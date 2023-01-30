@@ -1,0 +1,17 @@
+/ast/
+/cdg/
+/cfg/
+/cg/
+/databaseNodes/
+/ddg/
+/dom/
+/fileWalker/
+/graphutils/
+/inputModules/
+/joern/
+/misc/
+/octopus/
+/outputModules/
+/tests/
+/tools/
+/udg/

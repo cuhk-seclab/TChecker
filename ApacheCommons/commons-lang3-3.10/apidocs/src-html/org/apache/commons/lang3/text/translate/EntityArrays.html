@@ -1,0 +1,530 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en">
+<head>
+<title>Source code</title>
+<link rel="stylesheet" type="text/css" href="../../../../../../../stylesheet.css" title="Style">
+</head>
+<body>
+<div class="sourceContainer">
+<pre><span class="sourceLineNo">001</span>/*<a name="line.1"></a>
+<span class="sourceLineNo">002</span> * Licensed to the Apache Software Foundation (ASF) under one or more<a name="line.2"></a>
+<span class="sourceLineNo">003</span> * contributor license agreements.  See the NOTICE file distributed with<a name="line.3"></a>
+<span class="sourceLineNo">004</span> * this work for additional information regarding copyright ownership.<a name="line.4"></a>
+<span class="sourceLineNo">005</span> * The ASF licenses this file to You under the Apache License, Version 2.0<a name="line.5"></a>
+<span class="sourceLineNo">006</span> * (the "License"); you may not use this file except in compliance with<a name="line.6"></a>
+<span class="sourceLineNo">007</span> * the License.  You may obtain a copy of the License at<a name="line.7"></a>
+<span class="sourceLineNo">008</span> *<a name="line.8"></a>
+<span class="sourceLineNo">009</span> *      http://www.apache.org/licenses/LICENSE-2.0<a name="line.9"></a>
+<span class="sourceLineNo">010</span> *<a name="line.10"></a>
+<span class="sourceLineNo">011</span> * Unless required by applicable law or agreed to in writing, software<a name="line.11"></a>
+<span class="sourceLineNo">012</span> * distributed under the License is distributed on an "AS IS" BASIS,<a name="line.12"></a>
+<span class="sourceLineNo">013</span> * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.<a name="line.13"></a>
+<span class="sourceLineNo">014</span> * See the License for the specific language governing permissions and<a name="line.14"></a>
+<span class="sourceLineNo">015</span> * limitations under the License.<a name="line.15"></a>
+<span class="sourceLineNo">016</span> */<a name="line.16"></a>
+<span class="sourceLineNo">017</span>package org.apache.commons.lang3.text.translate;<a name="line.17"></a>
+<span class="sourceLineNo">018</span><a name="line.18"></a>
+<span class="sourceLineNo">019</span>/**<a name="line.19"></a>
+<span class="sourceLineNo">020</span> * Class holding various entity data for HTML and XML - generally for use with<a name="line.20"></a>
+<span class="sourceLineNo">021</span> * the LookupTranslator.<a name="line.21"></a>
+<span class="sourceLineNo">022</span> * All arrays are of length [*][2].<a name="line.22"></a>
+<span class="sourceLineNo">023</span> *<a name="line.23"></a>
+<span class="sourceLineNo">024</span> * @since 3.0<a name="line.24"></a>
+<span class="sourceLineNo">025</span> * @deprecated as of 3.6, use commons-text<a name="line.25"></a>
+<span class="sourceLineNo">026</span> * &lt;a href="https://commons.apache.org/proper/commons-text/javadocs/api-release/org/apache/commons/text/translate/CodePointTranslator.html"&gt;<a name="line.26"></a>
+<span class="sourceLineNo">027</span> * EntityArrays&lt;/a&gt; instead<a name="line.27"></a>
+<span class="sourceLineNo">028</span> */<a name="line.28"></a>
+<span class="sourceLineNo">029</span>@Deprecated<a name="line.29"></a>
+<span class="sourceLineNo">030</span>public class EntityArrays {<a name="line.30"></a>
+<span class="sourceLineNo">031</span><a name="line.31"></a>
+<span class="sourceLineNo">032</span>    /**<a name="line.32"></a>
+<span class="sourceLineNo">033</span>     * Mapping to escape &lt;a href="https://secure.wikimedia.org/wikipedia/en/wiki/ISO/IEC_8859-1"&gt;ISO-8859-1&lt;/a&gt;<a name="line.33"></a>
+<span class="sourceLineNo">034</span>     * characters to their named HTML 3.x equivalents.<a name="line.34"></a>
+<span class="sourceLineNo">035</span>     * @return the mapping table<a name="line.35"></a>
+<span class="sourceLineNo">036</span>     */<a name="line.36"></a>
+<span class="sourceLineNo">037</span>    public static String[][] ISO8859_1_ESCAPE() {<a name="line.37"></a>
+<span class="sourceLineNo">038</span>        return ISO8859_1_ESCAPE.clone();<a name="line.38"></a>
+<span class="sourceLineNo">039</span>    }<a name="line.39"></a>
+<span class="sourceLineNo">040</span><a name="line.40"></a>
+<span class="sourceLineNo">041</span>    private static final String[][] ISO8859_1_ESCAPE = {<a name="line.41"></a>
+<span class="sourceLineNo">042</span>        {"\u00A0", "&amp;nbsp;"}, // non-breaking space<a name="line.42"></a>
+<span class="sourceLineNo">043</span>        {"\u00A1", "&amp;iexcl;"}, // inverted exclamation mark<a name="line.43"></a>
+<span class="sourceLineNo">044</span>        {"\u00A2", "&amp;cent;"}, // cent sign<a name="line.44"></a>
+<span class="sourceLineNo">045</span>        {"\u00A3", "&amp;pound;"}, // pound sign<a name="line.45"></a>
+<span class="sourceLineNo">046</span>        {"\u00A4", "&amp;curren;"}, // currency sign<a name="line.46"></a>
+<span class="sourceLineNo">047</span>        {"\u00A5", "&amp;yen;"}, // yen sign = yuan sign<a name="line.47"></a>
+<span class="sourceLineNo">048</span>        {"\u00A6", "&amp;brvbar;"}, // broken bar = broken vertical bar<a name="line.48"></a>
+<span class="sourceLineNo">049</span>        {"\u00A7", "&amp;sect;"}, // section sign<a name="line.49"></a>
+<span class="sourceLineNo">050</span>        {"\u00A8", "&amp;uml;"}, // diaeresis = spacing diaeresis<a name="line.50"></a>
+<span class="sourceLineNo">051</span>        {"\u00A9", "&amp;copy;"}, // © - copyright sign<a name="line.51"></a>
+<span class="sourceLineNo">052</span>        {"\u00AA", "&amp;ordf;"}, // feminine ordinal indicator<a name="line.52"></a>
+<span class="sourceLineNo">053</span>        {"\u00AB", "&amp;laquo;"}, // left-pointing double angle quotation mark = left pointing guillemet<a name="line.53"></a>
+<span class="sourceLineNo">054</span>        {"\u00AC", "&amp;not;"}, // not sign<a name="line.54"></a>
+<span class="sourceLineNo">055</span>        {"\u00AD", "&amp;shy;"}, // soft hyphen = discretionary hyphen<a name="line.55"></a>
+<span class="sourceLineNo">056</span>        {"\u00AE", "&amp;reg;"}, // ® - registered trademark sign<a name="line.56"></a>
+<span class="sourceLineNo">057</span>        {"\u00AF", "&amp;macr;"}, // macron = spacing macron = overline = APL overbar<a name="line.57"></a>
+<span class="sourceLineNo">058</span>        {"\u00B0", "&amp;deg;"}, // degree sign<a name="line.58"></a>
+<span class="sourceLineNo">059</span>        {"\u00B1", "&amp;plusmn;"}, // plus-minus sign = plus-or-minus sign<a name="line.59"></a>
+<span class="sourceLineNo">060</span>        {"\u00B2", "&amp;sup2;"}, // superscript two = superscript digit two = squared<a name="line.60"></a>
+<span class="sourceLineNo">061</span>        {"\u00B3", "&amp;sup3;"}, // superscript three = superscript digit three = cubed<a name="line.61"></a>
+<span class="sourceLineNo">062</span>        {"\u00B4", "&amp;acute;"}, // acute accent = spacing acute<a name="line.62"></a>
+<span class="sourceLineNo">063</span>        {"\u00B5", "&amp;micro;"}, // micro sign<a name="line.63"></a>
+<span class="sourceLineNo">064</span>        {"\u00B6", "&amp;para;"}, // pilcrow sign = paragraph sign<a name="line.64"></a>
+<span class="sourceLineNo">065</span>        {"\u00B7", "&amp;middot;"}, // middle dot = Georgian comma = Greek middle dot<a name="line.65"></a>
+<span class="sourceLineNo">066</span>        {"\u00B8", "&amp;cedil;"}, // cedilla = spacing cedilla<a name="line.66"></a>
+<span class="sourceLineNo">067</span>        {"\u00B9", "&amp;sup1;"}, // superscript one = superscript digit one<a name="line.67"></a>
+<span class="sourceLineNo">068</span>        {"\u00BA", "&amp;ordm;"}, // masculine ordinal indicator<a name="line.68"></a>
+<span class="sourceLineNo">069</span>        {"\u00BB", "&amp;raquo;"}, // right-pointing double angle quotation mark = right pointing guillemet<a name="line.69"></a>
+<span class="sourceLineNo">070</span>        {"\u00BC", "&amp;frac14;"}, // vulgar fraction one quarter = fraction one quarter<a name="line.70"></a>
+<span class="sourceLineNo">071</span>        {"\u00BD", "&amp;frac12;"}, // vulgar fraction one half = fraction one half<a name="line.71"></a>
+<span class="sourceLineNo">072</span>        {"\u00BE", "&amp;frac34;"}, // vulgar fraction three quarters = fraction three quarters<a name="line.72"></a>
+<span class="sourceLineNo">073</span>        {"\u00BF", "&amp;iquest;"}, // inverted question mark = turned question mark<a name="line.73"></a>
+<span class="sourceLineNo">074</span>        {"\u00C0", "&amp;Agrave;"}, // À - uppercase A, grave accent<a name="line.74"></a>
+<span class="sourceLineNo">075</span>        {"\u00C1", "&amp;Aacute;"}, // Á - uppercase A, acute accent<a name="line.75"></a>
+<span class="sourceLineNo">076</span>        {"\u00C2", "&amp;Acirc;"}, // Â - uppercase A, circumflex accent<a name="line.76"></a>
+<span class="sourceLineNo">077</span>        {"\u00C3", "&amp;Atilde;"}, // Ã - uppercase A, tilde<a name="line.77"></a>
+<span class="sourceLineNo">078</span>        {"\u00C4", "&amp;Auml;"}, // Ä - uppercase A, umlaut<a name="line.78"></a>
+<span class="sourceLineNo">079</span>        {"\u00C5", "&amp;Aring;"}, // Å - uppercase A, ring<a name="line.79"></a>
+<span class="sourceLineNo">080</span>        {"\u00C6", "&amp;AElig;"}, // Æ - uppercase AE<a name="line.80"></a>
+<span class="sourceLineNo">081</span>        {"\u00C7", "&amp;Ccedil;"}, // Ç - uppercase C, cedilla<a name="line.81"></a>
+<span class="sourceLineNo">082</span>        {"\u00C8", "&amp;Egrave;"}, // È - uppercase E, grave accent<a name="line.82"></a>
+<span class="sourceLineNo">083</span>        {"\u00C9", "&amp;Eacute;"}, // É - uppercase E, acute accent<a name="line.83"></a>
+<span class="sourceLineNo">084</span>        {"\u00CA", "&amp;Ecirc;"}, // Ê - uppercase E, circumflex accent<a name="line.84"></a>
+<span class="sourceLineNo">085</span>        {"\u00CB", "&amp;Euml;"}, // Ë - uppercase E, umlaut<a name="line.85"></a>
+<span class="sourceLineNo">086</span>        {"\u00CC", "&amp;Igrave;"}, // Ì - uppercase I, grave accent<a name="line.86"></a>
+<span class="sourceLineNo">087</span>        {"\u00CD", "&amp;Iacute;"}, // Í - uppercase I, acute accent<a name="line.87"></a>
+<span class="sourceLineNo">088</span>        {"\u00CE", "&amp;Icirc;"}, // Î - uppercase I, circumflex accent<a name="line.88"></a>
+<span class="sourceLineNo">089</span>        {"\u00CF", "&amp;Iuml;"}, // Ï - uppercase I, umlaut<a name="line.89"></a>
+<span class="sourceLineNo">090</span>        {"\u00D0", "&amp;ETH;"}, // Ð - uppercase Eth, Icelandic<a name="line.90"></a>
+<span class="sourceLineNo">091</span>        {"\u00D1", "&amp;Ntilde;"}, // Ñ - uppercase N, tilde<a name="line.91"></a>
+<span class="sourceLineNo">092</span>        {"\u00D2", "&amp;Ograve;"}, // Ò - uppercase O, grave accent<a name="line.92"></a>
+<span class="sourceLineNo">093</span>        {"\u00D3", "&amp;Oacute;"}, // Ó - uppercase O, acute accent<a name="line.93"></a>
+<span class="sourceLineNo">094</span>        {"\u00D4", "&amp;Ocirc;"}, // Ô - uppercase O, circumflex accent<a name="line.94"></a>
+<span class="sourceLineNo">095</span>        {"\u00D5", "&amp;Otilde;"}, // Õ - uppercase O, tilde<a name="line.95"></a>
+<span class="sourceLineNo">096</span>        {"\u00D6", "&amp;Ouml;"}, // Ö - uppercase O, umlaut<a name="line.96"></a>
+<span class="sourceLineNo">097</span>        {"\u00D7", "&amp;times;"}, // multiplication sign<a name="line.97"></a>
+<span class="sourceLineNo">098</span>        {"\u00D8", "&amp;Oslash;"}, // Ø - uppercase O, slash<a name="line.98"></a>
+<span class="sourceLineNo">099</span>        {"\u00D9", "&amp;Ugrave;"}, // Ù - uppercase U, grave accent<a name="line.99"></a>
+<span class="sourceLineNo">100</span>        {"\u00DA", "&amp;Uacute;"}, // Ú - uppercase U, acute accent<a name="line.100"></a>
+<span class="sourceLineNo">101</span>        {"\u00DB", "&amp;Ucirc;"}, // Û - uppercase U, circumflex accent<a name="line.101"></a>
+<span class="sourceLineNo">102</span>        {"\u00DC", "&amp;Uuml;"}, // Ü - uppercase U, umlaut<a name="line.102"></a>
+<span class="sourceLineNo">103</span>        {"\u00DD", "&amp;Yacute;"}, // Ý - uppercase Y, acute accent<a name="line.103"></a>
+<span class="sourceLineNo">104</span>        {"\u00DE", "&amp;THORN;"}, // Þ - uppercase THORN, Icelandic<a name="line.104"></a>
+<span class="sourceLineNo">105</span>        {"\u00DF", "&amp;szlig;"}, // ß - lowercase sharps, German<a name="line.105"></a>
+<span class="sourceLineNo">106</span>        {"\u00E0", "&amp;agrave;"}, // à - lowercase a, grave accent<a name="line.106"></a>
+<span class="sourceLineNo">107</span>        {"\u00E1", "&amp;aacute;"}, // á - lowercase a, acute accent<a name="line.107"></a>
+<span class="sourceLineNo">108</span>        {"\u00E2", "&amp;acirc;"}, // â - lowercase a, circumflex accent<a name="line.108"></a>
+<span class="sourceLineNo">109</span>        {"\u00E3", "&amp;atilde;"}, // ã - lowercase a, tilde<a name="line.109"></a>
+<span class="sourceLineNo">110</span>        {"\u00E4", "&amp;auml;"}, // ä - lowercase a, umlaut<a name="line.110"></a>
+<span class="sourceLineNo">111</span>        {"\u00E5", "&amp;aring;"}, // å - lowercase a, ring<a name="line.111"></a>
+<span class="sourceLineNo">112</span>        {"\u00E6", "&amp;aelig;"}, // æ - lowercase ae<a name="line.112"></a>
+<span class="sourceLineNo">113</span>        {"\u00E7", "&amp;ccedil;"}, // ç - lowercase c, cedilla<a name="line.113"></a>
+<span class="sourceLineNo">114</span>        {"\u00E8", "&amp;egrave;"}, // è - lowercase e, grave accent<a name="line.114"></a>
+<span class="sourceLineNo">115</span>        {"\u00E9", "&amp;eacute;"}, // é - lowercase e, acute accent<a name="line.115"></a>
+<span class="sourceLineNo">116</span>        {"\u00EA", "&amp;ecirc;"}, // ê - lowercase e, circumflex accent<a name="line.116"></a>
+<span class="sourceLineNo">117</span>        {"\u00EB", "&amp;euml;"}, // ë - lowercase e, umlaut<a name="line.117"></a>
+<span class="sourceLineNo">118</span>        {"\u00EC", "&amp;igrave;"}, // ì - lowercase i, grave accent<a name="line.118"></a>
+<span class="sourceLineNo">119</span>        {"\u00ED", "&amp;iacute;"}, // í - lowercase i, acute accent<a name="line.119"></a>
+<span class="sourceLineNo">120</span>        {"\u00EE", "&amp;icirc;"}, // î - lowercase i, circumflex accent<a name="line.120"></a>
+<span class="sourceLineNo">121</span>        {"\u00EF", "&amp;iuml;"}, // ï - lowercase i, umlaut<a name="line.121"></a>
+<span class="sourceLineNo">122</span>        {"\u00F0", "&amp;eth;"}, // ð - lowercase eth, Icelandic<a name="line.122"></a>
+<span class="sourceLineNo">123</span>        {"\u00F1", "&amp;ntilde;"}, // ñ - lowercase n, tilde<a name="line.123"></a>
+<span class="sourceLineNo">124</span>        {"\u00F2", "&amp;ograve;"}, // ò - lowercase o, grave accent<a name="line.124"></a>
+<span class="sourceLineNo">125</span>        {"\u00F3", "&amp;oacute;"}, // ó - lowercase o, acute accent<a name="line.125"></a>
+<span class="sourceLineNo">126</span>        {"\u00F4", "&amp;ocirc;"}, // ô - lowercase o, circumflex accent<a name="line.126"></a>
+<span class="sourceLineNo">127</span>        {"\u00F5", "&amp;otilde;"}, // õ - lowercase o, tilde<a name="line.127"></a>
+<span class="sourceLineNo">128</span>        {"\u00F6", "&amp;ouml;"}, // ö - lowercase o, umlaut<a name="line.128"></a>
+<span class="sourceLineNo">129</span>        {"\u00F7", "&amp;divide;"}, // division sign<a name="line.129"></a>
+<span class="sourceLineNo">130</span>        {"\u00F8", "&amp;oslash;"}, // ø - lowercase o, slash<a name="line.130"></a>
+<span class="sourceLineNo">131</span>        {"\u00F9", "&amp;ugrave;"}, // ù - lowercase u, grave accent<a name="line.131"></a>
+<span class="sourceLineNo">132</span>        {"\u00FA", "&amp;uacute;"}, // ú - lowercase u, acute accent<a name="line.132"></a>
+<span class="sourceLineNo">133</span>        {"\u00FB", "&amp;ucirc;"}, // û - lowercase u, circumflex accent<a name="line.133"></a>
+<span class="sourceLineNo">134</span>        {"\u00FC", "&amp;uuml;"}, // ü - lowercase u, umlaut<a name="line.134"></a>
+<span class="sourceLineNo">135</span>        {"\u00FD", "&amp;yacute;"}, // ý - lowercase y, acute accent<a name="line.135"></a>
+<span class="sourceLineNo">136</span>        {"\u00FE", "&amp;thorn;"}, // þ - lowercase thorn, Icelandic<a name="line.136"></a>
+<span class="sourceLineNo">137</span>        {"\u00FF", "&amp;yuml;"}, // ÿ - lowercase y, umlaut<a name="line.137"></a>
+<span class="sourceLineNo">138</span>    };<a name="line.138"></a>
+<span class="sourceLineNo">139</span><a name="line.139"></a>
+<span class="sourceLineNo">140</span>    /**<a name="line.140"></a>
+<span class="sourceLineNo">141</span>     * Reverse of {@link #ISO8859_1_ESCAPE()} for unescaping purposes.<a name="line.141"></a>
+<span class="sourceLineNo">142</span>     * @return the mapping table<a name="line.142"></a>
+<span class="sourceLineNo">143</span>     */<a name="line.143"></a>
+<span class="sourceLineNo">144</span>    public static String[][] ISO8859_1_UNESCAPE() {<a name="line.144"></a>
+<span class="sourceLineNo">145</span>        return ISO8859_1_UNESCAPE.clone();<a name="line.145"></a>
+<span class="sourceLineNo">146</span>    }<a name="line.146"></a>
+<span class="sourceLineNo">147</span><a name="line.147"></a>
+<span class="sourceLineNo">148</span>    private static final String[][] ISO8859_1_UNESCAPE = invert(ISO8859_1_ESCAPE);<a name="line.148"></a>
+<span class="sourceLineNo">149</span><a name="line.149"></a>
+<span class="sourceLineNo">150</span>    /**<a name="line.150"></a>
+<span class="sourceLineNo">151</span>     * Mapping to escape additional &lt;a href="http://www.w3.org/TR/REC-html40/sgml/entities.html"&gt;character entity<a name="line.151"></a>
+<span class="sourceLineNo">152</span>     * references&lt;/a&gt;. Note that this must be used with {@link #ISO8859_1_ESCAPE()} to get the full list of<a name="line.152"></a>
+<span class="sourceLineNo">153</span>     * HTML 4.0 character entities.<a name="line.153"></a>
+<span class="sourceLineNo">154</span>     * @return the mapping table<a name="line.154"></a>
+<span class="sourceLineNo">155</span>     */<a name="line.155"></a>
+<span class="sourceLineNo">156</span>    public static String[][] HTML40_EXTENDED_ESCAPE() {<a name="line.156"></a>
+<span class="sourceLineNo">157</span>        return HTML40_EXTENDED_ESCAPE.clone();<a name="line.157"></a>
+<span class="sourceLineNo">158</span>    }<a name="line.158"></a>
+<span class="sourceLineNo">159</span><a name="line.159"></a>
+<span class="sourceLineNo">160</span>    private static final String[][] HTML40_EXTENDED_ESCAPE = {<a name="line.160"></a>
+<span class="sourceLineNo">161</span>        // &lt;!-- Latin Extended-B --&gt;<a name="line.161"></a>
+<span class="sourceLineNo">162</span>        {"\u0192", "&amp;fnof;"}, // latin small f with hook = function= florin, U+0192 ISOtech --&gt;<a name="line.162"></a>
+<span class="sourceLineNo">163</span>        // &lt;!-- Greek --&gt;<a name="line.163"></a>
+<span class="sourceLineNo">164</span>        {"\u0391", "&amp;Alpha;"}, // greek capital letter alpha, U+0391 --&gt;<a name="line.164"></a>
+<span class="sourceLineNo">165</span>        {"\u0392", "&amp;Beta;"}, // greek capital letter beta, U+0392 --&gt;<a name="line.165"></a>
+<span class="sourceLineNo">166</span>        {"\u0393", "&amp;Gamma;"}, // greek capital letter gamma, U+0393 ISOgrk3 --&gt;<a name="line.166"></a>
+<span class="sourceLineNo">167</span>        {"\u0394", "&amp;Delta;"}, // greek capital letter delta, U+0394 ISOgrk3 --&gt;<a name="line.167"></a>
+<span class="sourceLineNo">168</span>        {"\u0395", "&amp;Epsilon;"}, // greek capital letter epsilon, U+0395 --&gt;<a name="line.168"></a>
+<span class="sourceLineNo">169</span>        {"\u0396", "&amp;Zeta;"}, // greek capital letter zeta, U+0396 --&gt;<a name="line.169"></a>
+<span class="sourceLineNo">170</span>        {"\u0397", "&amp;Eta;"}, // greek capital letter eta, U+0397 --&gt;<a name="line.170"></a>
+<span class="sourceLineNo">171</span>        {"\u0398", "&amp;Theta;"}, // greek capital letter theta, U+0398 ISOgrk3 --&gt;<a name="line.171"></a>
+<span class="sourceLineNo">172</span>        {"\u0399", "&amp;Iota;"}, // greek capital letter iota, U+0399 --&gt;<a name="line.172"></a>
+<span class="sourceLineNo">173</span>        {"\u039A", "&amp;Kappa;"}, // greek capital letter kappa, U+039A --&gt;<a name="line.173"></a>
+<span class="sourceLineNo">174</span>        {"\u039B", "&amp;Lambda;"}, // greek capital letter lambda, U+039B ISOgrk3 --&gt;<a name="line.174"></a>
+<span class="sourceLineNo">175</span>        {"\u039C", "&amp;Mu;"}, // greek capital letter mu, U+039C --&gt;<a name="line.175"></a>
+<span class="sourceLineNo">176</span>        {"\u039D", "&amp;Nu;"}, // greek capital letter nu, U+039D --&gt;<a name="line.176"></a>
+<span class="sourceLineNo">177</span>        {"\u039E", "&amp;Xi;"}, // greek capital letter xi, U+039E ISOgrk3 --&gt;<a name="line.177"></a>
+<span class="sourceLineNo">178</span>        {"\u039F", "&amp;Omicron;"}, // greek capital letter omicron, U+039F --&gt;<a name="line.178"></a>
+<span class="sourceLineNo">179</span>        {"\u03A0", "&amp;Pi;"}, // greek capital letter pi, U+03A0 ISOgrk3 --&gt;<a name="line.179"></a>
+<span class="sourceLineNo">180</span>        {"\u03A1", "&amp;Rho;"}, // greek capital letter rho, U+03A1 --&gt;<a name="line.180"></a>
+<span class="sourceLineNo">181</span>        // &lt;!-- there is no Sigmaf, and no U+03A2 character either --&gt;<a name="line.181"></a>
+<span class="sourceLineNo">182</span>        {"\u03A3", "&amp;Sigma;"}, // greek capital letter sigma, U+03A3 ISOgrk3 --&gt;<a name="line.182"></a>
+<span class="sourceLineNo">183</span>        {"\u03A4", "&amp;Tau;"}, // greek capital letter tau, U+03A4 --&gt;<a name="line.183"></a>
+<span class="sourceLineNo">184</span>        {"\u03A5", "&amp;Upsilon;"}, // greek capital letter upsilon, U+03A5 ISOgrk3 --&gt;<a name="line.184"></a>
+<span class="sourceLineNo">185</span>        {"\u03A6", "&amp;Phi;"}, // greek capital letter phi, U+03A6 ISOgrk3 --&gt;<a name="line.185"></a>
+<span class="sourceLineNo">186</span>        {"\u03A7", "&amp;Chi;"}, // greek capital letter chi, U+03A7 --&gt;<a name="line.186"></a>
+<span class="sourceLineNo">187</span>        {"\u03A8", "&amp;Psi;"}, // greek capital letter psi, U+03A8 ISOgrk3 --&gt;<a name="line.187"></a>
+<span class="sourceLineNo">188</span>        {"\u03A9", "&amp;Omega;"}, // greek capital letter omega, U+03A9 ISOgrk3 --&gt;<a name="line.188"></a>
+<span class="sourceLineNo">189</span>        {"\u03B1", "&amp;alpha;"}, // greek small letter alpha, U+03B1 ISOgrk3 --&gt;<a name="line.189"></a>
+<span class="sourceLineNo">190</span>        {"\u03B2", "&amp;beta;"}, // greek small letter beta, U+03B2 ISOgrk3 --&gt;<a name="line.190"></a>
+<span class="sourceLineNo">191</span>        {"\u03B3", "&amp;gamma;"}, // greek small letter gamma, U+03B3 ISOgrk3 --&gt;<a name="line.191"></a>
+<span class="sourceLineNo">192</span>        {"\u03B4", "&amp;delta;"}, // greek small letter delta, U+03B4 ISOgrk3 --&gt;<a name="line.192"></a>
+<span class="sourceLineNo">193</span>        {"\u03B5", "&amp;epsilon;"}, // greek small letter epsilon, U+03B5 ISOgrk3 --&gt;<a name="line.193"></a>
+<span class="sourceLineNo">194</span>        {"\u03B6", "&amp;zeta;"}, // greek small letter zeta, U+03B6 ISOgrk3 --&gt;<a name="line.194"></a>
+<span class="sourceLineNo">195</span>        {"\u03B7", "&amp;eta;"}, // greek small letter eta, U+03B7 ISOgrk3 --&gt;<a name="line.195"></a>
+<span class="sourceLineNo">196</span>        {"\u03B8", "&amp;theta;"}, // greek small letter theta, U+03B8 ISOgrk3 --&gt;<a name="line.196"></a>
+<span class="sourceLineNo">197</span>        {"\u03B9", "&amp;iota;"}, // greek small letter iota, U+03B9 ISOgrk3 --&gt;<a name="line.197"></a>
+<span class="sourceLineNo">198</span>        {"\u03BA", "&amp;kappa;"}, // greek small letter kappa, U+03BA ISOgrk3 --&gt;<a name="line.198"></a>
+<span class="sourceLineNo">199</span>        {"\u03BB", "&amp;lambda;"}, // greek small letter lambda, U+03BB ISOgrk3 --&gt;<a name="line.199"></a>
+<span class="sourceLineNo">200</span>        {"\u03BC", "&amp;mu;"}, // greek small letter mu, U+03BC ISOgrk3 --&gt;<a name="line.200"></a>
+<span class="sourceLineNo">201</span>        {"\u03BD", "&amp;nu;"}, // greek small letter nu, U+03BD ISOgrk3 --&gt;<a name="line.201"></a>
+<span class="sourceLineNo">202</span>        {"\u03BE", "&amp;xi;"}, // greek small letter xi, U+03BE ISOgrk3 --&gt;<a name="line.202"></a>
+<span class="sourceLineNo">203</span>        {"\u03BF", "&amp;omicron;"}, // greek small letter omicron, U+03BF NEW --&gt;<a name="line.203"></a>
+<span class="sourceLineNo">204</span>        {"\u03C0", "&amp;pi;"}, // greek small letter pi, U+03C0 ISOgrk3 --&gt;<a name="line.204"></a>
+<span class="sourceLineNo">205</span>        {"\u03C1", "&amp;rho;"}, // greek small letter rho, U+03C1 ISOgrk3 --&gt;<a name="line.205"></a>
+<span class="sourceLineNo">206</span>        {"\u03C2", "&amp;sigmaf;"}, // greek small letter final sigma, U+03C2 ISOgrk3 --&gt;<a name="line.206"></a>
+<span class="sourceLineNo">207</span>        {"\u03C3", "&amp;sigma;"}, // greek small letter sigma, U+03C3 ISOgrk3 --&gt;<a name="line.207"></a>
+<span class="sourceLineNo">208</span>        {"\u03C4", "&amp;tau;"}, // greek small letter tau, U+03C4 ISOgrk3 --&gt;<a name="line.208"></a>
+<span class="sourceLineNo">209</span>        {"\u03C5", "&amp;upsilon;"}, // greek small letter upsilon, U+03C5 ISOgrk3 --&gt;<a name="line.209"></a>
+<span class="sourceLineNo">210</span>        {"\u03C6", "&amp;phi;"}, // greek small letter phi, U+03C6 ISOgrk3 --&gt;<a name="line.210"></a>
+<span class="sourceLineNo">211</span>        {"\u03C7", "&amp;chi;"}, // greek small letter chi, U+03C7 ISOgrk3 --&gt;<a name="line.211"></a>
+<span class="sourceLineNo">212</span>        {"\u03C8", "&amp;psi;"}, // greek small letter psi, U+03C8 ISOgrk3 --&gt;<a name="line.212"></a>
+<span class="sourceLineNo">213</span>        {"\u03C9", "&amp;omega;"}, // greek small letter omega, U+03C9 ISOgrk3 --&gt;<a name="line.213"></a>
+<span class="sourceLineNo">214</span>        {"\u03D1", "&amp;thetasym;"}, // greek small letter theta symbol, U+03D1 NEW --&gt;<a name="line.214"></a>
+<span class="sourceLineNo">215</span>        {"\u03D2", "&amp;upsih;"}, // greek upsilon with hook symbol, U+03D2 NEW --&gt;<a name="line.215"></a>
+<span class="sourceLineNo">216</span>        {"\u03D6", "&amp;piv;"}, // greek pi symbol, U+03D6 ISOgrk3 --&gt;<a name="line.216"></a>
+<span class="sourceLineNo">217</span>        // &lt;!-- General Punctuation --&gt;<a name="line.217"></a>
+<span class="sourceLineNo">218</span>        {"\u2022", "&amp;bull;"}, // bullet = black small circle, U+2022 ISOpub --&gt;<a name="line.218"></a>
+<span class="sourceLineNo">219</span>        // &lt;!-- bullet is NOT the same as bullet operator, U+2219 --&gt;<a name="line.219"></a>
+<span class="sourceLineNo">220</span>        {"\u2026", "&amp;hellip;"}, // horizontal ellipsis = three dot leader, U+2026 ISOpub --&gt;<a name="line.220"></a>
+<span class="sourceLineNo">221</span>        {"\u2032", "&amp;prime;"}, // prime = minutes = feet, U+2032 ISOtech --&gt;<a name="line.221"></a>
+<span class="sourceLineNo">222</span>        {"\u2033", "&amp;Prime;"}, // double prime = seconds = inches, U+2033 ISOtech --&gt;<a name="line.222"></a>
+<span class="sourceLineNo">223</span>        {"\u203E", "&amp;oline;"}, // overline = spacing overscore, U+203E NEW --&gt;<a name="line.223"></a>
+<span class="sourceLineNo">224</span>        {"\u2044", "&amp;frasl;"}, // fraction slash, U+2044 NEW --&gt;<a name="line.224"></a>
+<span class="sourceLineNo">225</span>        // &lt;!-- Letterlike Symbols --&gt;<a name="line.225"></a>
+<span class="sourceLineNo">226</span>        {"\u2118", "&amp;weierp;"}, // script capital P = power set= Weierstrass p, U+2118 ISOamso --&gt;<a name="line.226"></a>
+<span class="sourceLineNo">227</span>        {"\u2111", "&amp;image;"}, // blackletter capital I = imaginary part, U+2111 ISOamso --&gt;<a name="line.227"></a>
+<span class="sourceLineNo">228</span>        {"\u211C", "&amp;real;"}, // blackletter capital R = real part symbol, U+211C ISOamso --&gt;<a name="line.228"></a>
+<span class="sourceLineNo">229</span>        {"\u2122", "&amp;trade;"}, // trade mark sign, U+2122 ISOnum --&gt;<a name="line.229"></a>
+<span class="sourceLineNo">230</span>        {"\u2135", "&amp;alefsym;"}, // alef symbol = first transfinite cardinal, U+2135 NEW --&gt;<a name="line.230"></a>
+<span class="sourceLineNo">231</span>        // &lt;!-- alef symbol is NOT the same as hebrew letter alef, U+05D0 although the<a name="line.231"></a>
+<span class="sourceLineNo">232</span>        // same glyph could be used to depict both characters --&gt;<a name="line.232"></a>
+<span class="sourceLineNo">233</span>        // &lt;!-- Arrows --&gt;<a name="line.233"></a>
+<span class="sourceLineNo">234</span>        {"\u2190", "&amp;larr;"}, // leftwards arrow, U+2190 ISOnum --&gt;<a name="line.234"></a>
+<span class="sourceLineNo">235</span>        {"\u2191", "&amp;uarr;"}, // upwards arrow, U+2191 ISOnum--&gt;<a name="line.235"></a>
+<span class="sourceLineNo">236</span>        {"\u2192", "&amp;rarr;"}, // rightwards arrow, U+2192 ISOnum --&gt;<a name="line.236"></a>
+<span class="sourceLineNo">237</span>        {"\u2193", "&amp;darr;"}, // downwards arrow, U+2193 ISOnum --&gt;<a name="line.237"></a>
+<span class="sourceLineNo">238</span>        {"\u2194", "&amp;harr;"}, // left right arrow, U+2194 ISOamsa --&gt;<a name="line.238"></a>
+<span class="sourceLineNo">239</span>        {"\u21B5", "&amp;crarr;"}, // downwards arrow with corner leftwards= carriage return, U+21B5 NEW --&gt;<a name="line.239"></a>
+<span class="sourceLineNo">240</span>        {"\u21D0", "&amp;lArr;"}, // leftwards double arrow, U+21D0 ISOtech --&gt;<a name="line.240"></a>
+<span class="sourceLineNo">241</span>        // &lt;!-- ISO 10646 does not say that lArr is the same as the 'is implied by'<a name="line.241"></a>
+<span class="sourceLineNo">242</span>        // arrow but also does not have any other character for that function.<a name="line.242"></a>
+<span class="sourceLineNo">243</span>        // So ? lArr canbe used for 'is implied by' as ISOtech suggests --&gt;<a name="line.243"></a>
+<span class="sourceLineNo">244</span>        {"\u21D1", "&amp;uArr;"}, // upwards double arrow, U+21D1 ISOamsa --&gt;<a name="line.244"></a>
+<span class="sourceLineNo">245</span>        {"\u21D2", "&amp;rArr;"}, // rightwards double arrow, U+21D2 ISOtech --&gt;<a name="line.245"></a>
+<span class="sourceLineNo">246</span>        // &lt;!-- ISO 10646 does not say this is the 'implies' character but does not<a name="line.246"></a>
+<span class="sourceLineNo">247</span>        // have another character with this function so ?rArr can be used for<a name="line.247"></a>
+<span class="sourceLineNo">248</span>        // 'implies' as ISOtech suggests --&gt;<a name="line.248"></a>
+<span class="sourceLineNo">249</span>        {"\u21D3", "&amp;dArr;"}, // downwards double arrow, U+21D3 ISOamsa --&gt;<a name="line.249"></a>
+<span class="sourceLineNo">250</span>        {"\u21D4", "&amp;hArr;"}, // left right double arrow, U+21D4 ISOamsa --&gt;<a name="line.250"></a>
+<span class="sourceLineNo">251</span>        // &lt;!-- Mathematical Operators --&gt;<a name="line.251"></a>
+<span class="sourceLineNo">252</span>        {"\u2200", "&amp;forall;"}, // for all, U+2200 ISOtech --&gt;<a name="line.252"></a>
+<span class="sourceLineNo">253</span>        {"\u2202", "&amp;part;"}, // partial differential, U+2202 ISOtech --&gt;<a name="line.253"></a>
+<span class="sourceLineNo">254</span>        {"\u2203", "&amp;exist;"}, // there exists, U+2203 ISOtech --&gt;<a name="line.254"></a>
+<span class="sourceLineNo">255</span>        {"\u2205", "&amp;empty;"}, // empty set = null set = diameter, U+2205 ISOamso --&gt;<a name="line.255"></a>
+<span class="sourceLineNo">256</span>        {"\u2207", "&amp;nabla;"}, // nabla = backward difference, U+2207 ISOtech --&gt;<a name="line.256"></a>
+<span class="sourceLineNo">257</span>        {"\u2208", "&amp;isin;"}, // element of, U+2208 ISOtech --&gt;<a name="line.257"></a>
+<span class="sourceLineNo">258</span>        {"\u2209", "&amp;notin;"}, // not an element of, U+2209 ISOtech --&gt;<a name="line.258"></a>
+<span class="sourceLineNo">259</span>        {"\u220B", "&amp;ni;"}, // contains as member, U+220B ISOtech --&gt;<a name="line.259"></a>
+<span class="sourceLineNo">260</span>        // &lt;!-- should there be a more memorable name than 'ni'? --&gt;<a name="line.260"></a>
+<span class="sourceLineNo">261</span>        {"\u220F", "&amp;prod;"}, // n-ary product = product sign, U+220F ISOamsb --&gt;<a name="line.261"></a>
+<span class="sourceLineNo">262</span>        // &lt;!-- prod is NOT the same character as U+03A0 'greek capital letter pi'<a name="line.262"></a>
+<span class="sourceLineNo">263</span>        // though the same glyph might be used for both --&gt;<a name="line.263"></a>
+<span class="sourceLineNo">264</span>        {"\u2211", "&amp;sum;"}, // n-ary summation, U+2211 ISOamsb --&gt;<a name="line.264"></a>
+<span class="sourceLineNo">265</span>        // &lt;!-- sum is NOT the same character as U+03A3 'greek capital letter sigma'<a name="line.265"></a>
+<span class="sourceLineNo">266</span>        // though the same glyph might be used for both --&gt;<a name="line.266"></a>
+<span class="sourceLineNo">267</span>        {"\u2212", "&amp;minus;"}, // minus sign, U+2212 ISOtech --&gt;<a name="line.267"></a>
+<span class="sourceLineNo">268</span>        {"\u2217", "&amp;lowast;"}, // asterisk operator, U+2217 ISOtech --&gt;<a name="line.268"></a>
+<span class="sourceLineNo">269</span>        {"\u221A", "&amp;radic;"}, // square root = radical sign, U+221A ISOtech --&gt;<a name="line.269"></a>
+<span class="sourceLineNo">270</span>        {"\u221D", "&amp;prop;"}, // proportional to, U+221D ISOtech --&gt;<a name="line.270"></a>
+<span class="sourceLineNo">271</span>        {"\u221E", "&amp;infin;"}, // infinity, U+221E ISOtech --&gt;<a name="line.271"></a>
+<span class="sourceLineNo">272</span>        {"\u2220", "&amp;ang;"}, // angle, U+2220 ISOamso --&gt;<a name="line.272"></a>
+<span class="sourceLineNo">273</span>        {"\u2227", "&amp;and;"}, // logical and = wedge, U+2227 ISOtech --&gt;<a name="line.273"></a>
+<span class="sourceLineNo">274</span>        {"\u2228", "&amp;or;"}, // logical or = vee, U+2228 ISOtech --&gt;<a name="line.274"></a>
+<span class="sourceLineNo">275</span>        {"\u2229", "&amp;cap;"}, // intersection = cap, U+2229 ISOtech --&gt;<a name="line.275"></a>
+<span class="sourceLineNo">276</span>        {"\u222A", "&amp;cup;"}, // union = cup, U+222A ISOtech --&gt;<a name="line.276"></a>
+<span class="sourceLineNo">277</span>        {"\u222B", "&amp;int;"}, // integral, U+222B ISOtech --&gt;<a name="line.277"></a>
+<span class="sourceLineNo">278</span>        {"\u2234", "&amp;there4;"}, // therefore, U+2234 ISOtech --&gt;<a name="line.278"></a>
+<span class="sourceLineNo">279</span>        {"\u223C", "&amp;sim;"}, // tilde operator = varies with = similar to, U+223C ISOtech --&gt;<a name="line.279"></a>
+<span class="sourceLineNo">280</span>        // &lt;!-- tilde operator is NOT the same character as the tilde, U+007E, although<a name="line.280"></a>
+<span class="sourceLineNo">281</span>        // the same glyph might be used to represent both --&gt;<a name="line.281"></a>
+<span class="sourceLineNo">282</span>        {"\u2245", "&amp;cong;"}, // approximately equal to, U+2245 ISOtech --&gt;<a name="line.282"></a>
+<span class="sourceLineNo">283</span>        {"\u2248", "&amp;asymp;"}, // almost equal to = asymptotic to, U+2248 ISOamsr --&gt;<a name="line.283"></a>
+<span class="sourceLineNo">284</span>        {"\u2260", "&amp;ne;"}, // not equal to, U+2260 ISOtech --&gt;<a name="line.284"></a>
+<span class="sourceLineNo">285</span>        {"\u2261", "&amp;equiv;"}, // identical to, U+2261 ISOtech --&gt;<a name="line.285"></a>
+<span class="sourceLineNo">286</span>        {"\u2264", "&amp;le;"}, // less-than or equal to, U+2264 ISOtech --&gt;<a name="line.286"></a>
+<span class="sourceLineNo">287</span>        {"\u2265", "&amp;ge;"}, // greater-than or equal to, U+2265 ISOtech --&gt;<a name="line.287"></a>
+<span class="sourceLineNo">288</span>        {"\u2282", "&amp;sub;"}, // subset of, U+2282 ISOtech --&gt;<a name="line.288"></a>
+<span class="sourceLineNo">289</span>        {"\u2283", "&amp;sup;"}, // superset of, U+2283 ISOtech --&gt;<a name="line.289"></a>
+<span class="sourceLineNo">290</span>        // &lt;!-- note that nsup, 'not a superset of, U+2283' is not covered by the<a name="line.290"></a>
+<span class="sourceLineNo">291</span>        // Symbol font encoding and is not included. Should it be, for symmetry?<a name="line.291"></a>
+<span class="sourceLineNo">292</span>        // It is in ISOamsn --&gt;,<a name="line.292"></a>
+<span class="sourceLineNo">293</span>        {"\u2284", "&amp;nsub;"}, // not a subset of, U+2284 ISOamsn --&gt;<a name="line.293"></a>
+<span class="sourceLineNo">294</span>        {"\u2286", "&amp;sube;"}, // subset of or equal to, U+2286 ISOtech --&gt;<a name="line.294"></a>
+<span class="sourceLineNo">295</span>        {"\u2287", "&amp;supe;"}, // superset of or equal to, U+2287 ISOtech --&gt;<a name="line.295"></a>
+<span class="sourceLineNo">296</span>        {"\u2295", "&amp;oplus;"}, // circled plus = direct sum, U+2295 ISOamsb --&gt;<a name="line.296"></a>
+<span class="sourceLineNo">297</span>        {"\u2297", "&amp;otimes;"}, // circled times = vector product, U+2297 ISOamsb --&gt;<a name="line.297"></a>
+<span class="sourceLineNo">298</span>        {"\u22A5", "&amp;perp;"}, // up tack = orthogonal to = perpendicular, U+22A5 ISOtech --&gt;<a name="line.298"></a>
+<span class="sourceLineNo">299</span>        {"\u22C5", "&amp;sdot;"}, // dot operator, U+22C5 ISOamsb --&gt;<a name="line.299"></a>
+<span class="sourceLineNo">300</span>        // &lt;!-- dot operator is NOT the same character as U+00B7 middle dot --&gt;<a name="line.300"></a>
+<span class="sourceLineNo">301</span>        // &lt;!-- Miscellaneous Technical --&gt;<a name="line.301"></a>
+<span class="sourceLineNo">302</span>        {"\u2308", "&amp;lceil;"}, // left ceiling = apl upstile, U+2308 ISOamsc --&gt;<a name="line.302"></a>
+<span class="sourceLineNo">303</span>        {"\u2309", "&amp;rceil;"}, // right ceiling, U+2309 ISOamsc --&gt;<a name="line.303"></a>
+<span class="sourceLineNo">304</span>        {"\u230A", "&amp;lfloor;"}, // left floor = apl downstile, U+230A ISOamsc --&gt;<a name="line.304"></a>
+<span class="sourceLineNo">305</span>        {"\u230B", "&amp;rfloor;"}, // right floor, U+230B ISOamsc --&gt;<a name="line.305"></a>
+<span class="sourceLineNo">306</span>        {"\u2329", "&amp;lang;"}, // left-pointing angle bracket = bra, U+2329 ISOtech --&gt;<a name="line.306"></a>
+<span class="sourceLineNo">307</span>        // &lt;!-- lang is NOT the same character as U+003C 'less than' or U+2039 'single left-pointing angle quotation<a name="line.307"></a>
+<span class="sourceLineNo">308</span>        // mark' --&gt;<a name="line.308"></a>
+<span class="sourceLineNo">309</span>        {"\u232A", "&amp;rang;"}, // right-pointing angle bracket = ket, U+232A ISOtech --&gt;<a name="line.309"></a>
+<span class="sourceLineNo">310</span>        // &lt;!-- rang is NOT the same character as U+003E 'greater than' or U+203A<a name="line.310"></a>
+<span class="sourceLineNo">311</span>        // 'single right-pointing angle quotation mark' --&gt;<a name="line.311"></a>
+<span class="sourceLineNo">312</span>        // &lt;!-- Geometric Shapes --&gt;<a name="line.312"></a>
+<span class="sourceLineNo">313</span>        {"\u25CA", "&amp;loz;"}, // lozenge, U+25CA ISOpub --&gt;<a name="line.313"></a>
+<span class="sourceLineNo">314</span>        // &lt;!-- Miscellaneous Symbols --&gt;<a name="line.314"></a>
+<span class="sourceLineNo">315</span>        {"\u2660", "&amp;spades;"}, // black spade suit, U+2660 ISOpub --&gt;<a name="line.315"></a>
+<span class="sourceLineNo">316</span>        // &lt;!-- black here seems to mean filled as opposed to hollow --&gt;<a name="line.316"></a>
+<span class="sourceLineNo">317</span>        {"\u2663", "&amp;clubs;"}, // black club suit = shamrock, U+2663 ISOpub --&gt;<a name="line.317"></a>
+<span class="sourceLineNo">318</span>        {"\u2665", "&amp;hearts;"}, // black heart suit = valentine, U+2665 ISOpub --&gt;<a name="line.318"></a>
+<span class="sourceLineNo">319</span>        {"\u2666", "&amp;diams;"}, // black diamond suit, U+2666 ISOpub --&gt;<a name="line.319"></a>
+<span class="sourceLineNo">320</span><a name="line.320"></a>
+<span class="sourceLineNo">321</span>        // &lt;!-- Latin Extended-A --&gt;<a name="line.321"></a>
+<span class="sourceLineNo">322</span>        {"\u0152", "&amp;OElig;"}, // -- latin capital ligature OE, U+0152 ISOlat2 --&gt;<a name="line.322"></a>
+<span class="sourceLineNo">323</span>        {"\u0153", "&amp;oelig;"}, // -- latin small ligature oe, U+0153 ISOlat2 --&gt;<a name="line.323"></a>
+<span class="sourceLineNo">324</span>        // &lt;!-- ligature is a misnomer, this is a separate character in some languages --&gt;<a name="line.324"></a>
+<span class="sourceLineNo">325</span>        {"\u0160", "&amp;Scaron;"}, // -- latin capital letter S with caron, U+0160 ISOlat2 --&gt;<a name="line.325"></a>
+<span class="sourceLineNo">326</span>        {"\u0161", "&amp;scaron;"}, // -- latin small letter s with caron, U+0161 ISOlat2 --&gt;<a name="line.326"></a>
+<span class="sourceLineNo">327</span>        {"\u0178", "&amp;Yuml;"}, // -- latin capital letter Y with diaeresis, U+0178 ISOlat2 --&gt;<a name="line.327"></a>
+<span class="sourceLineNo">328</span>        // &lt;!-- Spacing Modifier Letters --&gt;<a name="line.328"></a>
+<span class="sourceLineNo">329</span>        {"\u02C6", "&amp;circ;"}, // -- modifier letter circumflex accent, U+02C6 ISOpub --&gt;<a name="line.329"></a>
+<span class="sourceLineNo">330</span>        {"\u02DC", "&amp;tilde;"}, // small tilde, U+02DC ISOdia --&gt;<a name="line.330"></a>
+<span class="sourceLineNo">331</span>        // &lt;!-- General Punctuation --&gt;<a name="line.331"></a>
+<span class="sourceLineNo">332</span>        {"\u2002", "&amp;ensp;"}, // en space, U+2002 ISOpub --&gt;<a name="line.332"></a>
+<span class="sourceLineNo">333</span>        {"\u2003", "&amp;emsp;"}, // em space, U+2003 ISOpub --&gt;<a name="line.333"></a>
+<span class="sourceLineNo">334</span>        {"\u2009", "&amp;thinsp;"}, // thin space, U+2009 ISOpub --&gt;<a name="line.334"></a>
+<span class="sourceLineNo">335</span>        {"\u200C", "&amp;zwnj;"}, // zero width non-joiner, U+200C NEW RFC 2070 --&gt;<a name="line.335"></a>
+<span class="sourceLineNo">336</span>        {"\u200D", "&amp;zwj;"}, // zero width joiner, U+200D NEW RFC 2070 --&gt;<a name="line.336"></a>
+<span class="sourceLineNo">337</span>        {"\u200E", "&amp;lrm;"}, // left-to-right mark, U+200E NEW RFC 2070 --&gt;<a name="line.337"></a>
+<span class="sourceLineNo">338</span>        {"\u200F", "&amp;rlm;"}, // right-to-left mark, U+200F NEW RFC 2070 --&gt;<a name="line.338"></a>
+<span class="sourceLineNo">339</span>        {"\u2013", "&amp;ndash;"}, // en dash, U+2013 ISOpub --&gt;<a name="line.339"></a>
+<span class="sourceLineNo">340</span>        {"\u2014", "&amp;mdash;"}, // em dash, U+2014 ISOpub --&gt;<a name="line.340"></a>
+<span class="sourceLineNo">341</span>        {"\u2018", "&amp;lsquo;"}, // left single quotation mark, U+2018 ISOnum --&gt;<a name="line.341"></a>
+<span class="sourceLineNo">342</span>        {"\u2019", "&amp;rsquo;"}, // right single quotation mark, U+2019 ISOnum --&gt;<a name="line.342"></a>
+<span class="sourceLineNo">343</span>        {"\u201A", "&amp;sbquo;"}, // single low-9 quotation mark, U+201A NEW --&gt;<a name="line.343"></a>
+<span class="sourceLineNo">344</span>        {"\u201C", "&amp;ldquo;"}, // left double quotation mark, U+201C ISOnum --&gt;<a name="line.344"></a>
+<span class="sourceLineNo">345</span>        {"\u201D", "&amp;rdquo;"}, // right double quotation mark, U+201D ISOnum --&gt;<a name="line.345"></a>
+<span class="sourceLineNo">346</span>        {"\u201E", "&amp;bdquo;"}, // double low-9 quotation mark, U+201E NEW --&gt;<a name="line.346"></a>
+<span class="sourceLineNo">347</span>        {"\u2020", "&amp;dagger;"}, // dagger, U+2020 ISOpub --&gt;<a name="line.347"></a>
+<span class="sourceLineNo">348</span>        {"\u2021", "&amp;Dagger;"}, // double dagger, U+2021 ISOpub --&gt;<a name="line.348"></a>
+<span class="sourceLineNo">349</span>        {"\u2030", "&amp;permil;"}, // per mille sign, U+2030 ISOtech --&gt;<a name="line.349"></a>
+<span class="sourceLineNo">350</span>        {"\u2039", "&amp;lsaquo;"}, // single left-pointing angle quotation mark, U+2039 ISO proposed --&gt;<a name="line.350"></a>
+<span class="sourceLineNo">351</span>        // &lt;!-- lsaquo is proposed but not yet ISO standardized --&gt;<a name="line.351"></a>
+<span class="sourceLineNo">352</span>        {"\u203A", "&amp;rsaquo;"}, // single right-pointing angle quotation mark, U+203A ISO proposed --&gt;<a name="line.352"></a>
+<span class="sourceLineNo">353</span>        // &lt;!-- rsaquo is proposed but not yet ISO standardized --&gt;<a name="line.353"></a>
+<span class="sourceLineNo">354</span>        {"\u20AC", "&amp;euro;"}, // -- euro sign, U+20AC NEW --&gt;<a name="line.354"></a>
+<span class="sourceLineNo">355</span>    };<a name="line.355"></a>
+<span class="sourceLineNo">356</span><a name="line.356"></a>
+<span class="sourceLineNo">357</span>    /**<a name="line.357"></a>
+<span class="sourceLineNo">358</span>     * Reverse of {@link #HTML40_EXTENDED_ESCAPE()} for unescaping purposes.<a name="line.358"></a>
+<span class="sourceLineNo">359</span>     * @return the mapping table<a name="line.359"></a>
+<span class="sourceLineNo">360</span>     */<a name="line.360"></a>
+<span class="sourceLineNo">361</span>    public static String[][] HTML40_EXTENDED_UNESCAPE() {<a name="line.361"></a>
+<span class="sourceLineNo">362</span>        return HTML40_EXTENDED_UNESCAPE.clone();<a name="line.362"></a>
+<span class="sourceLineNo">363</span>    }<a name="line.363"></a>
+<span class="sourceLineNo">364</span><a name="line.364"></a>
+<span class="sourceLineNo">365</span>    private static final String[][] HTML40_EXTENDED_UNESCAPE = invert(HTML40_EXTENDED_ESCAPE);<a name="line.365"></a>
+<span class="sourceLineNo">366</span><a name="line.366"></a>
+<span class="sourceLineNo">367</span>    /**<a name="line.367"></a>
+<span class="sourceLineNo">368</span>     * Mapping to escape the basic XML and HTML character entities.<a name="line.368"></a>
+<span class="sourceLineNo">369</span>     *<a name="line.369"></a>
+<span class="sourceLineNo">370</span>     * Namely: {@code " &amp; &lt; &gt;}<a name="line.370"></a>
+<span class="sourceLineNo">371</span>     * @return the mapping table<a name="line.371"></a>
+<span class="sourceLineNo">372</span>     */<a name="line.372"></a>
+<span class="sourceLineNo">373</span>    public static String[][] BASIC_ESCAPE() {<a name="line.373"></a>
+<span class="sourceLineNo">374</span>        return BASIC_ESCAPE.clone();<a name="line.374"></a>
+<span class="sourceLineNo">375</span>    }<a name="line.375"></a>
+<span class="sourceLineNo">376</span><a name="line.376"></a>
+<span class="sourceLineNo">377</span>    private static final String[][] BASIC_ESCAPE = {<a name="line.377"></a>
+<span class="sourceLineNo">378</span>        {"\"", "&amp;quot;"}, // " - double-quote<a name="line.378"></a>
+<span class="sourceLineNo">379</span>        {"&amp;", "&amp;amp;"},   // &amp; - ampersand<a name="line.379"></a>
+<span class="sourceLineNo">380</span>        {"&lt;", "&amp;lt;"},    // &lt; - less-than<a name="line.380"></a>
+<span class="sourceLineNo">381</span>        {"&gt;", "&amp;gt;"},    // &gt; - greater-than<a name="line.381"></a>
+<span class="sourceLineNo">382</span>    };<a name="line.382"></a>
+<span class="sourceLineNo">383</span><a name="line.383"></a>
+<span class="sourceLineNo">384</span>    /**<a name="line.384"></a>
+<span class="sourceLineNo">385</span>     * Reverse of {@link #BASIC_ESCAPE()} for unescaping purposes.<a name="line.385"></a>
+<span class="sourceLineNo">386</span>     * @return the mapping table<a name="line.386"></a>
+<span class="sourceLineNo">387</span>     */<a name="line.387"></a>
+<span class="sourceLineNo">388</span>    public static String[][] BASIC_UNESCAPE() {<a name="line.388"></a>
+<span class="sourceLineNo">389</span>        return BASIC_UNESCAPE.clone();<a name="line.389"></a>
+<span class="sourceLineNo">390</span>    }<a name="line.390"></a>
+<span class="sourceLineNo">391</span><a name="line.391"></a>
+<span class="sourceLineNo">392</span>    private static final String[][] BASIC_UNESCAPE = invert(BASIC_ESCAPE);<a name="line.392"></a>
+<span class="sourceLineNo">393</span><a name="line.393"></a>
+<span class="sourceLineNo">394</span>    /**<a name="line.394"></a>
+<span class="sourceLineNo">395</span>     * Mapping to escape the apostrophe character to its XML character entity.<a name="line.395"></a>
+<span class="sourceLineNo">396</span>     * @return the mapping table<a name="line.396"></a>
+<span class="sourceLineNo">397</span>     */<a name="line.397"></a>
+<span class="sourceLineNo">398</span>    public static String[][] APOS_ESCAPE() {<a name="line.398"></a>
+<span class="sourceLineNo">399</span>        return APOS_ESCAPE.clone();<a name="line.399"></a>
+<span class="sourceLineNo">400</span>    }<a name="line.400"></a>
+<span class="sourceLineNo">401</span><a name="line.401"></a>
+<span class="sourceLineNo">402</span>    private static final String[][] APOS_ESCAPE = {<a name="line.402"></a>
+<span class="sourceLineNo">403</span>        {"'", "&amp;apos;"}, // XML apostrophe<a name="line.403"></a>
+<span class="sourceLineNo">404</span>    };<a name="line.404"></a>
+<span class="sourceLineNo">405</span><a name="line.405"></a>
+<span class="sourceLineNo">406</span>    /**<a name="line.406"></a>
+<span class="sourceLineNo">407</span>     * Reverse of {@link #APOS_ESCAPE()} for unescaping purposes.<a name="line.407"></a>
+<span class="sourceLineNo">408</span>     * @return the mapping table<a name="line.408"></a>
+<span class="sourceLineNo">409</span>     */<a name="line.409"></a>
+<span class="sourceLineNo">410</span>    public static String[][] APOS_UNESCAPE() {<a name="line.410"></a>
+<span class="sourceLineNo">411</span>        return APOS_UNESCAPE.clone();<a name="line.411"></a>
+<span class="sourceLineNo">412</span>    }<a name="line.412"></a>
+<span class="sourceLineNo">413</span><a name="line.413"></a>
+<span class="sourceLineNo">414</span>    private static final String[][] APOS_UNESCAPE = invert(APOS_ESCAPE);<a name="line.414"></a>
+<span class="sourceLineNo">415</span><a name="line.415"></a>
+<span class="sourceLineNo">416</span>    /**<a name="line.416"></a>
+<span class="sourceLineNo">417</span>     * Mapping to escape the Java control characters.<a name="line.417"></a>
+<span class="sourceLineNo">418</span>     *<a name="line.418"></a>
+<span class="sourceLineNo">419</span>     * Namely: {@code \b \n \t \f \r}<a name="line.419"></a>
+<span class="sourceLineNo">420</span>     * @return the mapping table<a name="line.420"></a>
+<span class="sourceLineNo">421</span>     */<a name="line.421"></a>
+<span class="sourceLineNo">422</span>    public static String[][] JAVA_CTRL_CHARS_ESCAPE() {<a name="line.422"></a>
+<span class="sourceLineNo">423</span>        return JAVA_CTRL_CHARS_ESCAPE.clone();<a name="line.423"></a>
+<span class="sourceLineNo">424</span>    }<a name="line.424"></a>
+<span class="sourceLineNo">425</span><a name="line.425"></a>
+<span class="sourceLineNo">426</span>    private static final String[][] JAVA_CTRL_CHARS_ESCAPE = {<a name="line.426"></a>
+<span class="sourceLineNo">427</span>        {"\b", "\\b"},<a name="line.427"></a>
+<span class="sourceLineNo">428</span>        {"\n", "\\n"},<a name="line.428"></a>
+<span class="sourceLineNo">429</span>        {"\t", "\\t"},<a name="line.429"></a>
+<span class="sourceLineNo">430</span>        {"\f", "\\f"},<a name="line.430"></a>
+<span class="sourceLineNo">431</span>        {"\r", "\\r"}<a name="line.431"></a>
+<span class="sourceLineNo">432</span>    };<a name="line.432"></a>
+<span class="sourceLineNo">433</span><a name="line.433"></a>
+<span class="sourceLineNo">434</span>    /**<a name="line.434"></a>
+<span class="sourceLineNo">435</span>     * Reverse of {@link #JAVA_CTRL_CHARS_ESCAPE()} for unescaping purposes.<a name="line.435"></a>
+<span class="sourceLineNo">436</span>     * @return the mapping table<a name="line.436"></a>
+<span class="sourceLineNo">437</span>     */<a name="line.437"></a>
+<span class="sourceLineNo">438</span>    public static String[][] JAVA_CTRL_CHARS_UNESCAPE() {<a name="line.438"></a>
+<span class="sourceLineNo">439</span>        return JAVA_CTRL_CHARS_UNESCAPE.clone();<a name="line.439"></a>
+<span class="sourceLineNo">440</span>    }<a name="line.440"></a>
+<span class="sourceLineNo">441</span><a name="line.441"></a>
+<span class="sourceLineNo">442</span>    private static final String[][] JAVA_CTRL_CHARS_UNESCAPE = invert(JAVA_CTRL_CHARS_ESCAPE);<a name="line.442"></a>
+<span class="sourceLineNo">443</span><a name="line.443"></a>
+<span class="sourceLineNo">444</span>    /**<a name="line.444"></a>
+<span class="sourceLineNo">445</span>     * Used to invert an escape array into an unescape array<a name="line.445"></a>
+<span class="sourceLineNo">446</span>     * @param array String[][] to be inverted<a name="line.446"></a>
+<span class="sourceLineNo">447</span>     * @return String[][] inverted array<a name="line.447"></a>
+<span class="sourceLineNo">448</span>     */<a name="line.448"></a>
+<span class="sourceLineNo">449</span>    public static String[][] invert(final String[][] array) {<a name="line.449"></a>
+<span class="sourceLineNo">450</span>        final String[][] newarray = new String[array.length][2];<a name="line.450"></a>
+<span class="sourceLineNo">451</span>        for (int i = 0; i&lt;array.length; i++) {<a name="line.451"></a>
+<span class="sourceLineNo">452</span>            newarray[i][0] = array[i][1];<a name="line.452"></a>
+<span class="sourceLineNo">453</span>            newarray[i][1] = array[i][0];<a name="line.453"></a>
+<span class="sourceLineNo">454</span>        }<a name="line.454"></a>
+<span class="sourceLineNo">455</span>        return newarray;<a name="line.455"></a>
+<span class="sourceLineNo">456</span>    }<a name="line.456"></a>
+<span class="sourceLineNo">457</span><a name="line.457"></a>
+<span class="sourceLineNo">458</span>}<a name="line.458"></a>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</pre>
+</div>
+</body>
+</html>

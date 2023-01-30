@@ -1,0 +1,537 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en">
+<head>
+<title>Source code</title>
+<link rel="stylesheet" type="text/css" href="../../../../../../stylesheet.css" title="Style">
+</head>
+<body>
+<div class="sourceContainer">
+<pre><span class="sourceLineNo">001</span>/*<a name="line.1"></a>
+<span class="sourceLineNo">002</span> * Licensed to the Apache Software Foundation (ASF) under one or more<a name="line.2"></a>
+<span class="sourceLineNo">003</span> * contributor license agreements.  See the NOTICE file distributed with<a name="line.3"></a>
+<span class="sourceLineNo">004</span> * this work for additional information regarding copyright ownership.<a name="line.4"></a>
+<span class="sourceLineNo">005</span> * The ASF licenses this file to You under the Apache License, Version 2.0<a name="line.5"></a>
+<span class="sourceLineNo">006</span> * (the "License"); you may not use this file except in compliance with<a name="line.6"></a>
+<span class="sourceLineNo">007</span> * the License.  You may obtain a copy of the License at<a name="line.7"></a>
+<span class="sourceLineNo">008</span> *<a name="line.8"></a>
+<span class="sourceLineNo">009</span> *      http://www.apache.org/licenses/LICENSE-2.0<a name="line.9"></a>
+<span class="sourceLineNo">010</span> *<a name="line.10"></a>
+<span class="sourceLineNo">011</span> * Unless required by applicable law or agreed to in writing, software<a name="line.11"></a>
+<span class="sourceLineNo">012</span> * distributed under the License is distributed on an "AS IS" BASIS,<a name="line.12"></a>
+<span class="sourceLineNo">013</span> * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.<a name="line.13"></a>
+<span class="sourceLineNo">014</span> * See the License for the specific language governing permissions and<a name="line.14"></a>
+<span class="sourceLineNo">015</span> * limitations under the License.<a name="line.15"></a>
+<span class="sourceLineNo">016</span> */<a name="line.16"></a>
+<span class="sourceLineNo">017</span>package org.apache.commons.lang3.concurrent;<a name="line.17"></a>
+<span class="sourceLineNo">018</span><a name="line.18"></a>
+<span class="sourceLineNo">019</span>import org.apache.commons.lang3.Validate;<a name="line.19"></a>
+<span class="sourceLineNo">020</span><a name="line.20"></a>
+<span class="sourceLineNo">021</span>import java.util.concurrent.ScheduledExecutorService;<a name="line.21"></a>
+<span class="sourceLineNo">022</span>import java.util.concurrent.ScheduledFuture;<a name="line.22"></a>
+<span class="sourceLineNo">023</span>import java.util.concurrent.ScheduledThreadPoolExecutor;<a name="line.23"></a>
+<span class="sourceLineNo">024</span>import java.util.concurrent.TimeUnit;<a name="line.24"></a>
+<span class="sourceLineNo">025</span><a name="line.25"></a>
+<span class="sourceLineNo">026</span>/**<a name="line.26"></a>
+<span class="sourceLineNo">027</span> * &lt;p&gt;<a name="line.27"></a>
+<span class="sourceLineNo">028</span> * A specialized &lt;em&gt;semaphore&lt;/em&gt; implementation that provides a number of<a name="line.28"></a>
+<span class="sourceLineNo">029</span> * permits in a given time frame.<a name="line.29"></a>
+<span class="sourceLineNo">030</span> * &lt;/p&gt;<a name="line.30"></a>
+<span class="sourceLineNo">031</span> * &lt;p&gt;<a name="line.31"></a>
+<span class="sourceLineNo">032</span> * This class is similar to the {@code java.util.concurrent.Semaphore} class<a name="line.32"></a>
+<span class="sourceLineNo">033</span> * provided by the JDK in that it manages a configurable number of permits.<a name="line.33"></a>
+<span class="sourceLineNo">034</span> * Using the {@link #acquire()} method a permit can be requested by a thread.<a name="line.34"></a>
+<span class="sourceLineNo">035</span> * However, there is an additional timing dimension: there is no {@code<a name="line.35"></a>
+<span class="sourceLineNo">036</span> * release()} method for freeing a permit, but all permits are automatically<a name="line.36"></a>
+<span class="sourceLineNo">037</span> * released at the end of a configurable time frame. If a thread calls<a name="line.37"></a>
+<span class="sourceLineNo">038</span> * {@link #acquire()} and the available permits are already exhausted for this<a name="line.38"></a>
+<span class="sourceLineNo">039</span> * time frame, the thread is blocked. When the time frame ends all permits<a name="line.39"></a>
+<span class="sourceLineNo">040</span> * requested so far are restored, and blocking threads are waked up again, so<a name="line.40"></a>
+<span class="sourceLineNo">041</span> * that they can try to acquire a new permit. This basically means that in the<a name="line.41"></a>
+<span class="sourceLineNo">042</span> * specified time frame only the given number of operations is possible.<a name="line.42"></a>
+<span class="sourceLineNo">043</span> * &lt;/p&gt;<a name="line.43"></a>
+<span class="sourceLineNo">044</span> * &lt;p&gt;<a name="line.44"></a>
+<span class="sourceLineNo">045</span> * A use case for this class is to artificially limit the load produced by a<a name="line.45"></a>
+<span class="sourceLineNo">046</span> * process. As an example consider an application that issues database queries<a name="line.46"></a>
+<span class="sourceLineNo">047</span> * on a production system in a background process to gather statistical<a name="line.47"></a>
+<span class="sourceLineNo">048</span> * information. This background processing should not produce so much database<a name="line.48"></a>
+<span class="sourceLineNo">049</span> * load that the functionality and the performance of the production system are<a name="line.49"></a>
+<span class="sourceLineNo">050</span> * impacted. Here a {@code TimedSemaphore} could be installed to guarantee that<a name="line.50"></a>
+<span class="sourceLineNo">051</span> * only a given number of database queries are issued per second.<a name="line.51"></a>
+<span class="sourceLineNo">052</span> * &lt;/p&gt;<a name="line.52"></a>
+<span class="sourceLineNo">053</span> * &lt;p&gt;<a name="line.53"></a>
+<span class="sourceLineNo">054</span> * A thread class for performing database queries could look as follows:<a name="line.54"></a>
+<span class="sourceLineNo">055</span> * &lt;/p&gt;<a name="line.55"></a>
+<span class="sourceLineNo">056</span> *<a name="line.56"></a>
+<span class="sourceLineNo">057</span> * &lt;pre&gt;<a name="line.57"></a>
+<span class="sourceLineNo">058</span> * public class StatisticsThread extends Thread {<a name="line.58"></a>
+<span class="sourceLineNo">059</span> *     // The semaphore for limiting database load.<a name="line.59"></a>
+<span class="sourceLineNo">060</span> *     private final TimedSemaphore semaphore;<a name="line.60"></a>
+<span class="sourceLineNo">061</span> *     // Create an instance and set the semaphore<a name="line.61"></a>
+<span class="sourceLineNo">062</span> *     public StatisticsThread(TimedSemaphore timedSemaphore) {<a name="line.62"></a>
+<span class="sourceLineNo">063</span> *         semaphore = timedSemaphore;<a name="line.63"></a>
+<span class="sourceLineNo">064</span> *     }<a name="line.64"></a>
+<span class="sourceLineNo">065</span> *     // Gather statistics<a name="line.65"></a>
+<span class="sourceLineNo">066</span> *     public void run() {<a name="line.66"></a>
+<span class="sourceLineNo">067</span> *         try {<a name="line.67"></a>
+<span class="sourceLineNo">068</span> *             while (true) {<a name="line.68"></a>
+<span class="sourceLineNo">069</span> *                 semaphore.acquire();   // limit database load<a name="line.69"></a>
+<span class="sourceLineNo">070</span> *                 performQuery();        // issue a query<a name="line.70"></a>
+<span class="sourceLineNo">071</span> *             }<a name="line.71"></a>
+<span class="sourceLineNo">072</span> *         } catch(InterruptedException) {<a name="line.72"></a>
+<span class="sourceLineNo">073</span> *             // fall through<a name="line.73"></a>
+<span class="sourceLineNo">074</span> *         }<a name="line.74"></a>
+<span class="sourceLineNo">075</span> *     }<a name="line.75"></a>
+<span class="sourceLineNo">076</span> *     ...<a name="line.76"></a>
+<span class="sourceLineNo">077</span> * }<a name="line.77"></a>
+<span class="sourceLineNo">078</span> * &lt;/pre&gt;<a name="line.78"></a>
+<span class="sourceLineNo">079</span> *<a name="line.79"></a>
+<span class="sourceLineNo">080</span> * &lt;p&gt;<a name="line.80"></a>
+<span class="sourceLineNo">081</span> * The following code fragment shows how a {@code TimedSemaphore} is created<a name="line.81"></a>
+<span class="sourceLineNo">082</span> * that allows only 10 operations per second and passed to the statistics<a name="line.82"></a>
+<span class="sourceLineNo">083</span> * thread:<a name="line.83"></a>
+<span class="sourceLineNo">084</span> * &lt;/p&gt;<a name="line.84"></a>
+<span class="sourceLineNo">085</span> *<a name="line.85"></a>
+<span class="sourceLineNo">086</span> * &lt;pre&gt;<a name="line.86"></a>
+<span class="sourceLineNo">087</span> * TimedSemaphore sem = new TimedSemaphore(1, TimeUnit.SECOND, 10);<a name="line.87"></a>
+<span class="sourceLineNo">088</span> * StatisticsThread thread = new StatisticsThread(sem);<a name="line.88"></a>
+<span class="sourceLineNo">089</span> * thread.start();<a name="line.89"></a>
+<span class="sourceLineNo">090</span> * &lt;/pre&gt;<a name="line.90"></a>
+<span class="sourceLineNo">091</span> *<a name="line.91"></a>
+<span class="sourceLineNo">092</span> * &lt;p&gt;<a name="line.92"></a>
+<span class="sourceLineNo">093</span> * When creating an instance the time period for the semaphore must be<a name="line.93"></a>
+<span class="sourceLineNo">094</span> * specified. {@code TimedSemaphore} uses an executor service with a<a name="line.94"></a>
+<span class="sourceLineNo">095</span> * corresponding period to monitor this interval. The {@code<a name="line.95"></a>
+<span class="sourceLineNo">096</span> * ScheduledExecutorService} to be used for this purpose can be provided at<a name="line.96"></a>
+<span class="sourceLineNo">097</span> * construction time. Alternatively the class creates an internal executor<a name="line.97"></a>
+<span class="sourceLineNo">098</span> * service.<a name="line.98"></a>
+<span class="sourceLineNo">099</span> * &lt;/p&gt;<a name="line.99"></a>
+<span class="sourceLineNo">100</span> * &lt;p&gt;<a name="line.100"></a>
+<span class="sourceLineNo">101</span> * Client code that uses {@code TimedSemaphore} has to call the<a name="line.101"></a>
+<span class="sourceLineNo">102</span> * {@link #acquire()} method in each processing step. {@code TimedSemaphore}<a name="line.102"></a>
+<span class="sourceLineNo">103</span> * keeps track of the number of invocations of the {@link #acquire()} method and<a name="line.103"></a>
+<span class="sourceLineNo">104</span> * blocks the calling thread if the counter exceeds the limit specified. When<a name="line.104"></a>
+<span class="sourceLineNo">105</span> * the timer signals the end of the time period the counter is reset and all<a name="line.105"></a>
+<span class="sourceLineNo">106</span> * waiting threads are released. Then another cycle can start.<a name="line.106"></a>
+<span class="sourceLineNo">107</span> * &lt;/p&gt;<a name="line.107"></a>
+<span class="sourceLineNo">108</span> * &lt;p&gt;<a name="line.108"></a>
+<span class="sourceLineNo">109</span> * An alternative to {@code acquire()} is the {@link #tryAcquire()} method. This<a name="line.109"></a>
+<span class="sourceLineNo">110</span> * method checks whether the semaphore is under the specified limit and<a name="line.110"></a>
+<span class="sourceLineNo">111</span> * increases the internal counter if this is the case. The return value is then<a name="line.111"></a>
+<span class="sourceLineNo">112</span> * &lt;strong&gt;true&lt;/strong&gt;, and the calling thread can continue with its action.<a name="line.112"></a>
+<span class="sourceLineNo">113</span> * If the semaphore is already at its limit, {@code tryAcquire()} immediately<a name="line.113"></a>
+<span class="sourceLineNo">114</span> * returns &lt;strong&gt;false&lt;/strong&gt; without blocking; the calling thread must<a name="line.114"></a>
+<span class="sourceLineNo">115</span> * then abort its action. This usage scenario prevents blocking of threads.<a name="line.115"></a>
+<span class="sourceLineNo">116</span> * &lt;/p&gt;<a name="line.116"></a>
+<span class="sourceLineNo">117</span> * &lt;p&gt;<a name="line.117"></a>
+<span class="sourceLineNo">118</span> * It is possible to modify the limit at any time using the<a name="line.118"></a>
+<span class="sourceLineNo">119</span> * {@link #setLimit(int)} method. This is useful if the load produced by an<a name="line.119"></a>
+<span class="sourceLineNo">120</span> * operation has to be adapted dynamically. In the example scenario with the<a name="line.120"></a>
+<span class="sourceLineNo">121</span> * thread collecting statistics it may make sense to specify a low limit during<a name="line.121"></a>
+<span class="sourceLineNo">122</span> * day time while allowing a higher load in the night time. Reducing the limit<a name="line.122"></a>
+<span class="sourceLineNo">123</span> * takes effect immediately by blocking incoming callers. If the limit is<a name="line.123"></a>
+<span class="sourceLineNo">124</span> * increased, waiting threads are not released immediately, but wake up when the<a name="line.124"></a>
+<span class="sourceLineNo">125</span> * timer runs out. Then, in the next period more processing steps can be<a name="line.125"></a>
+<span class="sourceLineNo">126</span> * performed without blocking. By setting the limit to 0 the semaphore can be<a name="line.126"></a>
+<span class="sourceLineNo">127</span> * switched off: in this mode the {@link #acquire()} method never blocks, but<a name="line.127"></a>
+<span class="sourceLineNo">128</span> * lets all callers pass directly.<a name="line.128"></a>
+<span class="sourceLineNo">129</span> * &lt;/p&gt;<a name="line.129"></a>
+<span class="sourceLineNo">130</span> * &lt;p&gt;<a name="line.130"></a>
+<span class="sourceLineNo">131</span> * When the {@code TimedSemaphore} is no more needed its {@link #shutdown()}<a name="line.131"></a>
+<span class="sourceLineNo">132</span> * method should be called. This causes the periodic task that monitors the time<a name="line.132"></a>
+<span class="sourceLineNo">133</span> * interval to be canceled. If the {@code ScheduledExecutorService} has been<a name="line.133"></a>
+<span class="sourceLineNo">134</span> * created by the semaphore at construction time, it is also shut down.<a name="line.134"></a>
+<span class="sourceLineNo">135</span> * resources. After that {@link #acquire()} must not be called any more.<a name="line.135"></a>
+<span class="sourceLineNo">136</span> * &lt;/p&gt;<a name="line.136"></a>
+<span class="sourceLineNo">137</span> *<a name="line.137"></a>
+<span class="sourceLineNo">138</span> * @since 3.0<a name="line.138"></a>
+<span class="sourceLineNo">139</span> */<a name="line.139"></a>
+<span class="sourceLineNo">140</span>public class TimedSemaphore {<a name="line.140"></a>
+<span class="sourceLineNo">141</span>    /**<a name="line.141"></a>
+<span class="sourceLineNo">142</span>     * Constant for a value representing no limit. If the limit is set to a<a name="line.142"></a>
+<span class="sourceLineNo">143</span>     * value less or equal this constant, the {@code TimedSemaphore} will be<a name="line.143"></a>
+<span class="sourceLineNo">144</span>     * effectively switched off.<a name="line.144"></a>
+<span class="sourceLineNo">145</span>     */<a name="line.145"></a>
+<span class="sourceLineNo">146</span>    public static final int NO_LIMIT = 0;<a name="line.146"></a>
+<span class="sourceLineNo">147</span><a name="line.147"></a>
+<span class="sourceLineNo">148</span>    /** Constant for the thread pool size for the executor. */<a name="line.148"></a>
+<span class="sourceLineNo">149</span>    private static final int THREAD_POOL_SIZE = 1;<a name="line.149"></a>
+<span class="sourceLineNo">150</span><a name="line.150"></a>
+<span class="sourceLineNo">151</span>    /** The executor service for managing the timer thread. */<a name="line.151"></a>
+<span class="sourceLineNo">152</span>    private final ScheduledExecutorService executorService;<a name="line.152"></a>
+<span class="sourceLineNo">153</span><a name="line.153"></a>
+<span class="sourceLineNo">154</span>    /** Stores the period for this timed semaphore. */<a name="line.154"></a>
+<span class="sourceLineNo">155</span>    private final long period;<a name="line.155"></a>
+<span class="sourceLineNo">156</span><a name="line.156"></a>
+<span class="sourceLineNo">157</span>    /** The time unit for the period. */<a name="line.157"></a>
+<span class="sourceLineNo">158</span>    private final TimeUnit unit;<a name="line.158"></a>
+<span class="sourceLineNo">159</span><a name="line.159"></a>
+<span class="sourceLineNo">160</span>    /** A flag whether the executor service was created by this object. */<a name="line.160"></a>
+<span class="sourceLineNo">161</span>    private final boolean ownExecutor;<a name="line.161"></a>
+<span class="sourceLineNo">162</span><a name="line.162"></a>
+<span class="sourceLineNo">163</span>    /** A future object representing the timer task. */<a name="line.163"></a>
+<span class="sourceLineNo">164</span>    private ScheduledFuture&lt;?&gt; task; // @GuardedBy("this")<a name="line.164"></a>
+<span class="sourceLineNo">165</span><a name="line.165"></a>
+<span class="sourceLineNo">166</span>    /** Stores the total number of invocations of the acquire() method. */<a name="line.166"></a>
+<span class="sourceLineNo">167</span>    private long totalAcquireCount; // @GuardedBy("this")<a name="line.167"></a>
+<span class="sourceLineNo">168</span><a name="line.168"></a>
+<span class="sourceLineNo">169</span>    /**<a name="line.169"></a>
+<span class="sourceLineNo">170</span>     * The counter for the periods. This counter is increased every time a<a name="line.170"></a>
+<span class="sourceLineNo">171</span>     * period ends.<a name="line.171"></a>
+<span class="sourceLineNo">172</span>     */<a name="line.172"></a>
+<span class="sourceLineNo">173</span>    private long periodCount; // @GuardedBy("this")<a name="line.173"></a>
+<span class="sourceLineNo">174</span><a name="line.174"></a>
+<span class="sourceLineNo">175</span>    /** The limit. */<a name="line.175"></a>
+<span class="sourceLineNo">176</span>    private int limit; // @GuardedBy("this")<a name="line.176"></a>
+<span class="sourceLineNo">177</span><a name="line.177"></a>
+<span class="sourceLineNo">178</span>    /** The current counter. */<a name="line.178"></a>
+<span class="sourceLineNo">179</span>    private int acquireCount;  // @GuardedBy("this")<a name="line.179"></a>
+<span class="sourceLineNo">180</span><a name="line.180"></a>
+<span class="sourceLineNo">181</span>    /** The number of invocations of acquire() in the last period. */<a name="line.181"></a>
+<span class="sourceLineNo">182</span>    private int lastCallsPerPeriod; // @GuardedBy("this")<a name="line.182"></a>
+<span class="sourceLineNo">183</span><a name="line.183"></a>
+<span class="sourceLineNo">184</span>    /** A flag whether shutdown() was called. */<a name="line.184"></a>
+<span class="sourceLineNo">185</span>    private boolean shutdown;  // @GuardedBy("this")<a name="line.185"></a>
+<span class="sourceLineNo">186</span><a name="line.186"></a>
+<span class="sourceLineNo">187</span>    /**<a name="line.187"></a>
+<span class="sourceLineNo">188</span>     * Creates a new instance of {@link TimedSemaphore} and initializes it with<a name="line.188"></a>
+<span class="sourceLineNo">189</span>     * the given time period and the limit.<a name="line.189"></a>
+<span class="sourceLineNo">190</span>     *<a name="line.190"></a>
+<span class="sourceLineNo">191</span>     * @param timePeriod the time period<a name="line.191"></a>
+<span class="sourceLineNo">192</span>     * @param timeUnit the unit for the period<a name="line.192"></a>
+<span class="sourceLineNo">193</span>     * @param limit the limit for the semaphore<a name="line.193"></a>
+<span class="sourceLineNo">194</span>     * @throws IllegalArgumentException if the period is less or equals 0<a name="line.194"></a>
+<span class="sourceLineNo">195</span>     */<a name="line.195"></a>
+<span class="sourceLineNo">196</span>    public TimedSemaphore(final long timePeriod, final TimeUnit timeUnit, final int limit) {<a name="line.196"></a>
+<span class="sourceLineNo">197</span>        this(null, timePeriod, timeUnit, limit);<a name="line.197"></a>
+<span class="sourceLineNo">198</span>    }<a name="line.198"></a>
+<span class="sourceLineNo">199</span><a name="line.199"></a>
+<span class="sourceLineNo">200</span>    /**<a name="line.200"></a>
+<span class="sourceLineNo">201</span>     * Creates a new instance of {@link TimedSemaphore} and initializes it with<a name="line.201"></a>
+<span class="sourceLineNo">202</span>     * an executor service, the given time period, and the limit. The executor<a name="line.202"></a>
+<span class="sourceLineNo">203</span>     * service will be used for creating a periodic task for monitoring the time<a name="line.203"></a>
+<span class="sourceLineNo">204</span>     * period. It can be &lt;b&gt;null&lt;/b&gt;, then a default service will be created.<a name="line.204"></a>
+<span class="sourceLineNo">205</span>     *<a name="line.205"></a>
+<span class="sourceLineNo">206</span>     * @param service the executor service<a name="line.206"></a>
+<span class="sourceLineNo">207</span>     * @param timePeriod the time period<a name="line.207"></a>
+<span class="sourceLineNo">208</span>     * @param timeUnit the unit for the period<a name="line.208"></a>
+<span class="sourceLineNo">209</span>     * @param limit the limit for the semaphore<a name="line.209"></a>
+<span class="sourceLineNo">210</span>     * @throws IllegalArgumentException if the period is less or equals 0<a name="line.210"></a>
+<span class="sourceLineNo">211</span>     */<a name="line.211"></a>
+<span class="sourceLineNo">212</span>    public TimedSemaphore(final ScheduledExecutorService service, final long timePeriod,<a name="line.212"></a>
+<span class="sourceLineNo">213</span>            final TimeUnit timeUnit, final int limit) {<a name="line.213"></a>
+<span class="sourceLineNo">214</span>        Validate.inclusiveBetween(1, Long.MAX_VALUE, timePeriod, "Time period must be greater than 0!");<a name="line.214"></a>
+<span class="sourceLineNo">215</span><a name="line.215"></a>
+<span class="sourceLineNo">216</span>        period = timePeriod;<a name="line.216"></a>
+<span class="sourceLineNo">217</span>        unit = timeUnit;<a name="line.217"></a>
+<span class="sourceLineNo">218</span><a name="line.218"></a>
+<span class="sourceLineNo">219</span>        if (service != null) {<a name="line.219"></a>
+<span class="sourceLineNo">220</span>            executorService = service;<a name="line.220"></a>
+<span class="sourceLineNo">221</span>            ownExecutor = false;<a name="line.221"></a>
+<span class="sourceLineNo">222</span>        } else {<a name="line.222"></a>
+<span class="sourceLineNo">223</span>            final ScheduledThreadPoolExecutor s = new ScheduledThreadPoolExecutor(<a name="line.223"></a>
+<span class="sourceLineNo">224</span>                    THREAD_POOL_SIZE);<a name="line.224"></a>
+<span class="sourceLineNo">225</span>            s.setContinueExistingPeriodicTasksAfterShutdownPolicy(false);<a name="line.225"></a>
+<span class="sourceLineNo">226</span>            s.setExecuteExistingDelayedTasksAfterShutdownPolicy(false);<a name="line.226"></a>
+<span class="sourceLineNo">227</span>            executorService = s;<a name="line.227"></a>
+<span class="sourceLineNo">228</span>            ownExecutor = true;<a name="line.228"></a>
+<span class="sourceLineNo">229</span>        }<a name="line.229"></a>
+<span class="sourceLineNo">230</span><a name="line.230"></a>
+<span class="sourceLineNo">231</span>        setLimit(limit);<a name="line.231"></a>
+<span class="sourceLineNo">232</span>    }<a name="line.232"></a>
+<span class="sourceLineNo">233</span><a name="line.233"></a>
+<span class="sourceLineNo">234</span>    /**<a name="line.234"></a>
+<span class="sourceLineNo">235</span>     * Returns the limit enforced by this semaphore. The limit determines how<a name="line.235"></a>
+<span class="sourceLineNo">236</span>     * many invocations of {@link #acquire()} are allowed within the monitored<a name="line.236"></a>
+<span class="sourceLineNo">237</span>     * period.<a name="line.237"></a>
+<span class="sourceLineNo">238</span>     *<a name="line.238"></a>
+<span class="sourceLineNo">239</span>     * @return the limit<a name="line.239"></a>
+<span class="sourceLineNo">240</span>     */<a name="line.240"></a>
+<span class="sourceLineNo">241</span>    public final synchronized int getLimit() {<a name="line.241"></a>
+<span class="sourceLineNo">242</span>        return limit;<a name="line.242"></a>
+<span class="sourceLineNo">243</span>    }<a name="line.243"></a>
+<span class="sourceLineNo">244</span><a name="line.244"></a>
+<span class="sourceLineNo">245</span>    /**<a name="line.245"></a>
+<span class="sourceLineNo">246</span>     * Sets the limit. This is the number of times the {@link #acquire()} method<a name="line.246"></a>
+<span class="sourceLineNo">247</span>     * can be called within the time period specified. If this limit is reached,<a name="line.247"></a>
+<span class="sourceLineNo">248</span>     * further invocations of {@link #acquire()} will block. Setting the limit<a name="line.248"></a>
+<span class="sourceLineNo">249</span>     * to a value &amp;lt;= {@link #NO_LIMIT} will cause the limit to be disabled,<a name="line.249"></a>
+<span class="sourceLineNo">250</span>     * i.e. an arbitrary number of{@link #acquire()} invocations is allowed in<a name="line.250"></a>
+<span class="sourceLineNo">251</span>     * the time period.<a name="line.251"></a>
+<span class="sourceLineNo">252</span>     *<a name="line.252"></a>
+<span class="sourceLineNo">253</span>     * @param limit the limit<a name="line.253"></a>
+<span class="sourceLineNo">254</span>     */<a name="line.254"></a>
+<span class="sourceLineNo">255</span>    public final synchronized void setLimit(final int limit) {<a name="line.255"></a>
+<span class="sourceLineNo">256</span>        this.limit = limit;<a name="line.256"></a>
+<span class="sourceLineNo">257</span>    }<a name="line.257"></a>
+<span class="sourceLineNo">258</span><a name="line.258"></a>
+<span class="sourceLineNo">259</span>    /**<a name="line.259"></a>
+<span class="sourceLineNo">260</span>     * Initializes a shutdown. After that the object cannot be used any more.<a name="line.260"></a>
+<span class="sourceLineNo">261</span>     * This method can be invoked an arbitrary number of times. All invocations<a name="line.261"></a>
+<span class="sourceLineNo">262</span>     * after the first one do not have any effect.<a name="line.262"></a>
+<span class="sourceLineNo">263</span>     */<a name="line.263"></a>
+<span class="sourceLineNo">264</span>    public synchronized void shutdown() {<a name="line.264"></a>
+<span class="sourceLineNo">265</span>        if (!shutdown) {<a name="line.265"></a>
+<span class="sourceLineNo">266</span><a name="line.266"></a>
+<span class="sourceLineNo">267</span>            if (ownExecutor) {<a name="line.267"></a>
+<span class="sourceLineNo">268</span>                // if the executor was created by this instance, it has<a name="line.268"></a>
+<span class="sourceLineNo">269</span>                // to be shutdown<a name="line.269"></a>
+<span class="sourceLineNo">270</span>                getExecutorService().shutdownNow();<a name="line.270"></a>
+<span class="sourceLineNo">271</span>            }<a name="line.271"></a>
+<span class="sourceLineNo">272</span>            if (task != null) {<a name="line.272"></a>
+<span class="sourceLineNo">273</span>                task.cancel(false);<a name="line.273"></a>
+<span class="sourceLineNo">274</span>            }<a name="line.274"></a>
+<span class="sourceLineNo">275</span><a name="line.275"></a>
+<span class="sourceLineNo">276</span>            shutdown = true;<a name="line.276"></a>
+<span class="sourceLineNo">277</span>        }<a name="line.277"></a>
+<span class="sourceLineNo">278</span>    }<a name="line.278"></a>
+<span class="sourceLineNo">279</span><a name="line.279"></a>
+<span class="sourceLineNo">280</span>    /**<a name="line.280"></a>
+<span class="sourceLineNo">281</span>     * Tests whether the {@link #shutdown()} method has been called on this<a name="line.281"></a>
+<span class="sourceLineNo">282</span>     * object. If this method returns &lt;b&gt;true&lt;/b&gt;, this instance cannot be used<a name="line.282"></a>
+<span class="sourceLineNo">283</span>     * any longer.<a name="line.283"></a>
+<span class="sourceLineNo">284</span>     *<a name="line.284"></a>
+<span class="sourceLineNo">285</span>     * @return a flag whether a shutdown has been performed<a name="line.285"></a>
+<span class="sourceLineNo">286</span>     */<a name="line.286"></a>
+<span class="sourceLineNo">287</span>    public synchronized boolean isShutdown() {<a name="line.287"></a>
+<span class="sourceLineNo">288</span>        return shutdown;<a name="line.288"></a>
+<span class="sourceLineNo">289</span>    }<a name="line.289"></a>
+<span class="sourceLineNo">290</span><a name="line.290"></a>
+<span class="sourceLineNo">291</span>    /**<a name="line.291"></a>
+<span class="sourceLineNo">292</span>     * Acquires a permit from this semaphore. This method will block if<a name="line.292"></a>
+<span class="sourceLineNo">293</span>     * the limit for the current period has already been reached. If<a name="line.293"></a>
+<span class="sourceLineNo">294</span>     * {@link #shutdown()} has already been invoked, calling this method will<a name="line.294"></a>
+<span class="sourceLineNo">295</span>     * cause an exception. The very first call of this method starts the timer<a name="line.295"></a>
+<span class="sourceLineNo">296</span>     * task which monitors the time period set for this {@code TimedSemaphore}.<a name="line.296"></a>
+<span class="sourceLineNo">297</span>     * From now on the semaphore is active.<a name="line.297"></a>
+<span class="sourceLineNo">298</span>     *<a name="line.298"></a>
+<span class="sourceLineNo">299</span>     * @throws InterruptedException if the thread gets interrupted<a name="line.299"></a>
+<span class="sourceLineNo">300</span>     * @throws IllegalStateException if this semaphore is already shut down<a name="line.300"></a>
+<span class="sourceLineNo">301</span>     */<a name="line.301"></a>
+<span class="sourceLineNo">302</span>    public synchronized void acquire() throws InterruptedException {<a name="line.302"></a>
+<span class="sourceLineNo">303</span>        prepareAcquire();<a name="line.303"></a>
+<span class="sourceLineNo">304</span><a name="line.304"></a>
+<span class="sourceLineNo">305</span>        boolean canPass;<a name="line.305"></a>
+<span class="sourceLineNo">306</span>        do {<a name="line.306"></a>
+<span class="sourceLineNo">307</span>            canPass = acquirePermit();<a name="line.307"></a>
+<span class="sourceLineNo">308</span>            if (!canPass) {<a name="line.308"></a>
+<span class="sourceLineNo">309</span>                wait();<a name="line.309"></a>
+<span class="sourceLineNo">310</span>            }<a name="line.310"></a>
+<span class="sourceLineNo">311</span>        } while (!canPass);<a name="line.311"></a>
+<span class="sourceLineNo">312</span>    }<a name="line.312"></a>
+<span class="sourceLineNo">313</span><a name="line.313"></a>
+<span class="sourceLineNo">314</span>    /**<a name="line.314"></a>
+<span class="sourceLineNo">315</span>     * Tries to acquire a permit from this semaphore. If the limit of this semaphore has<a name="line.315"></a>
+<span class="sourceLineNo">316</span>     * not yet been reached, a permit is acquired, and this method returns<a name="line.316"></a>
+<span class="sourceLineNo">317</span>     * &lt;strong&gt;true&lt;/strong&gt;. Otherwise, this method returns immediately with the result<a name="line.317"></a>
+<span class="sourceLineNo">318</span>     * &lt;strong&gt;false&lt;/strong&gt;.<a name="line.318"></a>
+<span class="sourceLineNo">319</span>     *<a name="line.319"></a>
+<span class="sourceLineNo">320</span>     * @return &lt;strong&gt;true&lt;/strong&gt; if a permit could be acquired; &lt;strong&gt;false&lt;/strong&gt;<a name="line.320"></a>
+<span class="sourceLineNo">321</span>     * otherwise<a name="line.321"></a>
+<span class="sourceLineNo">322</span>     * @throws IllegalStateException if this semaphore is already shut down<a name="line.322"></a>
+<span class="sourceLineNo">323</span>     * @since 3.5<a name="line.323"></a>
+<span class="sourceLineNo">324</span>     */<a name="line.324"></a>
+<span class="sourceLineNo">325</span>    public synchronized boolean tryAcquire() {<a name="line.325"></a>
+<span class="sourceLineNo">326</span>        prepareAcquire();<a name="line.326"></a>
+<span class="sourceLineNo">327</span>        return acquirePermit();<a name="line.327"></a>
+<span class="sourceLineNo">328</span>    }<a name="line.328"></a>
+<span class="sourceLineNo">329</span><a name="line.329"></a>
+<span class="sourceLineNo">330</span>    /**<a name="line.330"></a>
+<span class="sourceLineNo">331</span>     * Returns the number of (successful) acquire invocations during the last<a name="line.331"></a>
+<span class="sourceLineNo">332</span>     * period. This is the number of times the {@link #acquire()} method was<a name="line.332"></a>
+<span class="sourceLineNo">333</span>     * called without blocking. This can be useful for testing or debugging<a name="line.333"></a>
+<span class="sourceLineNo">334</span>     * purposes or to determine a meaningful threshold value. If a limit is set,<a name="line.334"></a>
+<span class="sourceLineNo">335</span>     * the value returned by this method won't be greater than this limit.<a name="line.335"></a>
+<span class="sourceLineNo">336</span>     *<a name="line.336"></a>
+<span class="sourceLineNo">337</span>     * @return the number of non-blocking invocations of the {@link #acquire()}<a name="line.337"></a>
+<span class="sourceLineNo">338</span>     * method<a name="line.338"></a>
+<span class="sourceLineNo">339</span>     */<a name="line.339"></a>
+<span class="sourceLineNo">340</span>    public synchronized int getLastAcquiresPerPeriod() {<a name="line.340"></a>
+<span class="sourceLineNo">341</span>        return lastCallsPerPeriod;<a name="line.341"></a>
+<span class="sourceLineNo">342</span>    }<a name="line.342"></a>
+<span class="sourceLineNo">343</span><a name="line.343"></a>
+<span class="sourceLineNo">344</span>    /**<a name="line.344"></a>
+<span class="sourceLineNo">345</span>     * Returns the number of invocations of the {@link #acquire()} method for<a name="line.345"></a>
+<span class="sourceLineNo">346</span>     * the current period. This may be useful for testing or debugging purposes.<a name="line.346"></a>
+<span class="sourceLineNo">347</span>     *<a name="line.347"></a>
+<span class="sourceLineNo">348</span>     * @return the current number of {@link #acquire()} invocations<a name="line.348"></a>
+<span class="sourceLineNo">349</span>     */<a name="line.349"></a>
+<span class="sourceLineNo">350</span>    public synchronized int getAcquireCount() {<a name="line.350"></a>
+<span class="sourceLineNo">351</span>        return acquireCount;<a name="line.351"></a>
+<span class="sourceLineNo">352</span>    }<a name="line.352"></a>
+<span class="sourceLineNo">353</span><a name="line.353"></a>
+<span class="sourceLineNo">354</span>    /**<a name="line.354"></a>
+<span class="sourceLineNo">355</span>     * Returns the number of calls to the {@link #acquire()} method that can<a name="line.355"></a>
+<span class="sourceLineNo">356</span>     * still be performed in the current period without blocking. This method<a name="line.356"></a>
+<span class="sourceLineNo">357</span>     * can give an indication whether it is safe to call the {@link #acquire()}<a name="line.357"></a>
+<span class="sourceLineNo">358</span>     * method without risking to be suspended. However, there is no guarantee<a name="line.358"></a>
+<span class="sourceLineNo">359</span>     * that a subsequent call to {@link #acquire()} actually is not-blocking<a name="line.359"></a>
+<span class="sourceLineNo">360</span>     * because in the mean time other threads may have invoked the semaphore.<a name="line.360"></a>
+<span class="sourceLineNo">361</span>     *<a name="line.361"></a>
+<span class="sourceLineNo">362</span>     * @return the current number of available {@link #acquire()} calls in the<a name="line.362"></a>
+<span class="sourceLineNo">363</span>     * current period<a name="line.363"></a>
+<span class="sourceLineNo">364</span>     */<a name="line.364"></a>
+<span class="sourceLineNo">365</span>    public synchronized int getAvailablePermits() {<a name="line.365"></a>
+<span class="sourceLineNo">366</span>        return getLimit() - getAcquireCount();<a name="line.366"></a>
+<span class="sourceLineNo">367</span>    }<a name="line.367"></a>
+<span class="sourceLineNo">368</span><a name="line.368"></a>
+<span class="sourceLineNo">369</span>    /**<a name="line.369"></a>
+<span class="sourceLineNo">370</span>     * Returns the average number of successful (i.e. non-blocking)<a name="line.370"></a>
+<span class="sourceLineNo">371</span>     * {@link #acquire()} invocations for the entire life-time of this {@code<a name="line.371"></a>
+<span class="sourceLineNo">372</span>     * TimedSemaphore}. This method can be used for instance for statistical<a name="line.372"></a>
+<span class="sourceLineNo">373</span>     * calculations.<a name="line.373"></a>
+<span class="sourceLineNo">374</span>     *<a name="line.374"></a>
+<span class="sourceLineNo">375</span>     * @return the average number of {@link #acquire()} invocations per time<a name="line.375"></a>
+<span class="sourceLineNo">376</span>     * unit<a name="line.376"></a>
+<span class="sourceLineNo">377</span>     */<a name="line.377"></a>
+<span class="sourceLineNo">378</span>    public synchronized double getAverageCallsPerPeriod() {<a name="line.378"></a>
+<span class="sourceLineNo">379</span>        return periodCount == 0 ? 0 : (double) totalAcquireCount<a name="line.379"></a>
+<span class="sourceLineNo">380</span>                / (double) periodCount;<a name="line.380"></a>
+<span class="sourceLineNo">381</span>    }<a name="line.381"></a>
+<span class="sourceLineNo">382</span><a name="line.382"></a>
+<span class="sourceLineNo">383</span>    /**<a name="line.383"></a>
+<span class="sourceLineNo">384</span>     * Returns the time period. This is the time monitored by this semaphore.<a name="line.384"></a>
+<span class="sourceLineNo">385</span>     * Only a given number of invocations of the {@link #acquire()} method is<a name="line.385"></a>
+<span class="sourceLineNo">386</span>     * possible in this period.<a name="line.386"></a>
+<span class="sourceLineNo">387</span>     *<a name="line.387"></a>
+<span class="sourceLineNo">388</span>     * @return the time period<a name="line.388"></a>
+<span class="sourceLineNo">389</span>     */<a name="line.389"></a>
+<span class="sourceLineNo">390</span>    public long getPeriod() {<a name="line.390"></a>
+<span class="sourceLineNo">391</span>        return period;<a name="line.391"></a>
+<span class="sourceLineNo">392</span>    }<a name="line.392"></a>
+<span class="sourceLineNo">393</span><a name="line.393"></a>
+<span class="sourceLineNo">394</span>    /**<a name="line.394"></a>
+<span class="sourceLineNo">395</span>     * Returns the time unit. This is the unit used by {@link #getPeriod()}.<a name="line.395"></a>
+<span class="sourceLineNo">396</span>     *<a name="line.396"></a>
+<span class="sourceLineNo">397</span>     * @return the time unit<a name="line.397"></a>
+<span class="sourceLineNo">398</span>     */<a name="line.398"></a>
+<span class="sourceLineNo">399</span>    public TimeUnit getUnit() {<a name="line.399"></a>
+<span class="sourceLineNo">400</span>        return unit;<a name="line.400"></a>
+<span class="sourceLineNo">401</span>    }<a name="line.401"></a>
+<span class="sourceLineNo">402</span><a name="line.402"></a>
+<span class="sourceLineNo">403</span>    /**<a name="line.403"></a>
+<span class="sourceLineNo">404</span>     * Returns the executor service used by this instance.<a name="line.404"></a>
+<span class="sourceLineNo">405</span>     *<a name="line.405"></a>
+<span class="sourceLineNo">406</span>     * @return the executor service<a name="line.406"></a>
+<span class="sourceLineNo">407</span>     */<a name="line.407"></a>
+<span class="sourceLineNo">408</span>    protected ScheduledExecutorService getExecutorService() {<a name="line.408"></a>
+<span class="sourceLineNo">409</span>        return executorService;<a name="line.409"></a>
+<span class="sourceLineNo">410</span>    }<a name="line.410"></a>
+<span class="sourceLineNo">411</span><a name="line.411"></a>
+<span class="sourceLineNo">412</span>    /**<a name="line.412"></a>
+<span class="sourceLineNo">413</span>     * Starts the timer. This method is called when {@link #acquire()} is called<a name="line.413"></a>
+<span class="sourceLineNo">414</span>     * for the first time. It schedules a task to be executed at fixed rate to<a name="line.414"></a>
+<span class="sourceLineNo">415</span>     * monitor the time period specified.<a name="line.415"></a>
+<span class="sourceLineNo">416</span>     *<a name="line.416"></a>
+<span class="sourceLineNo">417</span>     * @return a future object representing the task scheduled<a name="line.417"></a>
+<span class="sourceLineNo">418</span>     */<a name="line.418"></a>
+<span class="sourceLineNo">419</span>    protected ScheduledFuture&lt;?&gt; startTimer() {<a name="line.419"></a>
+<span class="sourceLineNo">420</span>        return getExecutorService().scheduleAtFixedRate(() -&gt; endOfPeriod(), getPeriod(), getPeriod(), getUnit());<a name="line.420"></a>
+<span class="sourceLineNo">421</span>    }<a name="line.421"></a>
+<span class="sourceLineNo">422</span><a name="line.422"></a>
+<span class="sourceLineNo">423</span>    /**<a name="line.423"></a>
+<span class="sourceLineNo">424</span>     * The current time period is finished. This method is called by the timer<a name="line.424"></a>
+<span class="sourceLineNo">425</span>     * used internally to monitor the time period. It resets the counter and<a name="line.425"></a>
+<span class="sourceLineNo">426</span>     * releases the threads waiting for this barrier.<a name="line.426"></a>
+<span class="sourceLineNo">427</span>     */<a name="line.427"></a>
+<span class="sourceLineNo">428</span>    synchronized void endOfPeriod() {<a name="line.428"></a>
+<span class="sourceLineNo">429</span>        lastCallsPerPeriod = acquireCount;<a name="line.429"></a>
+<span class="sourceLineNo">430</span>        totalAcquireCount += acquireCount;<a name="line.430"></a>
+<span class="sourceLineNo">431</span>        periodCount++;<a name="line.431"></a>
+<span class="sourceLineNo">432</span>        acquireCount = 0;<a name="line.432"></a>
+<span class="sourceLineNo">433</span>        notifyAll();<a name="line.433"></a>
+<span class="sourceLineNo">434</span>    }<a name="line.434"></a>
+<span class="sourceLineNo">435</span><a name="line.435"></a>
+<span class="sourceLineNo">436</span>    /**<a name="line.436"></a>
+<span class="sourceLineNo">437</span>     * Prepares an acquire operation. Checks for the current state and starts the internal<a name="line.437"></a>
+<span class="sourceLineNo">438</span>     * timer if necessary. This method must be called with the lock of this object held.<a name="line.438"></a>
+<span class="sourceLineNo">439</span>     */<a name="line.439"></a>
+<span class="sourceLineNo">440</span>    private void prepareAcquire() {<a name="line.440"></a>
+<span class="sourceLineNo">441</span>        if (isShutdown()) {<a name="line.441"></a>
+<span class="sourceLineNo">442</span>            throw new IllegalStateException("TimedSemaphore is shut down!");<a name="line.442"></a>
+<span class="sourceLineNo">443</span>        }<a name="line.443"></a>
+<span class="sourceLineNo">444</span><a name="line.444"></a>
+<span class="sourceLineNo">445</span>        if (task == null) {<a name="line.445"></a>
+<span class="sourceLineNo">446</span>            task = startTimer();<a name="line.446"></a>
+<span class="sourceLineNo">447</span>        }<a name="line.447"></a>
+<span class="sourceLineNo">448</span>    }<a name="line.448"></a>
+<span class="sourceLineNo">449</span><a name="line.449"></a>
+<span class="sourceLineNo">450</span>    /**<a name="line.450"></a>
+<span class="sourceLineNo">451</span>     * Internal helper method for acquiring a permit. This method checks whether currently<a name="line.451"></a>
+<span class="sourceLineNo">452</span>     * a permit can be acquired and - if so - increases the internal counter. The return<a name="line.452"></a>
+<span class="sourceLineNo">453</span>     * value indicates whether a permit could be acquired. This method must be called with<a name="line.453"></a>
+<span class="sourceLineNo">454</span>     * the lock of this object held.<a name="line.454"></a>
+<span class="sourceLineNo">455</span>     *<a name="line.455"></a>
+<span class="sourceLineNo">456</span>     * @return a flag whether a permit could be acquired<a name="line.456"></a>
+<span class="sourceLineNo">457</span>     */<a name="line.457"></a>
+<span class="sourceLineNo">458</span>    private boolean acquirePermit() {<a name="line.458"></a>
+<span class="sourceLineNo">459</span>        if (getLimit() &lt;= NO_LIMIT || acquireCount &lt; getLimit()) {<a name="line.459"></a>
+<span class="sourceLineNo">460</span>            acquireCount++;<a name="line.460"></a>
+<span class="sourceLineNo">461</span>            return true;<a name="line.461"></a>
+<span class="sourceLineNo">462</span>        }<a name="line.462"></a>
+<span class="sourceLineNo">463</span>        return false;<a name="line.463"></a>
+<span class="sourceLineNo">464</span>    }<a name="line.464"></a>
+<span class="sourceLineNo">465</span>}<a name="line.465"></a>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</pre>
+</div>
+</body>
+</html>

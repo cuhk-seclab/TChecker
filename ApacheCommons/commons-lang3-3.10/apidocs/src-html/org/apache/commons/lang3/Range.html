@@ -1,0 +1,591 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en">
+<head>
+<title>Source code</title>
+<link rel="stylesheet" type="text/css" href="../../../../../stylesheet.css" title="Style">
+</head>
+<body>
+<div class="sourceContainer">
+<pre><span class="sourceLineNo">001</span>/*<a name="line.1"></a>
+<span class="sourceLineNo">002</span> * Licensed to the Apache Software Foundation (ASF) under one or more<a name="line.2"></a>
+<span class="sourceLineNo">003</span> * contributor license agreements.  See the NOTICE file distributed with<a name="line.3"></a>
+<span class="sourceLineNo">004</span> * this work for additional information regarding copyright ownership.<a name="line.4"></a>
+<span class="sourceLineNo">005</span> * The ASF licenses this file to You under the Apache License, Version 2.0<a name="line.5"></a>
+<span class="sourceLineNo">006</span> * (the "License"); you may not use this file except in compliance with<a name="line.6"></a>
+<span class="sourceLineNo">007</span> * the License.  You may obtain a copy of the License at<a name="line.7"></a>
+<span class="sourceLineNo">008</span> *<a name="line.8"></a>
+<span class="sourceLineNo">009</span> *      http://www.apache.org/licenses/LICENSE-2.0<a name="line.9"></a>
+<span class="sourceLineNo">010</span> *<a name="line.10"></a>
+<span class="sourceLineNo">011</span> * Unless required by applicable law or agreed to in writing, software<a name="line.11"></a>
+<span class="sourceLineNo">012</span> * distributed under the License is distributed on an "AS IS" BASIS,<a name="line.12"></a>
+<span class="sourceLineNo">013</span> * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.<a name="line.13"></a>
+<span class="sourceLineNo">014</span> * See the License for the specific language governing permissions and<a name="line.14"></a>
+<span class="sourceLineNo">015</span> * limitations under the License.<a name="line.15"></a>
+<span class="sourceLineNo">016</span> */<a name="line.16"></a>
+<span class="sourceLineNo">017</span>package org.apache.commons.lang3;<a name="line.17"></a>
+<span class="sourceLineNo">018</span><a name="line.18"></a>
+<span class="sourceLineNo">019</span>import java.io.Serializable;<a name="line.19"></a>
+<span class="sourceLineNo">020</span>import java.util.Comparator;<a name="line.20"></a>
+<span class="sourceLineNo">021</span><a name="line.21"></a>
+<span class="sourceLineNo">022</span>/**<a name="line.22"></a>
+<span class="sourceLineNo">023</span> * &lt;p&gt;An immutable range of objects from a minimum to maximum point inclusive.&lt;/p&gt;<a name="line.23"></a>
+<span class="sourceLineNo">024</span> *<a name="line.24"></a>
+<span class="sourceLineNo">025</span> * &lt;p&gt;The objects need to either be implementations of {@code Comparable}<a name="line.25"></a>
+<span class="sourceLineNo">026</span> * or you need to supply a {@code Comparator}. &lt;/p&gt;<a name="line.26"></a>
+<span class="sourceLineNo">027</span> *<a name="line.27"></a>
+<span class="sourceLineNo">028</span> * &lt;p&gt;#ThreadSafe# if the objects and comparator are thread-safe&lt;/p&gt;<a name="line.28"></a>
+<span class="sourceLineNo">029</span> *<a name="line.29"></a>
+<span class="sourceLineNo">030</span> * @param &lt;T&gt; The type of range values.<a name="line.30"></a>
+<span class="sourceLineNo">031</span> * @since 3.0<a name="line.31"></a>
+<span class="sourceLineNo">032</span> */<a name="line.32"></a>
+<span class="sourceLineNo">033</span>public final class Range&lt;T&gt; implements Serializable {<a name="line.33"></a>
+<span class="sourceLineNo">034</span><a name="line.34"></a>
+<span class="sourceLineNo">035</span>    //-----------------------------------------------------------------------<a name="line.35"></a>
+<span class="sourceLineNo">036</span>    @SuppressWarnings({"rawtypes", "unchecked"})<a name="line.36"></a>
+<span class="sourceLineNo">037</span>    private enum ComparableComparator implements Comparator {<a name="line.37"></a>
+<span class="sourceLineNo">038</span>        INSTANCE;<a name="line.38"></a>
+<span class="sourceLineNo">039</span>        /**<a name="line.39"></a>
+<span class="sourceLineNo">040</span>         * Comparable based compare implementation.<a name="line.40"></a>
+<span class="sourceLineNo">041</span>         *<a name="line.41"></a>
+<span class="sourceLineNo">042</span>         * @param obj1 left hand side of comparison<a name="line.42"></a>
+<span class="sourceLineNo">043</span>         * @param obj2 right hand side of comparison<a name="line.43"></a>
+<span class="sourceLineNo">044</span>         * @return negative, 0, positive comparison value<a name="line.44"></a>
+<span class="sourceLineNo">045</span>         */<a name="line.45"></a>
+<span class="sourceLineNo">046</span>        @Override<a name="line.46"></a>
+<span class="sourceLineNo">047</span>        public int compare(final Object obj1, final Object obj2) {<a name="line.47"></a>
+<span class="sourceLineNo">048</span>            return ((Comparable) obj1).compareTo(obj2);<a name="line.48"></a>
+<span class="sourceLineNo">049</span>        }<a name="line.49"></a>
+<span class="sourceLineNo">050</span>    }<a name="line.50"></a>
+<span class="sourceLineNo">051</span><a name="line.51"></a>
+<span class="sourceLineNo">052</span>    /**<a name="line.52"></a>
+<span class="sourceLineNo">053</span>     * Serialization version.<a name="line.53"></a>
+<span class="sourceLineNo">054</span>     * @see java.io.Serializable<a name="line.54"></a>
+<span class="sourceLineNo">055</span>     */<a name="line.55"></a>
+<span class="sourceLineNo">056</span>    private static final long serialVersionUID = 1L;<a name="line.56"></a>
+<span class="sourceLineNo">057</span>    /**<a name="line.57"></a>
+<span class="sourceLineNo">058</span>     * &lt;p&gt;Obtains a range with the specified minimum and maximum values (both inclusive).&lt;/p&gt;<a name="line.58"></a>
+<span class="sourceLineNo">059</span>     *<a name="line.59"></a>
+<span class="sourceLineNo">060</span>     * &lt;p&gt;The range uses the natural ordering of the elements to determine where<a name="line.60"></a>
+<span class="sourceLineNo">061</span>     * values lie in the range.&lt;/p&gt;<a name="line.61"></a>
+<span class="sourceLineNo">062</span>     *<a name="line.62"></a>
+<span class="sourceLineNo">063</span>     * &lt;p&gt;The arguments may be passed in the order (min,max) or (max,min).<a name="line.63"></a>
+<span class="sourceLineNo">064</span>     * The getMinimum and getMaximum methods will return the correct values.&lt;/p&gt;<a name="line.64"></a>
+<span class="sourceLineNo">065</span>     *<a name="line.65"></a>
+<span class="sourceLineNo">066</span>     * @param &lt;T&gt; the type of the elements in this range<a name="line.66"></a>
+<span class="sourceLineNo">067</span>     * @param fromInclusive  the first value that defines the edge of the range, inclusive<a name="line.67"></a>
+<span class="sourceLineNo">068</span>     * @param toInclusive  the second value that defines the edge of the range, inclusive<a name="line.68"></a>
+<span class="sourceLineNo">069</span>     * @return the range object, not null<a name="line.69"></a>
+<span class="sourceLineNo">070</span>     * @throws IllegalArgumentException if either element is null<a name="line.70"></a>
+<span class="sourceLineNo">071</span>     * @throws ClassCastException if the elements are not {@code Comparable}<a name="line.71"></a>
+<span class="sourceLineNo">072</span>     */<a name="line.72"></a>
+<span class="sourceLineNo">073</span>    public static &lt;T extends Comparable&lt;T&gt;&gt; Range&lt;T&gt; between(final T fromInclusive, final T toInclusive) {<a name="line.73"></a>
+<span class="sourceLineNo">074</span>        return between(fromInclusive, toInclusive, null);<a name="line.74"></a>
+<span class="sourceLineNo">075</span>    }<a name="line.75"></a>
+<span class="sourceLineNo">076</span>    /**<a name="line.76"></a>
+<span class="sourceLineNo">077</span>     * &lt;p&gt;Obtains a range with the specified minimum and maximum values (both inclusive).&lt;/p&gt;<a name="line.77"></a>
+<span class="sourceLineNo">078</span>     *<a name="line.78"></a>
+<span class="sourceLineNo">079</span>     * &lt;p&gt;The range uses the specified {@code Comparator} to determine where<a name="line.79"></a>
+<span class="sourceLineNo">080</span>     * values lie in the range.&lt;/p&gt;<a name="line.80"></a>
+<span class="sourceLineNo">081</span>     *<a name="line.81"></a>
+<span class="sourceLineNo">082</span>     * &lt;p&gt;The arguments may be passed in the order (min,max) or (max,min).<a name="line.82"></a>
+<span class="sourceLineNo">083</span>     * The getMinimum and getMaximum methods will return the correct values.&lt;/p&gt;<a name="line.83"></a>
+<span class="sourceLineNo">084</span>     *<a name="line.84"></a>
+<span class="sourceLineNo">085</span>     * @param &lt;T&gt; the type of the elements in this range<a name="line.85"></a>
+<span class="sourceLineNo">086</span>     * @param fromInclusive  the first value that defines the edge of the range, inclusive<a name="line.86"></a>
+<span class="sourceLineNo">087</span>     * @param toInclusive  the second value that defines the edge of the range, inclusive<a name="line.87"></a>
+<span class="sourceLineNo">088</span>     * @param comparator  the comparator to be used, null for natural ordering<a name="line.88"></a>
+<span class="sourceLineNo">089</span>     * @return the range object, not null<a name="line.89"></a>
+<span class="sourceLineNo">090</span>     * @throws IllegalArgumentException if either element is null<a name="line.90"></a>
+<span class="sourceLineNo">091</span>     * @throws ClassCastException if using natural ordering and the elements are not {@code Comparable}<a name="line.91"></a>
+<span class="sourceLineNo">092</span>     */<a name="line.92"></a>
+<span class="sourceLineNo">093</span>    public static &lt;T&gt; Range&lt;T&gt; between(final T fromInclusive, final T toInclusive, final Comparator&lt;T&gt; comparator) {<a name="line.93"></a>
+<span class="sourceLineNo">094</span>        return new Range&lt;&gt;(fromInclusive, toInclusive, comparator);<a name="line.94"></a>
+<span class="sourceLineNo">095</span>    }<a name="line.95"></a>
+<span class="sourceLineNo">096</span>    /**<a name="line.96"></a>
+<span class="sourceLineNo">097</span>     * &lt;p&gt;Obtains a range using the specified element as both the minimum<a name="line.97"></a>
+<span class="sourceLineNo">098</span>     * and maximum in this range.&lt;/p&gt;<a name="line.98"></a>
+<span class="sourceLineNo">099</span>     *<a name="line.99"></a>
+<span class="sourceLineNo">100</span>     * &lt;p&gt;The range uses the natural ordering of the elements to determine where<a name="line.100"></a>
+<span class="sourceLineNo">101</span>     * values lie in the range.&lt;/p&gt;<a name="line.101"></a>
+<span class="sourceLineNo">102</span>     *<a name="line.102"></a>
+<span class="sourceLineNo">103</span>     * @param &lt;T&gt; the type of the elements in this range<a name="line.103"></a>
+<span class="sourceLineNo">104</span>     * @param element  the value to use for this range, not null<a name="line.104"></a>
+<span class="sourceLineNo">105</span>     * @return the range object, not null<a name="line.105"></a>
+<span class="sourceLineNo">106</span>     * @throws IllegalArgumentException if the element is null<a name="line.106"></a>
+<span class="sourceLineNo">107</span>     * @throws ClassCastException if the element is not {@code Comparable}<a name="line.107"></a>
+<span class="sourceLineNo">108</span>     */<a name="line.108"></a>
+<span class="sourceLineNo">109</span>    public static &lt;T extends Comparable&lt;T&gt;&gt; Range&lt;T&gt; is(final T element) {<a name="line.109"></a>
+<span class="sourceLineNo">110</span>        return between(element, element, null);<a name="line.110"></a>
+<span class="sourceLineNo">111</span>    }<a name="line.111"></a>
+<span class="sourceLineNo">112</span>    /**<a name="line.112"></a>
+<span class="sourceLineNo">113</span>     * &lt;p&gt;Obtains a range using the specified element as both the minimum<a name="line.113"></a>
+<span class="sourceLineNo">114</span>     * and maximum in this range.&lt;/p&gt;<a name="line.114"></a>
+<span class="sourceLineNo">115</span>     *<a name="line.115"></a>
+<span class="sourceLineNo">116</span>     * &lt;p&gt;The range uses the specified {@code Comparator} to determine where<a name="line.116"></a>
+<span class="sourceLineNo">117</span>     * values lie in the range.&lt;/p&gt;<a name="line.117"></a>
+<span class="sourceLineNo">118</span>     *<a name="line.118"></a>
+<span class="sourceLineNo">119</span>     * @param &lt;T&gt; the type of the elements in this range<a name="line.119"></a>
+<span class="sourceLineNo">120</span>     * @param element  the value to use for this range, must not be {@code null}<a name="line.120"></a>
+<span class="sourceLineNo">121</span>     * @param comparator  the comparator to be used, null for natural ordering<a name="line.121"></a>
+<span class="sourceLineNo">122</span>     * @return the range object, not null<a name="line.122"></a>
+<span class="sourceLineNo">123</span>     * @throws IllegalArgumentException if the element is null<a name="line.123"></a>
+<span class="sourceLineNo">124</span>     * @throws ClassCastException if using natural ordering and the elements are not {@code Comparable}<a name="line.124"></a>
+<span class="sourceLineNo">125</span>     */<a name="line.125"></a>
+<span class="sourceLineNo">126</span>    public static &lt;T&gt; Range&lt;T&gt; is(final T element, final Comparator&lt;T&gt; comparator) {<a name="line.126"></a>
+<span class="sourceLineNo">127</span>        return between(element, element, comparator);<a name="line.127"></a>
+<span class="sourceLineNo">128</span>    }<a name="line.128"></a>
+<span class="sourceLineNo">129</span><a name="line.129"></a>
+<span class="sourceLineNo">130</span>    /**<a name="line.130"></a>
+<span class="sourceLineNo">131</span>     * The ordering scheme used in this range.<a name="line.131"></a>
+<span class="sourceLineNo">132</span>     */<a name="line.132"></a>
+<span class="sourceLineNo">133</span>    private final Comparator&lt;T&gt; comparator;<a name="line.133"></a>
+<span class="sourceLineNo">134</span><a name="line.134"></a>
+<span class="sourceLineNo">135</span>    /**<a name="line.135"></a>
+<span class="sourceLineNo">136</span>     * Cached output hashCode (class is immutable).<a name="line.136"></a>
+<span class="sourceLineNo">137</span>     */<a name="line.137"></a>
+<span class="sourceLineNo">138</span>    private transient int hashCode;<a name="line.138"></a>
+<span class="sourceLineNo">139</span><a name="line.139"></a>
+<span class="sourceLineNo">140</span>    /**<a name="line.140"></a>
+<span class="sourceLineNo">141</span>     * The maximum value in this range (inclusive).<a name="line.141"></a>
+<span class="sourceLineNo">142</span>     */<a name="line.142"></a>
+<span class="sourceLineNo">143</span>    private final T maximum;<a name="line.143"></a>
+<span class="sourceLineNo">144</span><a name="line.144"></a>
+<span class="sourceLineNo">145</span>    /**<a name="line.145"></a>
+<span class="sourceLineNo">146</span>     * The minimum value in this range (inclusive).<a name="line.146"></a>
+<span class="sourceLineNo">147</span>     */<a name="line.147"></a>
+<span class="sourceLineNo">148</span>    private final T minimum;<a name="line.148"></a>
+<span class="sourceLineNo">149</span><a name="line.149"></a>
+<span class="sourceLineNo">150</span>    /**<a name="line.150"></a>
+<span class="sourceLineNo">151</span>     * Cached output toString (class is immutable).<a name="line.151"></a>
+<span class="sourceLineNo">152</span>     */<a name="line.152"></a>
+<span class="sourceLineNo">153</span>    private transient String toString;<a name="line.153"></a>
+<span class="sourceLineNo">154</span><a name="line.154"></a>
+<span class="sourceLineNo">155</span>    // Accessors<a name="line.155"></a>
+<span class="sourceLineNo">156</span>    //--------------------------------------------------------------------<a name="line.156"></a>
+<span class="sourceLineNo">157</span><a name="line.157"></a>
+<span class="sourceLineNo">158</span>    /**<a name="line.158"></a>
+<span class="sourceLineNo">159</span>     * Creates an instance.<a name="line.159"></a>
+<span class="sourceLineNo">160</span>     *<a name="line.160"></a>
+<span class="sourceLineNo">161</span>     * @param element1  the first element, not null<a name="line.161"></a>
+<span class="sourceLineNo">162</span>     * @param element2  the second element, not null<a name="line.162"></a>
+<span class="sourceLineNo">163</span>     * @param comp  the comparator to be used, null for natural ordering<a name="line.163"></a>
+<span class="sourceLineNo">164</span>     */<a name="line.164"></a>
+<span class="sourceLineNo">165</span>    @SuppressWarnings("unchecked")<a name="line.165"></a>
+<span class="sourceLineNo">166</span>    private Range(final T element1, final T element2, final Comparator&lt;T&gt; comp) {<a name="line.166"></a>
+<span class="sourceLineNo">167</span>        if (element1 == null || element2 == null) {<a name="line.167"></a>
+<span class="sourceLineNo">168</span>            throw new IllegalArgumentException("Elements in a range must not be null: element1=" +<a name="line.168"></a>
+<span class="sourceLineNo">169</span>                                               element1 + ", element2=" + element2);<a name="line.169"></a>
+<span class="sourceLineNo">170</span>        }<a name="line.170"></a>
+<span class="sourceLineNo">171</span>        if (comp == null) {<a name="line.171"></a>
+<span class="sourceLineNo">172</span>            this.comparator = ComparableComparator.INSTANCE;<a name="line.172"></a>
+<span class="sourceLineNo">173</span>        } else {<a name="line.173"></a>
+<span class="sourceLineNo">174</span>            this.comparator = comp;<a name="line.174"></a>
+<span class="sourceLineNo">175</span>        }<a name="line.175"></a>
+<span class="sourceLineNo">176</span>        if (this.comparator.compare(element1, element2) &lt; 1) {<a name="line.176"></a>
+<span class="sourceLineNo">177</span>            this.minimum = element1;<a name="line.177"></a>
+<span class="sourceLineNo">178</span>            this.maximum = element2;<a name="line.178"></a>
+<span class="sourceLineNo">179</span>        } else {<a name="line.179"></a>
+<span class="sourceLineNo">180</span>            this.minimum = element2;<a name="line.180"></a>
+<span class="sourceLineNo">181</span>            this.maximum = element1;<a name="line.181"></a>
+<span class="sourceLineNo">182</span>        }<a name="line.182"></a>
+<span class="sourceLineNo">183</span>    }<a name="line.183"></a>
+<span class="sourceLineNo">184</span><a name="line.184"></a>
+<span class="sourceLineNo">185</span>    /**<a name="line.185"></a>
+<span class="sourceLineNo">186</span>     * &lt;p&gt;Checks whether the specified element occurs within this range.&lt;/p&gt;<a name="line.186"></a>
+<span class="sourceLineNo">187</span>     *<a name="line.187"></a>
+<span class="sourceLineNo">188</span>     * @param element  the element to check for, null returns false<a name="line.188"></a>
+<span class="sourceLineNo">189</span>     * @return true if the specified element occurs within this range<a name="line.189"></a>
+<span class="sourceLineNo">190</span>     */<a name="line.190"></a>
+<span class="sourceLineNo">191</span>    public boolean contains(final T element) {<a name="line.191"></a>
+<span class="sourceLineNo">192</span>        if (element == null) {<a name="line.192"></a>
+<span class="sourceLineNo">193</span>            return false;<a name="line.193"></a>
+<span class="sourceLineNo">194</span>        }<a name="line.194"></a>
+<span class="sourceLineNo">195</span>        return comparator.compare(element, minimum) &gt; -1 &amp;&amp; comparator.compare(element, maximum) &lt; 1;<a name="line.195"></a>
+<span class="sourceLineNo">196</span>    }<a name="line.196"></a>
+<span class="sourceLineNo">197</span><a name="line.197"></a>
+<span class="sourceLineNo">198</span>    /**<a name="line.198"></a>
+<span class="sourceLineNo">199</span>     * &lt;p&gt;Checks whether this range contains all the elements of the specified range.&lt;/p&gt;<a name="line.199"></a>
+<span class="sourceLineNo">200</span>     *<a name="line.200"></a>
+<span class="sourceLineNo">201</span>     * &lt;p&gt;This method may fail if the ranges have two different comparators or element types.&lt;/p&gt;<a name="line.201"></a>
+<span class="sourceLineNo">202</span>     *<a name="line.202"></a>
+<span class="sourceLineNo">203</span>     * @param otherRange  the range to check, null returns false<a name="line.203"></a>
+<span class="sourceLineNo">204</span>     * @return true if this range contains the specified range<a name="line.204"></a>
+<span class="sourceLineNo">205</span>     * @throws RuntimeException if ranges cannot be compared<a name="line.205"></a>
+<span class="sourceLineNo">206</span>     */<a name="line.206"></a>
+<span class="sourceLineNo">207</span>    public boolean containsRange(final Range&lt;T&gt; otherRange) {<a name="line.207"></a>
+<span class="sourceLineNo">208</span>        if (otherRange == null) {<a name="line.208"></a>
+<span class="sourceLineNo">209</span>            return false;<a name="line.209"></a>
+<span class="sourceLineNo">210</span>        }<a name="line.210"></a>
+<span class="sourceLineNo">211</span>        return contains(otherRange.minimum)<a name="line.211"></a>
+<span class="sourceLineNo">212</span>            &amp;&amp; contains(otherRange.maximum);<a name="line.212"></a>
+<span class="sourceLineNo">213</span>    }<a name="line.213"></a>
+<span class="sourceLineNo">214</span><a name="line.214"></a>
+<span class="sourceLineNo">215</span>    /**<a name="line.215"></a>
+<span class="sourceLineNo">216</span>     * &lt;p&gt;Checks where the specified element occurs relative to this range.&lt;/p&gt;<a name="line.216"></a>
+<span class="sourceLineNo">217</span>     *<a name="line.217"></a>
+<span class="sourceLineNo">218</span>     * &lt;p&gt;The API is reminiscent of the Comparable interface returning {@code -1} if<a name="line.218"></a>
+<span class="sourceLineNo">219</span>     * the element is before the range, {@code 0} if contained within the range and<a name="line.219"></a>
+<span class="sourceLineNo">220</span>     * {@code 1} if the element is after the range. &lt;/p&gt;<a name="line.220"></a>
+<span class="sourceLineNo">221</span>     *<a name="line.221"></a>
+<span class="sourceLineNo">222</span>     * @param element  the element to check for, not null<a name="line.222"></a>
+<span class="sourceLineNo">223</span>     * @return -1, 0 or +1 depending on the element's location relative to the range<a name="line.223"></a>
+<span class="sourceLineNo">224</span>     */<a name="line.224"></a>
+<span class="sourceLineNo">225</span>    public int elementCompareTo(final T element) {<a name="line.225"></a>
+<span class="sourceLineNo">226</span>        // Comparable API says throw NPE on null<a name="line.226"></a>
+<span class="sourceLineNo">227</span>        Validate.notNull(element, "Element is null");<a name="line.227"></a>
+<span class="sourceLineNo">228</span>        if (isAfter(element)) {<a name="line.228"></a>
+<span class="sourceLineNo">229</span>            return -1;<a name="line.229"></a>
+<span class="sourceLineNo">230</span>        } else if (isBefore(element)) {<a name="line.230"></a>
+<span class="sourceLineNo">231</span>            return 1;<a name="line.231"></a>
+<span class="sourceLineNo">232</span>        } else {<a name="line.232"></a>
+<span class="sourceLineNo">233</span>            return 0;<a name="line.233"></a>
+<span class="sourceLineNo">234</span>        }<a name="line.234"></a>
+<span class="sourceLineNo">235</span>    }<a name="line.235"></a>
+<span class="sourceLineNo">236</span><a name="line.236"></a>
+<span class="sourceLineNo">237</span>    // Element tests<a name="line.237"></a>
+<span class="sourceLineNo">238</span>    //--------------------------------------------------------------------<a name="line.238"></a>
+<span class="sourceLineNo">239</span><a name="line.239"></a>
+<span class="sourceLineNo">240</span>    /**<a name="line.240"></a>
+<span class="sourceLineNo">241</span>     * &lt;p&gt;Compares this range to another object to test if they are equal.&lt;/p&gt;.<a name="line.241"></a>
+<span class="sourceLineNo">242</span>     *<a name="line.242"></a>
+<span class="sourceLineNo">243</span>     * &lt;p&gt;To be equal, the minimum and maximum values must be equal, which<a name="line.243"></a>
+<span class="sourceLineNo">244</span>     * ignores any differences in the comparator.&lt;/p&gt;<a name="line.244"></a>
+<span class="sourceLineNo">245</span>     *<a name="line.245"></a>
+<span class="sourceLineNo">246</span>     * @param obj the reference object with which to compare<a name="line.246"></a>
+<span class="sourceLineNo">247</span>     * @return true if this object is equal<a name="line.247"></a>
+<span class="sourceLineNo">248</span>     */<a name="line.248"></a>
+<span class="sourceLineNo">249</span>    @Override<a name="line.249"></a>
+<span class="sourceLineNo">250</span>    public boolean equals(final Object obj) {<a name="line.250"></a>
+<span class="sourceLineNo">251</span>        if (obj == this) {<a name="line.251"></a>
+<span class="sourceLineNo">252</span>            return true;<a name="line.252"></a>
+<span class="sourceLineNo">253</span>        } else if (obj == null || obj.getClass() != getClass()) {<a name="line.253"></a>
+<span class="sourceLineNo">254</span>            return false;<a name="line.254"></a>
+<span class="sourceLineNo">255</span>        } else {<a name="line.255"></a>
+<span class="sourceLineNo">256</span>            @SuppressWarnings("unchecked") // OK because we checked the class above<a name="line.256"></a>
+<span class="sourceLineNo">257</span>            final<a name="line.257"></a>
+<span class="sourceLineNo">258</span>            Range&lt;T&gt; range = (Range&lt;T&gt;) obj;<a name="line.258"></a>
+<span class="sourceLineNo">259</span>            return minimum.equals(range.minimum) &amp;&amp;<a name="line.259"></a>
+<span class="sourceLineNo">260</span>                   maximum.equals(range.maximum);<a name="line.260"></a>
+<span class="sourceLineNo">261</span>        }<a name="line.261"></a>
+<span class="sourceLineNo">262</span>    }<a name="line.262"></a>
+<span class="sourceLineNo">263</span><a name="line.263"></a>
+<span class="sourceLineNo">264</span>    /**<a name="line.264"></a>
+<span class="sourceLineNo">265</span>     * &lt;p&gt;Gets the comparator being used to determine if objects are within the range.&lt;/p&gt;<a name="line.265"></a>
+<span class="sourceLineNo">266</span>     *<a name="line.266"></a>
+<span class="sourceLineNo">267</span>     * &lt;p&gt;Natural ordering uses an internal comparator implementation, thus this<a name="line.267"></a>
+<span class="sourceLineNo">268</span>     * method never returns null. See {@link #isNaturalOrdering()}.&lt;/p&gt;<a name="line.268"></a>
+<span class="sourceLineNo">269</span>     *<a name="line.269"></a>
+<span class="sourceLineNo">270</span>     * @return the comparator being used, not null<a name="line.270"></a>
+<span class="sourceLineNo">271</span>     */<a name="line.271"></a>
+<span class="sourceLineNo">272</span>    public Comparator&lt;T&gt; getComparator() {<a name="line.272"></a>
+<span class="sourceLineNo">273</span>        return comparator;<a name="line.273"></a>
+<span class="sourceLineNo">274</span>    }<a name="line.274"></a>
+<span class="sourceLineNo">275</span><a name="line.275"></a>
+<span class="sourceLineNo">276</span>    /**<a name="line.276"></a>
+<span class="sourceLineNo">277</span>     * &lt;p&gt;Gets the maximum value in this range.&lt;/p&gt;<a name="line.277"></a>
+<span class="sourceLineNo">278</span>     *<a name="line.278"></a>
+<span class="sourceLineNo">279</span>     * @return the maximum value in this range, not null<a name="line.279"></a>
+<span class="sourceLineNo">280</span>     */<a name="line.280"></a>
+<span class="sourceLineNo">281</span>    public T getMaximum() {<a name="line.281"></a>
+<span class="sourceLineNo">282</span>        return maximum;<a name="line.282"></a>
+<span class="sourceLineNo">283</span>    }<a name="line.283"></a>
+<span class="sourceLineNo">284</span><a name="line.284"></a>
+<span class="sourceLineNo">285</span>    /**<a name="line.285"></a>
+<span class="sourceLineNo">286</span>     * &lt;p&gt;Gets the minimum value in this range.&lt;/p&gt;<a name="line.286"></a>
+<span class="sourceLineNo">287</span>     *<a name="line.287"></a>
+<span class="sourceLineNo">288</span>     * @return the minimum value in this range, not null<a name="line.288"></a>
+<span class="sourceLineNo">289</span>     */<a name="line.289"></a>
+<span class="sourceLineNo">290</span>    public T getMinimum() {<a name="line.290"></a>
+<span class="sourceLineNo">291</span>        return minimum;<a name="line.291"></a>
+<span class="sourceLineNo">292</span>    }<a name="line.292"></a>
+<span class="sourceLineNo">293</span><a name="line.293"></a>
+<span class="sourceLineNo">294</span>    /**<a name="line.294"></a>
+<span class="sourceLineNo">295</span>     * &lt;p&gt;Gets a suitable hash code for the range.&lt;/p&gt;<a name="line.295"></a>
+<span class="sourceLineNo">296</span>     *<a name="line.296"></a>
+<span class="sourceLineNo">297</span>     * @return a hash code value for this object<a name="line.297"></a>
+<span class="sourceLineNo">298</span>     */<a name="line.298"></a>
+<span class="sourceLineNo">299</span>    @Override<a name="line.299"></a>
+<span class="sourceLineNo">300</span>    public int hashCode() {<a name="line.300"></a>
+<span class="sourceLineNo">301</span>        int result = hashCode;<a name="line.301"></a>
+<span class="sourceLineNo">302</span>        if (hashCode == 0) {<a name="line.302"></a>
+<span class="sourceLineNo">303</span>            result = 17;<a name="line.303"></a>
+<span class="sourceLineNo">304</span>            result = 37 * result + getClass().hashCode();<a name="line.304"></a>
+<span class="sourceLineNo">305</span>            result = 37 * result + minimum.hashCode();<a name="line.305"></a>
+<span class="sourceLineNo">306</span>            result = 37 * result + maximum.hashCode();<a name="line.306"></a>
+<span class="sourceLineNo">307</span>            hashCode = result;<a name="line.307"></a>
+<span class="sourceLineNo">308</span>        }<a name="line.308"></a>
+<span class="sourceLineNo">309</span>        return result;<a name="line.309"></a>
+<span class="sourceLineNo">310</span>    }<a name="line.310"></a>
+<span class="sourceLineNo">311</span><a name="line.311"></a>
+<span class="sourceLineNo">312</span>    /**<a name="line.312"></a>
+<span class="sourceLineNo">313</span>     * Calculate the intersection of {@code this} and an overlapping Range.<a name="line.313"></a>
+<span class="sourceLineNo">314</span>     * @param other overlapping Range<a name="line.314"></a>
+<span class="sourceLineNo">315</span>     * @return range representing the intersection of {@code this} and {@code other} ({@code this} if equal)<a name="line.315"></a>
+<span class="sourceLineNo">316</span>     * @throws IllegalArgumentException if {@code other} does not overlap {@code this}<a name="line.316"></a>
+<span class="sourceLineNo">317</span>     * @since 3.0.1<a name="line.317"></a>
+<span class="sourceLineNo">318</span>     */<a name="line.318"></a>
+<span class="sourceLineNo">319</span>    public Range&lt;T&gt; intersectionWith(final Range&lt;T&gt; other) {<a name="line.319"></a>
+<span class="sourceLineNo">320</span>        if (!this.isOverlappedBy(other)) {<a name="line.320"></a>
+<span class="sourceLineNo">321</span>            throw new IllegalArgumentException(String.format(<a name="line.321"></a>
+<span class="sourceLineNo">322</span>                "Cannot calculate intersection with non-overlapping range %s", other));<a name="line.322"></a>
+<span class="sourceLineNo">323</span>        }<a name="line.323"></a>
+<span class="sourceLineNo">324</span>        if (this.equals(other)) {<a name="line.324"></a>
+<span class="sourceLineNo">325</span>            return this;<a name="line.325"></a>
+<span class="sourceLineNo">326</span>        }<a name="line.326"></a>
+<span class="sourceLineNo">327</span>        final T min = getComparator().compare(minimum, other.minimum) &lt; 0 ? other.minimum : minimum;<a name="line.327"></a>
+<span class="sourceLineNo">328</span>        final T max = getComparator().compare(maximum, other.maximum) &lt; 0 ? maximum : other.maximum;<a name="line.328"></a>
+<span class="sourceLineNo">329</span>        return between(min, max, getComparator());<a name="line.329"></a>
+<span class="sourceLineNo">330</span>    }<a name="line.330"></a>
+<span class="sourceLineNo">331</span><a name="line.331"></a>
+<span class="sourceLineNo">332</span>    // Range tests<a name="line.332"></a>
+<span class="sourceLineNo">333</span>    //--------------------------------------------------------------------<a name="line.333"></a>
+<span class="sourceLineNo">334</span><a name="line.334"></a>
+<span class="sourceLineNo">335</span>    /**<a name="line.335"></a>
+<span class="sourceLineNo">336</span>     * &lt;p&gt;Checks whether this range is after the specified element.&lt;/p&gt;<a name="line.336"></a>
+<span class="sourceLineNo">337</span>     *<a name="line.337"></a>
+<span class="sourceLineNo">338</span>     * @param element  the element to check for, null returns false<a name="line.338"></a>
+<span class="sourceLineNo">339</span>     * @return true if this range is entirely after the specified element<a name="line.339"></a>
+<span class="sourceLineNo">340</span>     */<a name="line.340"></a>
+<span class="sourceLineNo">341</span>    public boolean isAfter(final T element) {<a name="line.341"></a>
+<span class="sourceLineNo">342</span>        if (element == null) {<a name="line.342"></a>
+<span class="sourceLineNo">343</span>            return false;<a name="line.343"></a>
+<span class="sourceLineNo">344</span>        }<a name="line.344"></a>
+<span class="sourceLineNo">345</span>        return comparator.compare(element, minimum) &lt; 0;<a name="line.345"></a>
+<span class="sourceLineNo">346</span>    }<a name="line.346"></a>
+<span class="sourceLineNo">347</span><a name="line.347"></a>
+<span class="sourceLineNo">348</span>    /**<a name="line.348"></a>
+<span class="sourceLineNo">349</span>     * &lt;p&gt;Checks whether this range is completely after the specified range.&lt;/p&gt;<a name="line.349"></a>
+<span class="sourceLineNo">350</span>     *<a name="line.350"></a>
+<span class="sourceLineNo">351</span>     * &lt;p&gt;This method may fail if the ranges have two different comparators or element types.&lt;/p&gt;<a name="line.351"></a>
+<span class="sourceLineNo">352</span>     *<a name="line.352"></a>
+<span class="sourceLineNo">353</span>     * @param otherRange  the range to check, null returns false<a name="line.353"></a>
+<span class="sourceLineNo">354</span>     * @return true if this range is completely after the specified range<a name="line.354"></a>
+<span class="sourceLineNo">355</span>     * @throws RuntimeException if ranges cannot be compared<a name="line.355"></a>
+<span class="sourceLineNo">356</span>     */<a name="line.356"></a>
+<span class="sourceLineNo">357</span>    public boolean isAfterRange(final Range&lt;T&gt; otherRange) {<a name="line.357"></a>
+<span class="sourceLineNo">358</span>        if (otherRange == null) {<a name="line.358"></a>
+<span class="sourceLineNo">359</span>            return false;<a name="line.359"></a>
+<span class="sourceLineNo">360</span>        }<a name="line.360"></a>
+<span class="sourceLineNo">361</span>        return isAfter(otherRange.maximum);<a name="line.361"></a>
+<span class="sourceLineNo">362</span>    }<a name="line.362"></a>
+<span class="sourceLineNo">363</span><a name="line.363"></a>
+<span class="sourceLineNo">364</span>    /**<a name="line.364"></a>
+<span class="sourceLineNo">365</span>     * &lt;p&gt;Checks whether this range is before the specified element.&lt;/p&gt;<a name="line.365"></a>
+<span class="sourceLineNo">366</span>     *<a name="line.366"></a>
+<span class="sourceLineNo">367</span>     * @param element  the element to check for, null returns false<a name="line.367"></a>
+<span class="sourceLineNo">368</span>     * @return true if this range is entirely before the specified element<a name="line.368"></a>
+<span class="sourceLineNo">369</span>     */<a name="line.369"></a>
+<span class="sourceLineNo">370</span>    public boolean isBefore(final T element) {<a name="line.370"></a>
+<span class="sourceLineNo">371</span>        if (element == null) {<a name="line.371"></a>
+<span class="sourceLineNo">372</span>            return false;<a name="line.372"></a>
+<span class="sourceLineNo">373</span>        }<a name="line.373"></a>
+<span class="sourceLineNo">374</span>        return comparator.compare(element, maximum) &gt; 0;<a name="line.374"></a>
+<span class="sourceLineNo">375</span>    }<a name="line.375"></a>
+<span class="sourceLineNo">376</span><a name="line.376"></a>
+<span class="sourceLineNo">377</span>    /**<a name="line.377"></a>
+<span class="sourceLineNo">378</span>     * &lt;p&gt;Checks whether this range is completely before the specified range.&lt;/p&gt;<a name="line.378"></a>
+<span class="sourceLineNo">379</span>     *<a name="line.379"></a>
+<span class="sourceLineNo">380</span>     * &lt;p&gt;This method may fail if the ranges have two different comparators or element types.&lt;/p&gt;<a name="line.380"></a>
+<span class="sourceLineNo">381</span>     *<a name="line.381"></a>
+<span class="sourceLineNo">382</span>     * @param otherRange  the range to check, null returns false<a name="line.382"></a>
+<span class="sourceLineNo">383</span>     * @return true if this range is completely before the specified range<a name="line.383"></a>
+<span class="sourceLineNo">384</span>     * @throws RuntimeException if ranges cannot be compared<a name="line.384"></a>
+<span class="sourceLineNo">385</span>     */<a name="line.385"></a>
+<span class="sourceLineNo">386</span>    public boolean isBeforeRange(final Range&lt;T&gt; otherRange) {<a name="line.386"></a>
+<span class="sourceLineNo">387</span>        if (otherRange == null) {<a name="line.387"></a>
+<span class="sourceLineNo">388</span>            return false;<a name="line.388"></a>
+<span class="sourceLineNo">389</span>        }<a name="line.389"></a>
+<span class="sourceLineNo">390</span>        return isBefore(otherRange.minimum);<a name="line.390"></a>
+<span class="sourceLineNo">391</span>    }<a name="line.391"></a>
+<span class="sourceLineNo">392</span><a name="line.392"></a>
+<span class="sourceLineNo">393</span>    /**<a name="line.393"></a>
+<span class="sourceLineNo">394</span>     * &lt;p&gt;Checks whether this range ends with the specified element.&lt;/p&gt;<a name="line.394"></a>
+<span class="sourceLineNo">395</span>     *<a name="line.395"></a>
+<span class="sourceLineNo">396</span>     * @param element  the element to check for, null returns false<a name="line.396"></a>
+<span class="sourceLineNo">397</span>     * @return true if the specified element occurs within this range<a name="line.397"></a>
+<span class="sourceLineNo">398</span>     */<a name="line.398"></a>
+<span class="sourceLineNo">399</span>    public boolean isEndedBy(final T element) {<a name="line.399"></a>
+<span class="sourceLineNo">400</span>        if (element == null) {<a name="line.400"></a>
+<span class="sourceLineNo">401</span>            return false;<a name="line.401"></a>
+<span class="sourceLineNo">402</span>        }<a name="line.402"></a>
+<span class="sourceLineNo">403</span>        return comparator.compare(element, maximum) == 0;<a name="line.403"></a>
+<span class="sourceLineNo">404</span>    }<a name="line.404"></a>
+<span class="sourceLineNo">405</span><a name="line.405"></a>
+<span class="sourceLineNo">406</span>    // Basics<a name="line.406"></a>
+<span class="sourceLineNo">407</span>    //--------------------------------------------------------------------<a name="line.407"></a>
+<span class="sourceLineNo">408</span><a name="line.408"></a>
+<span class="sourceLineNo">409</span>    /**<a name="line.409"></a>
+<span class="sourceLineNo">410</span>     * &lt;p&gt;Whether or not the Range is using the natural ordering of the elements.&lt;/p&gt;<a name="line.410"></a>
+<span class="sourceLineNo">411</span>     *<a name="line.411"></a>
+<span class="sourceLineNo">412</span>     * &lt;p&gt;Natural ordering uses an internal comparator implementation, thus this<a name="line.412"></a>
+<span class="sourceLineNo">413</span>     * method is the only way to check if a null comparator was specified.&lt;/p&gt;<a name="line.413"></a>
+<span class="sourceLineNo">414</span>     *<a name="line.414"></a>
+<span class="sourceLineNo">415</span>     * @return true if using natural ordering<a name="line.415"></a>
+<span class="sourceLineNo">416</span>     */<a name="line.416"></a>
+<span class="sourceLineNo">417</span>    public boolean isNaturalOrdering() {<a name="line.417"></a>
+<span class="sourceLineNo">418</span>        return comparator == ComparableComparator.INSTANCE;<a name="line.418"></a>
+<span class="sourceLineNo">419</span>    }<a name="line.419"></a>
+<span class="sourceLineNo">420</span><a name="line.420"></a>
+<span class="sourceLineNo">421</span>    /**<a name="line.421"></a>
+<span class="sourceLineNo">422</span>     * &lt;p&gt;Checks whether this range is overlapped by the specified range.&lt;/p&gt;<a name="line.422"></a>
+<span class="sourceLineNo">423</span>     *<a name="line.423"></a>
+<span class="sourceLineNo">424</span>     * &lt;p&gt;Two ranges overlap if there is at least one element in common.&lt;/p&gt;<a name="line.424"></a>
+<span class="sourceLineNo">425</span>     *<a name="line.425"></a>
+<span class="sourceLineNo">426</span>     * &lt;p&gt;This method may fail if the ranges have two different comparators or element types.&lt;/p&gt;<a name="line.426"></a>
+<span class="sourceLineNo">427</span>     *<a name="line.427"></a>
+<span class="sourceLineNo">428</span>     * @param otherRange  the range to test, null returns false<a name="line.428"></a>
+<span class="sourceLineNo">429</span>     * @return true if the specified range overlaps with this<a name="line.429"></a>
+<span class="sourceLineNo">430</span>     *  range; otherwise, {@code false}<a name="line.430"></a>
+<span class="sourceLineNo">431</span>     * @throws RuntimeException if ranges cannot be compared<a name="line.431"></a>
+<span class="sourceLineNo">432</span>     */<a name="line.432"></a>
+<span class="sourceLineNo">433</span>    public boolean isOverlappedBy(final Range&lt;T&gt; otherRange) {<a name="line.433"></a>
+<span class="sourceLineNo">434</span>        if (otherRange == null) {<a name="line.434"></a>
+<span class="sourceLineNo">435</span>            return false;<a name="line.435"></a>
+<span class="sourceLineNo">436</span>        }<a name="line.436"></a>
+<span class="sourceLineNo">437</span>        return otherRange.contains(minimum)<a name="line.437"></a>
+<span class="sourceLineNo">438</span>            || otherRange.contains(maximum)<a name="line.438"></a>
+<span class="sourceLineNo">439</span>            || contains(otherRange.minimum);<a name="line.439"></a>
+<span class="sourceLineNo">440</span>    }<a name="line.440"></a>
+<span class="sourceLineNo">441</span><a name="line.441"></a>
+<span class="sourceLineNo">442</span>    /**<a name="line.442"></a>
+<span class="sourceLineNo">443</span>     * &lt;p&gt;Checks whether this range starts with the specified element.&lt;/p&gt;<a name="line.443"></a>
+<span class="sourceLineNo">444</span>     *<a name="line.444"></a>
+<span class="sourceLineNo">445</span>     * @param element  the element to check for, null returns false<a name="line.445"></a>
+<span class="sourceLineNo">446</span>     * @return true if the specified element occurs within this range<a name="line.446"></a>
+<span class="sourceLineNo">447</span>     */<a name="line.447"></a>
+<span class="sourceLineNo">448</span>    public boolean isStartedBy(final T element) {<a name="line.448"></a>
+<span class="sourceLineNo">449</span>        if (element == null) {<a name="line.449"></a>
+<span class="sourceLineNo">450</span>            return false;<a name="line.450"></a>
+<span class="sourceLineNo">451</span>        }<a name="line.451"></a>
+<span class="sourceLineNo">452</span>        return comparator.compare(element, minimum) == 0;<a name="line.452"></a>
+<span class="sourceLineNo">453</span>    }<a name="line.453"></a>
+<span class="sourceLineNo">454</span><a name="line.454"></a>
+<span class="sourceLineNo">455</span>    /**<a name="line.455"></a>
+<span class="sourceLineNo">456</span>     * &lt;p&gt;<a name="line.456"></a>
+<span class="sourceLineNo">457</span>     * Fits the given element into this range by returning the given element or, if out of bounds, the range minimum if<a name="line.457"></a>
+<span class="sourceLineNo">458</span>     * below, or the range maximum if above.<a name="line.458"></a>
+<span class="sourceLineNo">459</span>     * &lt;/p&gt;<a name="line.459"></a>
+<span class="sourceLineNo">460</span>     * &lt;pre&gt;<a name="line.460"></a>
+<span class="sourceLineNo">461</span>     * Range&amp;lt;Integer&amp;gt; range = Range.between(16, 64);<a name="line.461"></a>
+<span class="sourceLineNo">462</span>     * range.fit(-9) --&amp;gt;  16<a name="line.462"></a>
+<span class="sourceLineNo">463</span>     * range.fit(0)  --&amp;gt;  16<a name="line.463"></a>
+<span class="sourceLineNo">464</span>     * range.fit(15) --&amp;gt;  16<a name="line.464"></a>
+<span class="sourceLineNo">465</span>     * range.fit(16) --&amp;gt;  16<a name="line.465"></a>
+<span class="sourceLineNo">466</span>     * range.fit(17) --&amp;gt;  17<a name="line.466"></a>
+<span class="sourceLineNo">467</span>     * ...<a name="line.467"></a>
+<span class="sourceLineNo">468</span>     * range.fit(63) --&amp;gt;  63<a name="line.468"></a>
+<span class="sourceLineNo">469</span>     * range.fit(64) --&amp;gt;  64<a name="line.469"></a>
+<span class="sourceLineNo">470</span>     * range.fit(99) --&amp;gt;  64<a name="line.470"></a>
+<span class="sourceLineNo">471</span>     * &lt;/pre&gt;<a name="line.471"></a>
+<span class="sourceLineNo">472</span>     * @param element the element to check for, not null<a name="line.472"></a>
+<span class="sourceLineNo">473</span>     * @return the minimum, the element, or the maximum depending on the element's location relative to the range<a name="line.473"></a>
+<span class="sourceLineNo">474</span>     * @since 3.10<a name="line.474"></a>
+<span class="sourceLineNo">475</span>     */<a name="line.475"></a>
+<span class="sourceLineNo">476</span>    public T fit(final T element) {<a name="line.476"></a>
+<span class="sourceLineNo">477</span>        // Comparable API says throw NPE on null<a name="line.477"></a>
+<span class="sourceLineNo">478</span>        Validate.notNull(element, "element");<a name="line.478"></a>
+<span class="sourceLineNo">479</span>        if (isAfter(element)) {<a name="line.479"></a>
+<span class="sourceLineNo">480</span>            return minimum;<a name="line.480"></a>
+<span class="sourceLineNo">481</span>        } else if (isBefore(element)) {<a name="line.481"></a>
+<span class="sourceLineNo">482</span>            return maximum;<a name="line.482"></a>
+<span class="sourceLineNo">483</span>        } else {<a name="line.483"></a>
+<span class="sourceLineNo">484</span>            return element;<a name="line.484"></a>
+<span class="sourceLineNo">485</span>        }<a name="line.485"></a>
+<span class="sourceLineNo">486</span>    }<a name="line.486"></a>
+<span class="sourceLineNo">487</span><a name="line.487"></a>
+<span class="sourceLineNo">488</span>    /**<a name="line.488"></a>
+<span class="sourceLineNo">489</span>     * &lt;p&gt;Gets the range as a {@code String}.&lt;/p&gt;<a name="line.489"></a>
+<span class="sourceLineNo">490</span>     *<a name="line.490"></a>
+<span class="sourceLineNo">491</span>     * &lt;p&gt;The format of the String is '[&lt;i&gt;min&lt;/i&gt;..&lt;i&gt;max&lt;/i&gt;]'.&lt;/p&gt;<a name="line.491"></a>
+<span class="sourceLineNo">492</span>     *<a name="line.492"></a>
+<span class="sourceLineNo">493</span>     * @return the {@code String} representation of this range<a name="line.493"></a>
+<span class="sourceLineNo">494</span>     */<a name="line.494"></a>
+<span class="sourceLineNo">495</span>    @Override<a name="line.495"></a>
+<span class="sourceLineNo">496</span>    public String toString() {<a name="line.496"></a>
+<span class="sourceLineNo">497</span>        if (toString == null) {<a name="line.497"></a>
+<span class="sourceLineNo">498</span>            toString = "[" + minimum + ".." + maximum + "]";<a name="line.498"></a>
+<span class="sourceLineNo">499</span>        }<a name="line.499"></a>
+<span class="sourceLineNo">500</span>        return toString;<a name="line.500"></a>
+<span class="sourceLineNo">501</span>    }<a name="line.501"></a>
+<span class="sourceLineNo">502</span><a name="line.502"></a>
+<span class="sourceLineNo">503</span>    /**<a name="line.503"></a>
+<span class="sourceLineNo">504</span>     * &lt;p&gt;Formats the receiver using the given format.&lt;/p&gt;<a name="line.504"></a>
+<span class="sourceLineNo">505</span>     *<a name="line.505"></a>
+<span class="sourceLineNo">506</span>     * &lt;p&gt;This uses {@link java.util.Formattable} to perform the formatting. Three variables may<a name="line.506"></a>
+<span class="sourceLineNo">507</span>     * be used to embed the minimum, maximum and comparator.<a name="line.507"></a>
+<span class="sourceLineNo">508</span>     * Use {@code %1$s} for the minimum element, {@code %2$s} for the maximum element<a name="line.508"></a>
+<span class="sourceLineNo">509</span>     * and {@code %3$s} for the comparator.<a name="line.509"></a>
+<span class="sourceLineNo">510</span>     * The default format used by {@code toString()} is {@code [%1$s..%2$s]}.&lt;/p&gt;<a name="line.510"></a>
+<span class="sourceLineNo">511</span>     *<a name="line.511"></a>
+<span class="sourceLineNo">512</span>     * @param format  the format string, optionally containing {@code %1$s}, {@code %2$s} and  {@code %3$s}, not null<a name="line.512"></a>
+<span class="sourceLineNo">513</span>     * @return the formatted string, not null<a name="line.513"></a>
+<span class="sourceLineNo">514</span>     */<a name="line.514"></a>
+<span class="sourceLineNo">515</span>    public String toString(final String format) {<a name="line.515"></a>
+<span class="sourceLineNo">516</span>        return String.format(format, minimum, maximum, comparator);<a name="line.516"></a>
+<span class="sourceLineNo">517</span>    }<a name="line.517"></a>
+<span class="sourceLineNo">518</span><a name="line.518"></a>
+<span class="sourceLineNo">519</span>}<a name="line.519"></a>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</pre>
+</div>
+</body>
+</html>

@@ -1,0 +1,1968 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en">
+<head>
+<title>Source code</title>
+<link rel="stylesheet" type="text/css" href="../../../../../../stylesheet.css" title="Style">
+</head>
+<body>
+<div class="sourceContainer">
+<pre><span class="sourceLineNo">001</span>/*<a name="line.1"></a>
+<span class="sourceLineNo">002</span> * Licensed to the Apache Software Foundation (ASF) under one or more<a name="line.2"></a>
+<span class="sourceLineNo">003</span> * contributor license agreements.  See the NOTICE file distributed with<a name="line.3"></a>
+<span class="sourceLineNo">004</span> * this work for additional information regarding copyright ownership.<a name="line.4"></a>
+<span class="sourceLineNo">005</span> * The ASF licenses this file to You under the Apache License, Version 2.0<a name="line.5"></a>
+<span class="sourceLineNo">006</span> * (the "License"); you may not use this file except in compliance with<a name="line.6"></a>
+<span class="sourceLineNo">007</span> * the License.  You may obtain a copy of the License at<a name="line.7"></a>
+<span class="sourceLineNo">008</span> *<a name="line.8"></a>
+<span class="sourceLineNo">009</span> *      http://www.apache.org/licenses/LICENSE-2.0<a name="line.9"></a>
+<span class="sourceLineNo">010</span> *<a name="line.10"></a>
+<span class="sourceLineNo">011</span> * Unless required by applicable law or agreed to in writing, software<a name="line.11"></a>
+<span class="sourceLineNo">012</span> * distributed under the License is distributed on an "AS IS" BASIS,<a name="line.12"></a>
+<span class="sourceLineNo">013</span> * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.<a name="line.13"></a>
+<span class="sourceLineNo">014</span> * See the License for the specific language governing permissions and<a name="line.14"></a>
+<span class="sourceLineNo">015</span> * limitations under the License.<a name="line.15"></a>
+<span class="sourceLineNo">016</span> */<a name="line.16"></a>
+<span class="sourceLineNo">017</span>package org.apache.commons.lang3.reflect;<a name="line.17"></a>
+<span class="sourceLineNo">018</span><a name="line.18"></a>
+<span class="sourceLineNo">019</span>import java.lang.reflect.Array;<a name="line.19"></a>
+<span class="sourceLineNo">020</span>import java.lang.reflect.GenericArrayType;<a name="line.20"></a>
+<span class="sourceLineNo">021</span>import java.lang.reflect.GenericDeclaration;<a name="line.21"></a>
+<span class="sourceLineNo">022</span>import java.lang.reflect.ParameterizedType;<a name="line.22"></a>
+<span class="sourceLineNo">023</span>import java.lang.reflect.Type;<a name="line.23"></a>
+<span class="sourceLineNo">024</span>import java.lang.reflect.TypeVariable;<a name="line.24"></a>
+<span class="sourceLineNo">025</span>import java.lang.reflect.WildcardType;<a name="line.25"></a>
+<span class="sourceLineNo">026</span>import java.util.Arrays;<a name="line.26"></a>
+<span class="sourceLineNo">027</span>import java.util.Collections;<a name="line.27"></a>
+<span class="sourceLineNo">028</span>import java.util.HashMap;<a name="line.28"></a>
+<span class="sourceLineNo">029</span>import java.util.HashSet;<a name="line.29"></a>
+<span class="sourceLineNo">030</span>import java.util.List;<a name="line.30"></a>
+<span class="sourceLineNo">031</span>import java.util.Map;<a name="line.31"></a>
+<span class="sourceLineNo">032</span>import java.util.Objects;<a name="line.32"></a>
+<span class="sourceLineNo">033</span>import java.util.Set;<a name="line.33"></a>
+<span class="sourceLineNo">034</span><a name="line.34"></a>
+<span class="sourceLineNo">035</span>import org.apache.commons.lang3.ArrayUtils;<a name="line.35"></a>
+<span class="sourceLineNo">036</span>import org.apache.commons.lang3.ClassUtils;<a name="line.36"></a>
+<span class="sourceLineNo">037</span>import org.apache.commons.lang3.ObjectUtils;<a name="line.37"></a>
+<span class="sourceLineNo">038</span>import org.apache.commons.lang3.Validate;<a name="line.38"></a>
+<span class="sourceLineNo">039</span>import org.apache.commons.lang3.builder.Builder;<a name="line.39"></a>
+<span class="sourceLineNo">040</span><a name="line.40"></a>
+<span class="sourceLineNo">041</span>/**<a name="line.41"></a>
+<span class="sourceLineNo">042</span> * &lt;p&gt; Utility methods focusing on type inspection, particularly with regard to<a name="line.42"></a>
+<span class="sourceLineNo">043</span> * generics. &lt;/p&gt;<a name="line.43"></a>
+<span class="sourceLineNo">044</span> *<a name="line.44"></a>
+<span class="sourceLineNo">045</span> * @since 3.0<a name="line.45"></a>
+<span class="sourceLineNo">046</span> */<a name="line.46"></a>
+<span class="sourceLineNo">047</span>public class TypeUtils {<a name="line.47"></a>
+<span class="sourceLineNo">048</span><a name="line.48"></a>
+<span class="sourceLineNo">049</span>    /**<a name="line.49"></a>
+<span class="sourceLineNo">050</span>     * {@link WildcardType} builder.<a name="line.50"></a>
+<span class="sourceLineNo">051</span>     * @since 3.2<a name="line.51"></a>
+<span class="sourceLineNo">052</span>     */<a name="line.52"></a>
+<span class="sourceLineNo">053</span>    public static class WildcardTypeBuilder implements Builder&lt;WildcardType&gt; {<a name="line.53"></a>
+<span class="sourceLineNo">054</span>        /**<a name="line.54"></a>
+<span class="sourceLineNo">055</span>         * Constructor<a name="line.55"></a>
+<span class="sourceLineNo">056</span>         */<a name="line.56"></a>
+<span class="sourceLineNo">057</span>        private WildcardTypeBuilder() {<a name="line.57"></a>
+<span class="sourceLineNo">058</span>        }<a name="line.58"></a>
+<span class="sourceLineNo">059</span><a name="line.59"></a>
+<span class="sourceLineNo">060</span>        private Type[] upperBounds;<a name="line.60"></a>
+<span class="sourceLineNo">061</span>        private Type[] lowerBounds;<a name="line.61"></a>
+<span class="sourceLineNo">062</span><a name="line.62"></a>
+<span class="sourceLineNo">063</span>        /**<a name="line.63"></a>
+<span class="sourceLineNo">064</span>         * Specify upper bounds of the wildcard type to build.<a name="line.64"></a>
+<span class="sourceLineNo">065</span>         * @param bounds to set<a name="line.65"></a>
+<span class="sourceLineNo">066</span>         * @return {@code this}<a name="line.66"></a>
+<span class="sourceLineNo">067</span>         */<a name="line.67"></a>
+<span class="sourceLineNo">068</span>        public WildcardTypeBuilder withUpperBounds(final Type... bounds) {<a name="line.68"></a>
+<span class="sourceLineNo">069</span>            this.upperBounds = bounds;<a name="line.69"></a>
+<span class="sourceLineNo">070</span>            return this;<a name="line.70"></a>
+<span class="sourceLineNo">071</span>        }<a name="line.71"></a>
+<span class="sourceLineNo">072</span><a name="line.72"></a>
+<span class="sourceLineNo">073</span>        /**<a name="line.73"></a>
+<span class="sourceLineNo">074</span>         * Specify lower bounds of the wildcard type to build.<a name="line.74"></a>
+<span class="sourceLineNo">075</span>         * @param bounds to set<a name="line.75"></a>
+<span class="sourceLineNo">076</span>         * @return {@code this}<a name="line.76"></a>
+<span class="sourceLineNo">077</span>         */<a name="line.77"></a>
+<span class="sourceLineNo">078</span>        public WildcardTypeBuilder withLowerBounds(final Type... bounds) {<a name="line.78"></a>
+<span class="sourceLineNo">079</span>            this.lowerBounds = bounds;<a name="line.79"></a>
+<span class="sourceLineNo">080</span>            return this;<a name="line.80"></a>
+<span class="sourceLineNo">081</span>        }<a name="line.81"></a>
+<span class="sourceLineNo">082</span><a name="line.82"></a>
+<span class="sourceLineNo">083</span>        /**<a name="line.83"></a>
+<span class="sourceLineNo">084</span>         * {@inheritDoc}<a name="line.84"></a>
+<span class="sourceLineNo">085</span>         */<a name="line.85"></a>
+<span class="sourceLineNo">086</span>        @Override<a name="line.86"></a>
+<span class="sourceLineNo">087</span>        public WildcardType build() {<a name="line.87"></a>
+<span class="sourceLineNo">088</span>            return new WildcardTypeImpl(upperBounds, lowerBounds);<a name="line.88"></a>
+<span class="sourceLineNo">089</span>        }<a name="line.89"></a>
+<span class="sourceLineNo">090</span>    }<a name="line.90"></a>
+<span class="sourceLineNo">091</span><a name="line.91"></a>
+<span class="sourceLineNo">092</span>    /**<a name="line.92"></a>
+<span class="sourceLineNo">093</span>     * GenericArrayType implementation class.<a name="line.93"></a>
+<span class="sourceLineNo">094</span>     * @since 3.2<a name="line.94"></a>
+<span class="sourceLineNo">095</span>     */<a name="line.95"></a>
+<span class="sourceLineNo">096</span>    private static final class GenericArrayTypeImpl implements GenericArrayType {<a name="line.96"></a>
+<span class="sourceLineNo">097</span>        private final Type componentType;<a name="line.97"></a>
+<span class="sourceLineNo">098</span><a name="line.98"></a>
+<span class="sourceLineNo">099</span>        /**<a name="line.99"></a>
+<span class="sourceLineNo">100</span>         * Constructor<a name="line.100"></a>
+<span class="sourceLineNo">101</span>         * @param componentType of this array type<a name="line.101"></a>
+<span class="sourceLineNo">102</span>         */<a name="line.102"></a>
+<span class="sourceLineNo">103</span>        private GenericArrayTypeImpl(final Type componentType) {<a name="line.103"></a>
+<span class="sourceLineNo">104</span>            this.componentType = componentType;<a name="line.104"></a>
+<span class="sourceLineNo">105</span>        }<a name="line.105"></a>
+<span class="sourceLineNo">106</span><a name="line.106"></a>
+<span class="sourceLineNo">107</span>        /**<a name="line.107"></a>
+<span class="sourceLineNo">108</span>         * {@inheritDoc}<a name="line.108"></a>
+<span class="sourceLineNo">109</span>         */<a name="line.109"></a>
+<span class="sourceLineNo">110</span>        @Override<a name="line.110"></a>
+<span class="sourceLineNo">111</span>        public Type getGenericComponentType() {<a name="line.111"></a>
+<span class="sourceLineNo">112</span>            return componentType;<a name="line.112"></a>
+<span class="sourceLineNo">113</span>        }<a name="line.113"></a>
+<span class="sourceLineNo">114</span><a name="line.114"></a>
+<span class="sourceLineNo">115</span>        /**<a name="line.115"></a>
+<span class="sourceLineNo">116</span>         * {@inheritDoc}<a name="line.116"></a>
+<span class="sourceLineNo">117</span>         */<a name="line.117"></a>
+<span class="sourceLineNo">118</span>        @Override<a name="line.118"></a>
+<span class="sourceLineNo">119</span>        public String toString() {<a name="line.119"></a>
+<span class="sourceLineNo">120</span>            return TypeUtils.toString(this);<a name="line.120"></a>
+<span class="sourceLineNo">121</span>        }<a name="line.121"></a>
+<span class="sourceLineNo">122</span><a name="line.122"></a>
+<span class="sourceLineNo">123</span>        /**<a name="line.123"></a>
+<span class="sourceLineNo">124</span>         * {@inheritDoc}<a name="line.124"></a>
+<span class="sourceLineNo">125</span>         */<a name="line.125"></a>
+<span class="sourceLineNo">126</span>        @Override<a name="line.126"></a>
+<span class="sourceLineNo">127</span>        public boolean equals(final Object obj) {<a name="line.127"></a>
+<span class="sourceLineNo">128</span>            return obj == this || obj instanceof GenericArrayType &amp;&amp; TypeUtils.equals(this, (GenericArrayType) obj);<a name="line.128"></a>
+<span class="sourceLineNo">129</span>        }<a name="line.129"></a>
+<span class="sourceLineNo">130</span><a name="line.130"></a>
+<span class="sourceLineNo">131</span>        /**<a name="line.131"></a>
+<span class="sourceLineNo">132</span>         * {@inheritDoc}<a name="line.132"></a>
+<span class="sourceLineNo">133</span>         */<a name="line.133"></a>
+<span class="sourceLineNo">134</span>        @Override<a name="line.134"></a>
+<span class="sourceLineNo">135</span>        public int hashCode() {<a name="line.135"></a>
+<span class="sourceLineNo">136</span>            int result = 67 &lt;&lt; 4;<a name="line.136"></a>
+<span class="sourceLineNo">137</span>            result |= componentType.hashCode();<a name="line.137"></a>
+<span class="sourceLineNo">138</span>            return result;<a name="line.138"></a>
+<span class="sourceLineNo">139</span>        }<a name="line.139"></a>
+<span class="sourceLineNo">140</span>    }<a name="line.140"></a>
+<span class="sourceLineNo">141</span><a name="line.141"></a>
+<span class="sourceLineNo">142</span>    /**<a name="line.142"></a>
+<span class="sourceLineNo">143</span>     * ParameterizedType implementation class.<a name="line.143"></a>
+<span class="sourceLineNo">144</span>     * @since 3.2<a name="line.144"></a>
+<span class="sourceLineNo">145</span>     */<a name="line.145"></a>
+<span class="sourceLineNo">146</span>    private static final class ParameterizedTypeImpl implements ParameterizedType {<a name="line.146"></a>
+<span class="sourceLineNo">147</span>        private final Class&lt;?&gt; raw;<a name="line.147"></a>
+<span class="sourceLineNo">148</span>        private final Type useOwner;<a name="line.148"></a>
+<span class="sourceLineNo">149</span>        private final Type[] typeArguments;<a name="line.149"></a>
+<span class="sourceLineNo">150</span><a name="line.150"></a>
+<span class="sourceLineNo">151</span>        /**<a name="line.151"></a>
+<span class="sourceLineNo">152</span>         * Constructor<a name="line.152"></a>
+<span class="sourceLineNo">153</span>         * @param rawClass type<a name="line.153"></a>
+<span class="sourceLineNo">154</span>         * @param useOwner owner type to use, if any<a name="line.154"></a>
+<span class="sourceLineNo">155</span>         * @param typeArguments formal type arguments<a name="line.155"></a>
+<span class="sourceLineNo">156</span>         */<a name="line.156"></a>
+<span class="sourceLineNo">157</span>        private ParameterizedTypeImpl(final Class&lt;?&gt; rawClass, final Type useOwner, final Type[] typeArguments) {<a name="line.157"></a>
+<span class="sourceLineNo">158</span>            this.raw = rawClass;<a name="line.158"></a>
+<span class="sourceLineNo">159</span>            this.useOwner = useOwner;<a name="line.159"></a>
+<span class="sourceLineNo">160</span>            this.typeArguments = Arrays.copyOf(typeArguments, typeArguments.length, Type[].class);<a name="line.160"></a>
+<span class="sourceLineNo">161</span>        }<a name="line.161"></a>
+<span class="sourceLineNo">162</span><a name="line.162"></a>
+<span class="sourceLineNo">163</span>        /**<a name="line.163"></a>
+<span class="sourceLineNo">164</span>         * {@inheritDoc}<a name="line.164"></a>
+<span class="sourceLineNo">165</span>         */<a name="line.165"></a>
+<span class="sourceLineNo">166</span>        @Override<a name="line.166"></a>
+<span class="sourceLineNo">167</span>        public Type getRawType() {<a name="line.167"></a>
+<span class="sourceLineNo">168</span>            return raw;<a name="line.168"></a>
+<span class="sourceLineNo">169</span>        }<a name="line.169"></a>
+<span class="sourceLineNo">170</span><a name="line.170"></a>
+<span class="sourceLineNo">171</span>        /**<a name="line.171"></a>
+<span class="sourceLineNo">172</span>         * {@inheritDoc}<a name="line.172"></a>
+<span class="sourceLineNo">173</span>         */<a name="line.173"></a>
+<span class="sourceLineNo">174</span>        @Override<a name="line.174"></a>
+<span class="sourceLineNo">175</span>        public Type getOwnerType() {<a name="line.175"></a>
+<span class="sourceLineNo">176</span>            return useOwner;<a name="line.176"></a>
+<span class="sourceLineNo">177</span>        }<a name="line.177"></a>
+<span class="sourceLineNo">178</span><a name="line.178"></a>
+<span class="sourceLineNo">179</span>        /**<a name="line.179"></a>
+<span class="sourceLineNo">180</span>         * {@inheritDoc}<a name="line.180"></a>
+<span class="sourceLineNo">181</span>         */<a name="line.181"></a>
+<span class="sourceLineNo">182</span>        @Override<a name="line.182"></a>
+<span class="sourceLineNo">183</span>        public Type[] getActualTypeArguments() {<a name="line.183"></a>
+<span class="sourceLineNo">184</span>            return typeArguments.clone();<a name="line.184"></a>
+<span class="sourceLineNo">185</span>        }<a name="line.185"></a>
+<span class="sourceLineNo">186</span><a name="line.186"></a>
+<span class="sourceLineNo">187</span>        /**<a name="line.187"></a>
+<span class="sourceLineNo">188</span>         * {@inheritDoc}<a name="line.188"></a>
+<span class="sourceLineNo">189</span>         */<a name="line.189"></a>
+<span class="sourceLineNo">190</span>        @Override<a name="line.190"></a>
+<span class="sourceLineNo">191</span>        public String toString() {<a name="line.191"></a>
+<span class="sourceLineNo">192</span>            return TypeUtils.toString(this);<a name="line.192"></a>
+<span class="sourceLineNo">193</span>        }<a name="line.193"></a>
+<span class="sourceLineNo">194</span><a name="line.194"></a>
+<span class="sourceLineNo">195</span>        /**<a name="line.195"></a>
+<span class="sourceLineNo">196</span>         * {@inheritDoc}<a name="line.196"></a>
+<span class="sourceLineNo">197</span>         */<a name="line.197"></a>
+<span class="sourceLineNo">198</span>        @Override<a name="line.198"></a>
+<span class="sourceLineNo">199</span>        public boolean equals(final Object obj) {<a name="line.199"></a>
+<span class="sourceLineNo">200</span>            return obj == this || obj instanceof ParameterizedType &amp;&amp; TypeUtils.equals(this, ((ParameterizedType) obj));<a name="line.200"></a>
+<span class="sourceLineNo">201</span>        }<a name="line.201"></a>
+<span class="sourceLineNo">202</span><a name="line.202"></a>
+<span class="sourceLineNo">203</span>        /**<a name="line.203"></a>
+<span class="sourceLineNo">204</span>         * {@inheritDoc}<a name="line.204"></a>
+<span class="sourceLineNo">205</span>         */<a name="line.205"></a>
+<span class="sourceLineNo">206</span>        @Override<a name="line.206"></a>
+<span class="sourceLineNo">207</span>        public int hashCode() {<a name="line.207"></a>
+<span class="sourceLineNo">208</span>            int result = 71 &lt;&lt; 4;<a name="line.208"></a>
+<span class="sourceLineNo">209</span>            result |= raw.hashCode();<a name="line.209"></a>
+<span class="sourceLineNo">210</span>            result &lt;&lt;= 4;<a name="line.210"></a>
+<span class="sourceLineNo">211</span>            result |= Objects.hashCode(useOwner);<a name="line.211"></a>
+<span class="sourceLineNo">212</span>            result &lt;&lt;= 8;<a name="line.212"></a>
+<span class="sourceLineNo">213</span>            result |= Arrays.hashCode(typeArguments);<a name="line.213"></a>
+<span class="sourceLineNo">214</span>            return result;<a name="line.214"></a>
+<span class="sourceLineNo">215</span>        }<a name="line.215"></a>
+<span class="sourceLineNo">216</span>    }<a name="line.216"></a>
+<span class="sourceLineNo">217</span><a name="line.217"></a>
+<span class="sourceLineNo">218</span>    /**<a name="line.218"></a>
+<span class="sourceLineNo">219</span>     * WildcardType implementation class.<a name="line.219"></a>
+<span class="sourceLineNo">220</span>     * @since 3.2<a name="line.220"></a>
+<span class="sourceLineNo">221</span>     */<a name="line.221"></a>
+<span class="sourceLineNo">222</span>    private static final class WildcardTypeImpl implements WildcardType {<a name="line.222"></a>
+<span class="sourceLineNo">223</span>        private final Type[] upperBounds;<a name="line.223"></a>
+<span class="sourceLineNo">224</span>        private final Type[] lowerBounds;<a name="line.224"></a>
+<span class="sourceLineNo">225</span><a name="line.225"></a>
+<span class="sourceLineNo">226</span>        /**<a name="line.226"></a>
+<span class="sourceLineNo">227</span>         * Constructor<a name="line.227"></a>
+<span class="sourceLineNo">228</span>         * @param upperBounds of this type<a name="line.228"></a>
+<span class="sourceLineNo">229</span>         * @param lowerBounds of this type<a name="line.229"></a>
+<span class="sourceLineNo">230</span>         */<a name="line.230"></a>
+<span class="sourceLineNo">231</span>        private WildcardTypeImpl(final Type[] upperBounds, final Type[] lowerBounds) {<a name="line.231"></a>
+<span class="sourceLineNo">232</span>            this.upperBounds = ObjectUtils.defaultIfNull(upperBounds, ArrayUtils.EMPTY_TYPE_ARRAY);<a name="line.232"></a>
+<span class="sourceLineNo">233</span>            this.lowerBounds = ObjectUtils.defaultIfNull(lowerBounds, ArrayUtils.EMPTY_TYPE_ARRAY);<a name="line.233"></a>
+<span class="sourceLineNo">234</span>        }<a name="line.234"></a>
+<span class="sourceLineNo">235</span><a name="line.235"></a>
+<span class="sourceLineNo">236</span>        /**<a name="line.236"></a>
+<span class="sourceLineNo">237</span>         * {@inheritDoc}<a name="line.237"></a>
+<span class="sourceLineNo">238</span>         */<a name="line.238"></a>
+<span class="sourceLineNo">239</span>        @Override<a name="line.239"></a>
+<span class="sourceLineNo">240</span>        public Type[] getUpperBounds() {<a name="line.240"></a>
+<span class="sourceLineNo">241</span>            return upperBounds.clone();<a name="line.241"></a>
+<span class="sourceLineNo">242</span>        }<a name="line.242"></a>
+<span class="sourceLineNo">243</span><a name="line.243"></a>
+<span class="sourceLineNo">244</span>        /**<a name="line.244"></a>
+<span class="sourceLineNo">245</span>         * {@inheritDoc}<a name="line.245"></a>
+<span class="sourceLineNo">246</span>         */<a name="line.246"></a>
+<span class="sourceLineNo">247</span>        @Override<a name="line.247"></a>
+<span class="sourceLineNo">248</span>        public Type[] getLowerBounds() {<a name="line.248"></a>
+<span class="sourceLineNo">249</span>            return lowerBounds.clone();<a name="line.249"></a>
+<span class="sourceLineNo">250</span>        }<a name="line.250"></a>
+<span class="sourceLineNo">251</span><a name="line.251"></a>
+<span class="sourceLineNo">252</span>        /**<a name="line.252"></a>
+<span class="sourceLineNo">253</span>         * {@inheritDoc}<a name="line.253"></a>
+<span class="sourceLineNo">254</span>         */<a name="line.254"></a>
+<span class="sourceLineNo">255</span>        @Override<a name="line.255"></a>
+<span class="sourceLineNo">256</span>        public String toString() {<a name="line.256"></a>
+<span class="sourceLineNo">257</span>            return TypeUtils.toString(this);<a name="line.257"></a>
+<span class="sourceLineNo">258</span>        }<a name="line.258"></a>
+<span class="sourceLineNo">259</span><a name="line.259"></a>
+<span class="sourceLineNo">260</span>        /**<a name="line.260"></a>
+<span class="sourceLineNo">261</span>         * {@inheritDoc}<a name="line.261"></a>
+<span class="sourceLineNo">262</span>         */<a name="line.262"></a>
+<span class="sourceLineNo">263</span>        @Override<a name="line.263"></a>
+<span class="sourceLineNo">264</span>        public boolean equals(final Object obj) {<a name="line.264"></a>
+<span class="sourceLineNo">265</span>            return obj == this || obj instanceof WildcardType &amp;&amp; TypeUtils.equals(this, (WildcardType) obj);<a name="line.265"></a>
+<span class="sourceLineNo">266</span>        }<a name="line.266"></a>
+<span class="sourceLineNo">267</span><a name="line.267"></a>
+<span class="sourceLineNo">268</span>        /**<a name="line.268"></a>
+<span class="sourceLineNo">269</span>         * {@inheritDoc}<a name="line.269"></a>
+<span class="sourceLineNo">270</span>         */<a name="line.270"></a>
+<span class="sourceLineNo">271</span>        @Override<a name="line.271"></a>
+<span class="sourceLineNo">272</span>        public int hashCode() {<a name="line.272"></a>
+<span class="sourceLineNo">273</span>            int result = 73 &lt;&lt; 8;<a name="line.273"></a>
+<span class="sourceLineNo">274</span>            result |= Arrays.hashCode(upperBounds);<a name="line.274"></a>
+<span class="sourceLineNo">275</span>            result &lt;&lt;= 8;<a name="line.275"></a>
+<span class="sourceLineNo">276</span>            result |= Arrays.hashCode(lowerBounds);<a name="line.276"></a>
+<span class="sourceLineNo">277</span>            return result;<a name="line.277"></a>
+<span class="sourceLineNo">278</span>        }<a name="line.278"></a>
+<span class="sourceLineNo">279</span>    }<a name="line.279"></a>
+<span class="sourceLineNo">280</span><a name="line.280"></a>
+<span class="sourceLineNo">281</span>    /**<a name="line.281"></a>
+<span class="sourceLineNo">282</span>     * A wildcard instance matching {@code ?}.<a name="line.282"></a>
+<span class="sourceLineNo">283</span>     * @since 3.2<a name="line.283"></a>
+<span class="sourceLineNo">284</span>     */<a name="line.284"></a>
+<span class="sourceLineNo">285</span>    public static final WildcardType WILDCARD_ALL = wildcardType().withUpperBounds(Object.class).build();<a name="line.285"></a>
+<span class="sourceLineNo">286</span><a name="line.286"></a>
+<span class="sourceLineNo">287</span>    /**<a name="line.287"></a>
+<span class="sourceLineNo">288</span>     * &lt;p&gt;{@code TypeUtils} instances should NOT be constructed in standard<a name="line.288"></a>
+<span class="sourceLineNo">289</span>     * programming. Instead, the class should be used as<a name="line.289"></a>
+<span class="sourceLineNo">290</span>     * {@code TypeUtils.isAssignable(cls, toClass)}.&lt;/p&gt; &lt;p&gt;This<a name="line.290"></a>
+<span class="sourceLineNo">291</span>     * constructor is public to permit tools that require a JavaBean instance to<a name="line.291"></a>
+<span class="sourceLineNo">292</span>     * operate.&lt;/p&gt;<a name="line.292"></a>
+<span class="sourceLineNo">293</span>     */<a name="line.293"></a>
+<span class="sourceLineNo">294</span>    public TypeUtils() {<a name="line.294"></a>
+<span class="sourceLineNo">295</span>        super();<a name="line.295"></a>
+<span class="sourceLineNo">296</span>    }<a name="line.296"></a>
+<span class="sourceLineNo">297</span><a name="line.297"></a>
+<span class="sourceLineNo">298</span>    /**<a name="line.298"></a>
+<span class="sourceLineNo">299</span>     * &lt;p&gt;Checks if the subject type may be implicitly cast to the target type<a name="line.299"></a>
+<span class="sourceLineNo">300</span>     * following the Java generics rules. If both types are {@link Class}<a name="line.300"></a>
+<span class="sourceLineNo">301</span>     * objects, the method returns the result of<a name="line.301"></a>
+<span class="sourceLineNo">302</span>     * {@link ClassUtils#isAssignable(Class, Class)}.&lt;/p&gt;<a name="line.302"></a>
+<span class="sourceLineNo">303</span>     *<a name="line.303"></a>
+<span class="sourceLineNo">304</span>     * @param type the subject type to be assigned to the target type<a name="line.304"></a>
+<span class="sourceLineNo">305</span>     * @param toType the target type<a name="line.305"></a>
+<span class="sourceLineNo">306</span>     * @return {@code true} if {@code type} is assignable to {@code toType}.<a name="line.306"></a>
+<span class="sourceLineNo">307</span>     */<a name="line.307"></a>
+<span class="sourceLineNo">308</span>    public static boolean isAssignable(final Type type, final Type toType) {<a name="line.308"></a>
+<span class="sourceLineNo">309</span>        return isAssignable(type, toType, null);<a name="line.309"></a>
+<span class="sourceLineNo">310</span>    }<a name="line.310"></a>
+<span class="sourceLineNo">311</span><a name="line.311"></a>
+<span class="sourceLineNo">312</span>    /**<a name="line.312"></a>
+<span class="sourceLineNo">313</span>     * &lt;p&gt;Checks if the subject type may be implicitly cast to the target type<a name="line.313"></a>
+<span class="sourceLineNo">314</span>     * following the Java generics rules.&lt;/p&gt;<a name="line.314"></a>
+<span class="sourceLineNo">315</span>     *<a name="line.315"></a>
+<span class="sourceLineNo">316</span>     * @param type the subject type to be assigned to the target type<a name="line.316"></a>
+<span class="sourceLineNo">317</span>     * @param toType the target type<a name="line.317"></a>
+<span class="sourceLineNo">318</span>     * @param typeVarAssigns optional map of type variable assignments<a name="line.318"></a>
+<span class="sourceLineNo">319</span>     * @return {@code true} if {@code type} is assignable to {@code toType}.<a name="line.319"></a>
+<span class="sourceLineNo">320</span>     */<a name="line.320"></a>
+<span class="sourceLineNo">321</span>    private static boolean isAssignable(final Type type, final Type toType,<a name="line.321"></a>
+<span class="sourceLineNo">322</span>            final Map&lt;TypeVariable&lt;?&gt;, Type&gt; typeVarAssigns) {<a name="line.322"></a>
+<span class="sourceLineNo">323</span>        if (toType == null || toType instanceof Class&lt;?&gt;) {<a name="line.323"></a>
+<span class="sourceLineNo">324</span>            return isAssignable(type, (Class&lt;?&gt;) toType);<a name="line.324"></a>
+<span class="sourceLineNo">325</span>        }<a name="line.325"></a>
+<span class="sourceLineNo">326</span><a name="line.326"></a>
+<span class="sourceLineNo">327</span>        if (toType instanceof ParameterizedType) {<a name="line.327"></a>
+<span class="sourceLineNo">328</span>            return isAssignable(type, (ParameterizedType) toType, typeVarAssigns);<a name="line.328"></a>
+<span class="sourceLineNo">329</span>        }<a name="line.329"></a>
+<span class="sourceLineNo">330</span><a name="line.330"></a>
+<span class="sourceLineNo">331</span>        if (toType instanceof GenericArrayType) {<a name="line.331"></a>
+<span class="sourceLineNo">332</span>            return isAssignable(type, (GenericArrayType) toType, typeVarAssigns);<a name="line.332"></a>
+<span class="sourceLineNo">333</span>        }<a name="line.333"></a>
+<span class="sourceLineNo">334</span><a name="line.334"></a>
+<span class="sourceLineNo">335</span>        if (toType instanceof WildcardType) {<a name="line.335"></a>
+<span class="sourceLineNo">336</span>            return isAssignable(type, (WildcardType) toType, typeVarAssigns);<a name="line.336"></a>
+<span class="sourceLineNo">337</span>        }<a name="line.337"></a>
+<span class="sourceLineNo">338</span><a name="line.338"></a>
+<span class="sourceLineNo">339</span>        if (toType instanceof TypeVariable&lt;?&gt;) {<a name="line.339"></a>
+<span class="sourceLineNo">340</span>            return isAssignable(type, (TypeVariable&lt;?&gt;) toType, typeVarAssigns);<a name="line.340"></a>
+<span class="sourceLineNo">341</span>        }<a name="line.341"></a>
+<span class="sourceLineNo">342</span><a name="line.342"></a>
+<span class="sourceLineNo">343</span>        throw new IllegalStateException("found an unhandled type: " + toType);<a name="line.343"></a>
+<span class="sourceLineNo">344</span>    }<a name="line.344"></a>
+<span class="sourceLineNo">345</span><a name="line.345"></a>
+<span class="sourceLineNo">346</span>    /**<a name="line.346"></a>
+<span class="sourceLineNo">347</span>     * &lt;p&gt;Checks if the subject type may be implicitly cast to the target class<a name="line.347"></a>
+<span class="sourceLineNo">348</span>     * following the Java generics rules.&lt;/p&gt;<a name="line.348"></a>
+<span class="sourceLineNo">349</span>     *<a name="line.349"></a>
+<span class="sourceLineNo">350</span>     * @param type the subject type to be assigned to the target type<a name="line.350"></a>
+<span class="sourceLineNo">351</span>     * @param toClass the target class<a name="line.351"></a>
+<span class="sourceLineNo">352</span>     * @return {@code true} if {@code type} is assignable to {@code toClass}.<a name="line.352"></a>
+<span class="sourceLineNo">353</span>     */<a name="line.353"></a>
+<span class="sourceLineNo">354</span>    private static boolean isAssignable(final Type type, final Class&lt;?&gt; toClass) {<a name="line.354"></a>
+<span class="sourceLineNo">355</span>        if (type == null) {<a name="line.355"></a>
+<span class="sourceLineNo">356</span>            // consistency with ClassUtils.isAssignable() behavior<a name="line.356"></a>
+<span class="sourceLineNo">357</span>            return toClass == null || !toClass.isPrimitive();<a name="line.357"></a>
+<span class="sourceLineNo">358</span>        }<a name="line.358"></a>
+<span class="sourceLineNo">359</span><a name="line.359"></a>
+<span class="sourceLineNo">360</span>        // only a null type can be assigned to null type which<a name="line.360"></a>
+<span class="sourceLineNo">361</span>        // would have cause the previous to return true<a name="line.361"></a>
+<span class="sourceLineNo">362</span>        if (toClass == null) {<a name="line.362"></a>
+<span class="sourceLineNo">363</span>            return false;<a name="line.363"></a>
+<span class="sourceLineNo">364</span>        }<a name="line.364"></a>
+<span class="sourceLineNo">365</span><a name="line.365"></a>
+<span class="sourceLineNo">366</span>        // all types are assignable to themselves<a name="line.366"></a>
+<span class="sourceLineNo">367</span>        if (toClass.equals(type)) {<a name="line.367"></a>
+<span class="sourceLineNo">368</span>            return true;<a name="line.368"></a>
+<span class="sourceLineNo">369</span>        }<a name="line.369"></a>
+<span class="sourceLineNo">370</span><a name="line.370"></a>
+<span class="sourceLineNo">371</span>        if (type instanceof Class&lt;?&gt;) {<a name="line.371"></a>
+<span class="sourceLineNo">372</span>            // just comparing two classes<a name="line.372"></a>
+<span class="sourceLineNo">373</span>            return ClassUtils.isAssignable((Class&lt;?&gt;) type, toClass);<a name="line.373"></a>
+<span class="sourceLineNo">374</span>        }<a name="line.374"></a>
+<span class="sourceLineNo">375</span><a name="line.375"></a>
+<span class="sourceLineNo">376</span>        if (type instanceof ParameterizedType) {<a name="line.376"></a>
+<span class="sourceLineNo">377</span>            // only have to compare the raw type to the class<a name="line.377"></a>
+<span class="sourceLineNo">378</span>            return isAssignable(getRawType((ParameterizedType) type), toClass);<a name="line.378"></a>
+<span class="sourceLineNo">379</span>        }<a name="line.379"></a>
+<span class="sourceLineNo">380</span><a name="line.380"></a>
+<span class="sourceLineNo">381</span>        // *<a name="line.381"></a>
+<span class="sourceLineNo">382</span>        if (type instanceof TypeVariable&lt;?&gt;) {<a name="line.382"></a>
+<span class="sourceLineNo">383</span>            // if any of the bounds are assignable to the class, then the<a name="line.383"></a>
+<span class="sourceLineNo">384</span>            // type is assignable to the class.<a name="line.384"></a>
+<span class="sourceLineNo">385</span>            for (final Type bound : ((TypeVariable&lt;?&gt;) type).getBounds()) {<a name="line.385"></a>
+<span class="sourceLineNo">386</span>                if (isAssignable(bound, toClass)) {<a name="line.386"></a>
+<span class="sourceLineNo">387</span>                    return true;<a name="line.387"></a>
+<span class="sourceLineNo">388</span>                }<a name="line.388"></a>
+<span class="sourceLineNo">389</span>            }<a name="line.389"></a>
+<span class="sourceLineNo">390</span><a name="line.390"></a>
+<span class="sourceLineNo">391</span>            return false;<a name="line.391"></a>
+<span class="sourceLineNo">392</span>        }<a name="line.392"></a>
+<span class="sourceLineNo">393</span><a name="line.393"></a>
+<span class="sourceLineNo">394</span>        // the only classes to which a generic array type can be assigned<a name="line.394"></a>
+<span class="sourceLineNo">395</span>        // are class Object and array classes<a name="line.395"></a>
+<span class="sourceLineNo">396</span>        if (type instanceof GenericArrayType) {<a name="line.396"></a>
+<span class="sourceLineNo">397</span>            return toClass.equals(Object.class)<a name="line.397"></a>
+<span class="sourceLineNo">398</span>                    || toClass.isArray()<a name="line.398"></a>
+<span class="sourceLineNo">399</span>                    &amp;&amp; isAssignable(((GenericArrayType) type).getGenericComponentType(), toClass<a name="line.399"></a>
+<span class="sourceLineNo">400</span>                            .getComponentType());<a name="line.400"></a>
+<span class="sourceLineNo">401</span>        }<a name="line.401"></a>
+<span class="sourceLineNo">402</span><a name="line.402"></a>
+<span class="sourceLineNo">403</span>        // wildcard types are not assignable to a class (though one would think<a name="line.403"></a>
+<span class="sourceLineNo">404</span>        // "? super Object" would be assignable to Object)<a name="line.404"></a>
+<span class="sourceLineNo">405</span>        if (type instanceof WildcardType) {<a name="line.405"></a>
+<span class="sourceLineNo">406</span>            return false;<a name="line.406"></a>
+<span class="sourceLineNo">407</span>        }<a name="line.407"></a>
+<span class="sourceLineNo">408</span><a name="line.408"></a>
+<span class="sourceLineNo">409</span>        throw new IllegalStateException("found an unhandled type: " + type);<a name="line.409"></a>
+<span class="sourceLineNo">410</span>    }<a name="line.410"></a>
+<span class="sourceLineNo">411</span><a name="line.411"></a>
+<span class="sourceLineNo">412</span>    /**<a name="line.412"></a>
+<span class="sourceLineNo">413</span>     * &lt;p&gt;Checks if the subject type may be implicitly cast to the target<a name="line.413"></a>
+<span class="sourceLineNo">414</span>     * parameterized type following the Java generics rules.&lt;/p&gt;<a name="line.414"></a>
+<span class="sourceLineNo">415</span>     *<a name="line.415"></a>
+<span class="sourceLineNo">416</span>     * @param type the subject type to be assigned to the target type<a name="line.416"></a>
+<span class="sourceLineNo">417</span>     * @param toParameterizedType the target parameterized type<a name="line.417"></a>
+<span class="sourceLineNo">418</span>     * @param typeVarAssigns a map with type variables<a name="line.418"></a>
+<span class="sourceLineNo">419</span>     * @return {@code true} if {@code type} is assignable to {@code toType}.<a name="line.419"></a>
+<span class="sourceLineNo">420</span>     */<a name="line.420"></a>
+<span class="sourceLineNo">421</span>    private static boolean isAssignable(final Type type, final ParameterizedType toParameterizedType,<a name="line.421"></a>
+<span class="sourceLineNo">422</span>            final Map&lt;TypeVariable&lt;?&gt;, Type&gt; typeVarAssigns) {<a name="line.422"></a>
+<span class="sourceLineNo">423</span>        if (type == null) {<a name="line.423"></a>
+<span class="sourceLineNo">424</span>            return true;<a name="line.424"></a>
+<span class="sourceLineNo">425</span>        }<a name="line.425"></a>
+<span class="sourceLineNo">426</span><a name="line.426"></a>
+<span class="sourceLineNo">427</span>        // only a null type can be assigned to null type which<a name="line.427"></a>
+<span class="sourceLineNo">428</span>        // would have cause the previous to return true<a name="line.428"></a>
+<span class="sourceLineNo">429</span>        if (toParameterizedType == null) {<a name="line.429"></a>
+<span class="sourceLineNo">430</span>            return false;<a name="line.430"></a>
+<span class="sourceLineNo">431</span>        }<a name="line.431"></a>
+<span class="sourceLineNo">432</span><a name="line.432"></a>
+<span class="sourceLineNo">433</span>        // all types are assignable to themselves<a name="line.433"></a>
+<span class="sourceLineNo">434</span>        if (toParameterizedType.equals(type)) {<a name="line.434"></a>
+<span class="sourceLineNo">435</span>            return true;<a name="line.435"></a>
+<span class="sourceLineNo">436</span>        }<a name="line.436"></a>
+<span class="sourceLineNo">437</span><a name="line.437"></a>
+<span class="sourceLineNo">438</span>        // get the target type's raw type<a name="line.438"></a>
+<span class="sourceLineNo">439</span>        final Class&lt;?&gt; toClass = getRawType(toParameterizedType);<a name="line.439"></a>
+<span class="sourceLineNo">440</span>        // get the subject type's type arguments including owner type arguments<a name="line.440"></a>
+<span class="sourceLineNo">441</span>        // and supertype arguments up to and including the target class.<a name="line.441"></a>
+<span class="sourceLineNo">442</span>        final Map&lt;TypeVariable&lt;?&gt;, Type&gt; fromTypeVarAssigns = getTypeArguments(type, toClass, null);<a name="line.442"></a>
+<span class="sourceLineNo">443</span><a name="line.443"></a>
+<span class="sourceLineNo">444</span>        // null means the two types are not compatible<a name="line.444"></a>
+<span class="sourceLineNo">445</span>        if (fromTypeVarAssigns == null) {<a name="line.445"></a>
+<span class="sourceLineNo">446</span>            return false;<a name="line.446"></a>
+<span class="sourceLineNo">447</span>        }<a name="line.447"></a>
+<span class="sourceLineNo">448</span><a name="line.448"></a>
+<span class="sourceLineNo">449</span>        // compatible types, but there's no type arguments. this is equivalent<a name="line.449"></a>
+<span class="sourceLineNo">450</span>        // to comparing Map&lt; ?, ? &gt; to Map, and raw types are always assignable<a name="line.450"></a>
+<span class="sourceLineNo">451</span>        // to parameterized types.<a name="line.451"></a>
+<span class="sourceLineNo">452</span>        if (fromTypeVarAssigns.isEmpty()) {<a name="line.452"></a>
+<span class="sourceLineNo">453</span>            return true;<a name="line.453"></a>
+<span class="sourceLineNo">454</span>        }<a name="line.454"></a>
+<span class="sourceLineNo">455</span><a name="line.455"></a>
+<span class="sourceLineNo">456</span>        // get the target type's type arguments including owner type arguments<a name="line.456"></a>
+<span class="sourceLineNo">457</span>        final Map&lt;TypeVariable&lt;?&gt;, Type&gt; toTypeVarAssigns = getTypeArguments(toParameterizedType,<a name="line.457"></a>
+<span class="sourceLineNo">458</span>                toClass, typeVarAssigns);<a name="line.458"></a>
+<span class="sourceLineNo">459</span><a name="line.459"></a>
+<span class="sourceLineNo">460</span>        // now to check each type argument<a name="line.460"></a>
+<span class="sourceLineNo">461</span>        for (final TypeVariable&lt;?&gt; var : toTypeVarAssigns.keySet()) {<a name="line.461"></a>
+<span class="sourceLineNo">462</span>            final Type toTypeArg = unrollVariableAssignments(var, toTypeVarAssigns);<a name="line.462"></a>
+<span class="sourceLineNo">463</span>            final Type fromTypeArg = unrollVariableAssignments(var, fromTypeVarAssigns);<a name="line.463"></a>
+<span class="sourceLineNo">464</span><a name="line.464"></a>
+<span class="sourceLineNo">465</span>            if (toTypeArg == null &amp;&amp; fromTypeArg instanceof Class) {<a name="line.465"></a>
+<span class="sourceLineNo">466</span>                continue;<a name="line.466"></a>
+<span class="sourceLineNo">467</span>            }<a name="line.467"></a>
+<span class="sourceLineNo">468</span><a name="line.468"></a>
+<span class="sourceLineNo">469</span>            // parameters must either be absent from the subject type, within<a name="line.469"></a>
+<span class="sourceLineNo">470</span>            // the bounds of the wildcard type, or be an exact match to the<a name="line.470"></a>
+<span class="sourceLineNo">471</span>            // parameters of the target type.<a name="line.471"></a>
+<span class="sourceLineNo">472</span>            if (fromTypeArg != null<a name="line.472"></a>
+<span class="sourceLineNo">473</span>                    &amp;&amp; !toTypeArg.equals(fromTypeArg)<a name="line.473"></a>
+<span class="sourceLineNo">474</span>                    &amp;&amp; !(toTypeArg instanceof WildcardType &amp;&amp; isAssignable(fromTypeArg, toTypeArg,<a name="line.474"></a>
+<span class="sourceLineNo">475</span>                            typeVarAssigns))) {<a name="line.475"></a>
+<span class="sourceLineNo">476</span>                return false;<a name="line.476"></a>
+<span class="sourceLineNo">477</span>            }<a name="line.477"></a>
+<span class="sourceLineNo">478</span>        }<a name="line.478"></a>
+<span class="sourceLineNo">479</span>        return true;<a name="line.479"></a>
+<span class="sourceLineNo">480</span>    }<a name="line.480"></a>
+<span class="sourceLineNo">481</span><a name="line.481"></a>
+<span class="sourceLineNo">482</span>    /**<a name="line.482"></a>
+<span class="sourceLineNo">483</span>     * Look up {@code var} in {@code typeVarAssigns} &lt;em&gt;transitively&lt;/em&gt;,<a name="line.483"></a>
+<span class="sourceLineNo">484</span>     * i.e. keep looking until the value found is &lt;em&gt;not&lt;/em&gt; a type variable.<a name="line.484"></a>
+<span class="sourceLineNo">485</span>     * @param typeVariable the type variable to look up<a name="line.485"></a>
+<span class="sourceLineNo">486</span>     * @param typeVarAssigns the map used for the look up<a name="line.486"></a>
+<span class="sourceLineNo">487</span>     * @return Type or {@code null} if some variable was not in the map<a name="line.487"></a>
+<span class="sourceLineNo">488</span>     * @since 3.2<a name="line.488"></a>
+<span class="sourceLineNo">489</span>     */<a name="line.489"></a>
+<span class="sourceLineNo">490</span>    private static Type unrollVariableAssignments(TypeVariable&lt;?&gt; typeVariable,<a name="line.490"></a>
+<span class="sourceLineNo">491</span>        final Map&lt;TypeVariable&lt;?&gt;, Type&gt; typeVarAssigns) {<a name="line.491"></a>
+<span class="sourceLineNo">492</span>        Type result;<a name="line.492"></a>
+<span class="sourceLineNo">493</span>        do {<a name="line.493"></a>
+<span class="sourceLineNo">494</span>            result = typeVarAssigns.get(typeVariable);<a name="line.494"></a>
+<span class="sourceLineNo">495</span>            if (result instanceof TypeVariable&lt;?&gt; &amp;&amp; !result.equals(typeVariable)) {<a name="line.495"></a>
+<span class="sourceLineNo">496</span>                typeVariable = (TypeVariable&lt;?&gt;) result;<a name="line.496"></a>
+<span class="sourceLineNo">497</span>                continue;<a name="line.497"></a>
+<span class="sourceLineNo">498</span>            }<a name="line.498"></a>
+<span class="sourceLineNo">499</span>            break;<a name="line.499"></a>
+<span class="sourceLineNo">500</span>        } while (true);<a name="line.500"></a>
+<span class="sourceLineNo">501</span>        return result;<a name="line.501"></a>
+<span class="sourceLineNo">502</span>    }<a name="line.502"></a>
+<span class="sourceLineNo">503</span><a name="line.503"></a>
+<span class="sourceLineNo">504</span>    /**<a name="line.504"></a>
+<span class="sourceLineNo">505</span>     * &lt;p&gt;Checks if the subject type may be implicitly cast to the target<a name="line.505"></a>
+<span class="sourceLineNo">506</span>     * generic array type following the Java generics rules.&lt;/p&gt;<a name="line.506"></a>
+<span class="sourceLineNo">507</span>     *<a name="line.507"></a>
+<span class="sourceLineNo">508</span>     * @param type the subject type to be assigned to the target type<a name="line.508"></a>
+<span class="sourceLineNo">509</span>     * @param toGenericArrayType the target generic array type<a name="line.509"></a>
+<span class="sourceLineNo">510</span>     * @param typeVarAssigns a map with type variables<a name="line.510"></a>
+<span class="sourceLineNo">511</span>     * @return {@code true} if {@code type} is assignable to<a name="line.511"></a>
+<span class="sourceLineNo">512</span>     * {@code toGenericArrayType}.<a name="line.512"></a>
+<span class="sourceLineNo">513</span>     */<a name="line.513"></a>
+<span class="sourceLineNo">514</span>    private static boolean isAssignable(final Type type, final GenericArrayType toGenericArrayType,<a name="line.514"></a>
+<span class="sourceLineNo">515</span>            final Map&lt;TypeVariable&lt;?&gt;, Type&gt; typeVarAssigns) {<a name="line.515"></a>
+<span class="sourceLineNo">516</span>        if (type == null) {<a name="line.516"></a>
+<span class="sourceLineNo">517</span>            return true;<a name="line.517"></a>
+<span class="sourceLineNo">518</span>        }<a name="line.518"></a>
+<span class="sourceLineNo">519</span><a name="line.519"></a>
+<span class="sourceLineNo">520</span>        // only a null type can be assigned to null type which<a name="line.520"></a>
+<span class="sourceLineNo">521</span>        // would have cause the previous to return true<a name="line.521"></a>
+<span class="sourceLineNo">522</span>        if (toGenericArrayType == null) {<a name="line.522"></a>
+<span class="sourceLineNo">523</span>            return false;<a name="line.523"></a>
+<span class="sourceLineNo">524</span>        }<a name="line.524"></a>
+<span class="sourceLineNo">525</span><a name="line.525"></a>
+<span class="sourceLineNo">526</span>        // all types are assignable to themselves<a name="line.526"></a>
+<span class="sourceLineNo">527</span>        if (toGenericArrayType.equals(type)) {<a name="line.527"></a>
+<span class="sourceLineNo">528</span>            return true;<a name="line.528"></a>
+<span class="sourceLineNo">529</span>        }<a name="line.529"></a>
+<span class="sourceLineNo">530</span><a name="line.530"></a>
+<span class="sourceLineNo">531</span>        final Type toComponentType = toGenericArrayType.getGenericComponentType();<a name="line.531"></a>
+<span class="sourceLineNo">532</span><a name="line.532"></a>
+<span class="sourceLineNo">533</span>        if (type instanceof Class&lt;?&gt;) {<a name="line.533"></a>
+<span class="sourceLineNo">534</span>            final Class&lt;?&gt; cls = (Class&lt;?&gt;) type;<a name="line.534"></a>
+<span class="sourceLineNo">535</span><a name="line.535"></a>
+<span class="sourceLineNo">536</span>            // compare the component types<a name="line.536"></a>
+<span class="sourceLineNo">537</span>            return cls.isArray()<a name="line.537"></a>
+<span class="sourceLineNo">538</span>                    &amp;&amp; isAssignable(cls.getComponentType(), toComponentType, typeVarAssigns);<a name="line.538"></a>
+<span class="sourceLineNo">539</span>        }<a name="line.539"></a>
+<span class="sourceLineNo">540</span><a name="line.540"></a>
+<span class="sourceLineNo">541</span>        if (type instanceof GenericArrayType) {<a name="line.541"></a>
+<span class="sourceLineNo">542</span>            // compare the component types<a name="line.542"></a>
+<span class="sourceLineNo">543</span>            return isAssignable(((GenericArrayType) type).getGenericComponentType(),<a name="line.543"></a>
+<span class="sourceLineNo">544</span>                    toComponentType, typeVarAssigns);<a name="line.544"></a>
+<span class="sourceLineNo">545</span>        }<a name="line.545"></a>
+<span class="sourceLineNo">546</span><a name="line.546"></a>
+<span class="sourceLineNo">547</span>        if (type instanceof WildcardType) {<a name="line.547"></a>
+<span class="sourceLineNo">548</span>            // so long as one of the upper bounds is assignable, it's good<a name="line.548"></a>
+<span class="sourceLineNo">549</span>            for (final Type bound : getImplicitUpperBounds((WildcardType) type)) {<a name="line.549"></a>
+<span class="sourceLineNo">550</span>                if (isAssignable(bound, toGenericArrayType)) {<a name="line.550"></a>
+<span class="sourceLineNo">551</span>                    return true;<a name="line.551"></a>
+<span class="sourceLineNo">552</span>                }<a name="line.552"></a>
+<span class="sourceLineNo">553</span>            }<a name="line.553"></a>
+<span class="sourceLineNo">554</span><a name="line.554"></a>
+<span class="sourceLineNo">555</span>            return false;<a name="line.555"></a>
+<span class="sourceLineNo">556</span>        }<a name="line.556"></a>
+<span class="sourceLineNo">557</span><a name="line.557"></a>
+<span class="sourceLineNo">558</span>        if (type instanceof TypeVariable&lt;?&gt;) {<a name="line.558"></a>
+<span class="sourceLineNo">559</span>            // probably should remove the following logic and just return false.<a name="line.559"></a>
+<span class="sourceLineNo">560</span>            // type variables cannot specify arrays as bounds.<a name="line.560"></a>
+<span class="sourceLineNo">561</span>            for (final Type bound : getImplicitBounds((TypeVariable&lt;?&gt;) type)) {<a name="line.561"></a>
+<span class="sourceLineNo">562</span>                if (isAssignable(bound, toGenericArrayType)) {<a name="line.562"></a>
+<span class="sourceLineNo">563</span>                    return true;<a name="line.563"></a>
+<span class="sourceLineNo">564</span>                }<a name="line.564"></a>
+<span class="sourceLineNo">565</span>            }<a name="line.565"></a>
+<span class="sourceLineNo">566</span><a name="line.566"></a>
+<span class="sourceLineNo">567</span>            return false;<a name="line.567"></a>
+<span class="sourceLineNo">568</span>        }<a name="line.568"></a>
+<span class="sourceLineNo">569</span><a name="line.569"></a>
+<span class="sourceLineNo">570</span>        if (type instanceof ParameterizedType) {<a name="line.570"></a>
+<span class="sourceLineNo">571</span>            // the raw type of a parameterized type is never an array or<a name="line.571"></a>
+<span class="sourceLineNo">572</span>            // generic array, otherwise the declaration would look like this:<a name="line.572"></a>
+<span class="sourceLineNo">573</span>            // Collection[]&lt; ? extends String &gt; collection;<a name="line.573"></a>
+<span class="sourceLineNo">574</span>            return false;<a name="line.574"></a>
+<span class="sourceLineNo">575</span>        }<a name="line.575"></a>
+<span class="sourceLineNo">576</span><a name="line.576"></a>
+<span class="sourceLineNo">577</span>        throw new IllegalStateException("found an unhandled type: " + type);<a name="line.577"></a>
+<span class="sourceLineNo">578</span>    }<a name="line.578"></a>
+<span class="sourceLineNo">579</span><a name="line.579"></a>
+<span class="sourceLineNo">580</span>    /**<a name="line.580"></a>
+<span class="sourceLineNo">581</span>     * &lt;p&gt;Checks if the subject type may be implicitly cast to the target<a name="line.581"></a>
+<span class="sourceLineNo">582</span>     * wildcard type following the Java generics rules.&lt;/p&gt;<a name="line.582"></a>
+<span class="sourceLineNo">583</span>     *<a name="line.583"></a>
+<span class="sourceLineNo">584</span>     * @param type the subject type to be assigned to the target type<a name="line.584"></a>
+<span class="sourceLineNo">585</span>     * @param toWildcardType the target wildcard type<a name="line.585"></a>
+<span class="sourceLineNo">586</span>     * @param typeVarAssigns a map with type variables<a name="line.586"></a>
+<span class="sourceLineNo">587</span>     * @return {@code true} if {@code type} is assignable to<a name="line.587"></a>
+<span class="sourceLineNo">588</span>     * {@code toWildcardType}.<a name="line.588"></a>
+<span class="sourceLineNo">589</span>     */<a name="line.589"></a>
+<span class="sourceLineNo">590</span>    private static boolean isAssignable(final Type type, final WildcardType toWildcardType,<a name="line.590"></a>
+<span class="sourceLineNo">591</span>            final Map&lt;TypeVariable&lt;?&gt;, Type&gt; typeVarAssigns) {<a name="line.591"></a>
+<span class="sourceLineNo">592</span>        if (type == null) {<a name="line.592"></a>
+<span class="sourceLineNo">593</span>            return true;<a name="line.593"></a>
+<span class="sourceLineNo">594</span>        }<a name="line.594"></a>
+<span class="sourceLineNo">595</span><a name="line.595"></a>
+<span class="sourceLineNo">596</span>        // only a null type can be assigned to null type which<a name="line.596"></a>
+<span class="sourceLineNo">597</span>        // would have cause the previous to return true<a name="line.597"></a>
+<span class="sourceLineNo">598</span>        if (toWildcardType == null) {<a name="line.598"></a>
+<span class="sourceLineNo">599</span>            return false;<a name="line.599"></a>
+<span class="sourceLineNo">600</span>        }<a name="line.600"></a>
+<span class="sourceLineNo">601</span><a name="line.601"></a>
+<span class="sourceLineNo">602</span>        // all types are assignable to themselves<a name="line.602"></a>
+<span class="sourceLineNo">603</span>        if (toWildcardType.equals(type)) {<a name="line.603"></a>
+<span class="sourceLineNo">604</span>            return true;<a name="line.604"></a>
+<span class="sourceLineNo">605</span>        }<a name="line.605"></a>
+<span class="sourceLineNo">606</span><a name="line.606"></a>
+<span class="sourceLineNo">607</span>        final Type[] toUpperBounds = getImplicitUpperBounds(toWildcardType);<a name="line.607"></a>
+<span class="sourceLineNo">608</span>        final Type[] toLowerBounds = getImplicitLowerBounds(toWildcardType);<a name="line.608"></a>
+<span class="sourceLineNo">609</span><a name="line.609"></a>
+<span class="sourceLineNo">610</span>        if (type instanceof WildcardType) {<a name="line.610"></a>
+<span class="sourceLineNo">611</span>            final WildcardType wildcardType = (WildcardType) type;<a name="line.611"></a>
+<span class="sourceLineNo">612</span>            final Type[] upperBounds = getImplicitUpperBounds(wildcardType);<a name="line.612"></a>
+<span class="sourceLineNo">613</span>            final Type[] lowerBounds = getImplicitLowerBounds(wildcardType);<a name="line.613"></a>
+<span class="sourceLineNo">614</span><a name="line.614"></a>
+<span class="sourceLineNo">615</span>            for (Type toBound : toUpperBounds) {<a name="line.615"></a>
+<span class="sourceLineNo">616</span>                // if there are assignments for unresolved type variables,<a name="line.616"></a>
+<span class="sourceLineNo">617</span>                // now's the time to substitute them.<a name="line.617"></a>
+<span class="sourceLineNo">618</span>                toBound = substituteTypeVariables(toBound, typeVarAssigns);<a name="line.618"></a>
+<span class="sourceLineNo">619</span><a name="line.619"></a>
+<span class="sourceLineNo">620</span>                // each upper bound of the subject type has to be assignable to<a name="line.620"></a>
+<span class="sourceLineNo">621</span>                // each<a name="line.621"></a>
+<span class="sourceLineNo">622</span>                // upper bound of the target type<a name="line.622"></a>
+<span class="sourceLineNo">623</span>                for (final Type bound : upperBounds) {<a name="line.623"></a>
+<span class="sourceLineNo">624</span>                    if (!isAssignable(bound, toBound, typeVarAssigns)) {<a name="line.624"></a>
+<span class="sourceLineNo">625</span>                        return false;<a name="line.625"></a>
+<span class="sourceLineNo">626</span>                    }<a name="line.626"></a>
+<span class="sourceLineNo">627</span>                }<a name="line.627"></a>
+<span class="sourceLineNo">628</span>            }<a name="line.628"></a>
+<span class="sourceLineNo">629</span><a name="line.629"></a>
+<span class="sourceLineNo">630</span>            for (Type toBound : toLowerBounds) {<a name="line.630"></a>
+<span class="sourceLineNo">631</span>                // if there are assignments for unresolved type variables,<a name="line.631"></a>
+<span class="sourceLineNo">632</span>                // now's the time to substitute them.<a name="line.632"></a>
+<span class="sourceLineNo">633</span>                toBound = substituteTypeVariables(toBound, typeVarAssigns);<a name="line.633"></a>
+<span class="sourceLineNo">634</span><a name="line.634"></a>
+<span class="sourceLineNo">635</span>                // each lower bound of the target type has to be assignable to<a name="line.635"></a>
+<span class="sourceLineNo">636</span>                // each<a name="line.636"></a>
+<span class="sourceLineNo">637</span>                // lower bound of the subject type<a name="line.637"></a>
+<span class="sourceLineNo">638</span>                for (final Type bound : lowerBounds) {<a name="line.638"></a>
+<span class="sourceLineNo">639</span>                    if (!isAssignable(toBound, bound, typeVarAssigns)) {<a name="line.639"></a>
+<span class="sourceLineNo">640</span>                        return false;<a name="line.640"></a>
+<span class="sourceLineNo">641</span>                    }<a name="line.641"></a>
+<span class="sourceLineNo">642</span>                }<a name="line.642"></a>
+<span class="sourceLineNo">643</span>            }<a name="line.643"></a>
+<span class="sourceLineNo">644</span>            return true;<a name="line.644"></a>
+<span class="sourceLineNo">645</span>        }<a name="line.645"></a>
+<span class="sourceLineNo">646</span><a name="line.646"></a>
+<span class="sourceLineNo">647</span>        for (final Type toBound : toUpperBounds) {<a name="line.647"></a>
+<span class="sourceLineNo">648</span>            // if there are assignments for unresolved type variables,<a name="line.648"></a>
+<span class="sourceLineNo">649</span>            // now's the time to substitute them.<a name="line.649"></a>
+<span class="sourceLineNo">650</span>            if (!isAssignable(type, substituteTypeVariables(toBound, typeVarAssigns),<a name="line.650"></a>
+<span class="sourceLineNo">651</span>                    typeVarAssigns)) {<a name="line.651"></a>
+<span class="sourceLineNo">652</span>                return false;<a name="line.652"></a>
+<span class="sourceLineNo">653</span>            }<a name="line.653"></a>
+<span class="sourceLineNo">654</span>        }<a name="line.654"></a>
+<span class="sourceLineNo">655</span><a name="line.655"></a>
+<span class="sourceLineNo">656</span>        for (final Type toBound : toLowerBounds) {<a name="line.656"></a>
+<span class="sourceLineNo">657</span>            // if there are assignments for unresolved type variables,<a name="line.657"></a>
+<span class="sourceLineNo">658</span>            // now's the time to substitute them.<a name="line.658"></a>
+<span class="sourceLineNo">659</span>            if (!isAssignable(substituteTypeVariables(toBound, typeVarAssigns), type,<a name="line.659"></a>
+<span class="sourceLineNo">660</span>                    typeVarAssigns)) {<a name="line.660"></a>
+<span class="sourceLineNo">661</span>                return false;<a name="line.661"></a>
+<span class="sourceLineNo">662</span>            }<a name="line.662"></a>
+<span class="sourceLineNo">663</span>        }<a name="line.663"></a>
+<span class="sourceLineNo">664</span>        return true;<a name="line.664"></a>
+<span class="sourceLineNo">665</span>    }<a name="line.665"></a>
+<span class="sourceLineNo">666</span><a name="line.666"></a>
+<span class="sourceLineNo">667</span>    /**<a name="line.667"></a>
+<span class="sourceLineNo">668</span>     * &lt;p&gt;Checks if the subject type may be implicitly cast to the target type<a name="line.668"></a>
+<span class="sourceLineNo">669</span>     * variable following the Java generics rules.&lt;/p&gt;<a name="line.669"></a>
+<span class="sourceLineNo">670</span>     *<a name="line.670"></a>
+<span class="sourceLineNo">671</span>     * @param type the subject type to be assigned to the target type<a name="line.671"></a>
+<span class="sourceLineNo">672</span>     * @param toTypeVariable the target type variable<a name="line.672"></a>
+<span class="sourceLineNo">673</span>     * @param typeVarAssigns a map with type variables<a name="line.673"></a>
+<span class="sourceLineNo">674</span>     * @return {@code true} if {@code type} is assignable to<a name="line.674"></a>
+<span class="sourceLineNo">675</span>     * {@code toTypeVariable}.<a name="line.675"></a>
+<span class="sourceLineNo">676</span>     */<a name="line.676"></a>
+<span class="sourceLineNo">677</span>    private static boolean isAssignable(final Type type, final TypeVariable&lt;?&gt; toTypeVariable,<a name="line.677"></a>
+<span class="sourceLineNo">678</span>            final Map&lt;TypeVariable&lt;?&gt;, Type&gt; typeVarAssigns) {<a name="line.678"></a>
+<span class="sourceLineNo">679</span>        if (type == null) {<a name="line.679"></a>
+<span class="sourceLineNo">680</span>            return true;<a name="line.680"></a>
+<span class="sourceLineNo">681</span>        }<a name="line.681"></a>
+<span class="sourceLineNo">682</span><a name="line.682"></a>
+<span class="sourceLineNo">683</span>        // only a null type can be assigned to null type which<a name="line.683"></a>
+<span class="sourceLineNo">684</span>        // would have cause the previous to return true<a name="line.684"></a>
+<span class="sourceLineNo">685</span>        if (toTypeVariable == null) {<a name="line.685"></a>
+<span class="sourceLineNo">686</span>            return false;<a name="line.686"></a>
+<span class="sourceLineNo">687</span>        }<a name="line.687"></a>
+<span class="sourceLineNo">688</span><a name="line.688"></a>
+<span class="sourceLineNo">689</span>        // all types are assignable to themselves<a name="line.689"></a>
+<span class="sourceLineNo">690</span>        if (toTypeVariable.equals(type)) {<a name="line.690"></a>
+<span class="sourceLineNo">691</span>            return true;<a name="line.691"></a>
+<span class="sourceLineNo">692</span>        }<a name="line.692"></a>
+<span class="sourceLineNo">693</span><a name="line.693"></a>
+<span class="sourceLineNo">694</span>        if (type instanceof TypeVariable&lt;?&gt;) {<a name="line.694"></a>
+<span class="sourceLineNo">695</span>            // a type variable is assignable to another type variable, if<a name="line.695"></a>
+<span class="sourceLineNo">696</span>            // and only if the former is the latter, extends the latter, or<a name="line.696"></a>
+<span class="sourceLineNo">697</span>            // is otherwise a descendant of the latter.<a name="line.697"></a>
+<span class="sourceLineNo">698</span>            final Type[] bounds = getImplicitBounds((TypeVariable&lt;?&gt;) type);<a name="line.698"></a>
+<span class="sourceLineNo">699</span><a name="line.699"></a>
+<span class="sourceLineNo">700</span>            for (final Type bound : bounds) {<a name="line.700"></a>
+<span class="sourceLineNo">701</span>                if (isAssignable(bound, toTypeVariable, typeVarAssigns)) {<a name="line.701"></a>
+<span class="sourceLineNo">702</span>                    return true;<a name="line.702"></a>
+<span class="sourceLineNo">703</span>                }<a name="line.703"></a>
+<span class="sourceLineNo">704</span>            }<a name="line.704"></a>
+<span class="sourceLineNo">705</span>        }<a name="line.705"></a>
+<span class="sourceLineNo">706</span><a name="line.706"></a>
+<span class="sourceLineNo">707</span>        if (type instanceof Class&lt;?&gt; || type instanceof ParameterizedType<a name="line.707"></a>
+<span class="sourceLineNo">708</span>                || type instanceof GenericArrayType || type instanceof WildcardType) {<a name="line.708"></a>
+<span class="sourceLineNo">709</span>            return false;<a name="line.709"></a>
+<span class="sourceLineNo">710</span>        }<a name="line.710"></a>
+<span class="sourceLineNo">711</span><a name="line.711"></a>
+<span class="sourceLineNo">712</span>        throw new IllegalStateException("found an unhandled type: " + type);<a name="line.712"></a>
+<span class="sourceLineNo">713</span>    }<a name="line.713"></a>
+<span class="sourceLineNo">714</span><a name="line.714"></a>
+<span class="sourceLineNo">715</span>    /**<a name="line.715"></a>
+<span class="sourceLineNo">716</span>     * &lt;p&gt;Find the mapping for {@code type} in {@code typeVarAssigns}.&lt;/p&gt;<a name="line.716"></a>
+<span class="sourceLineNo">717</span>     *<a name="line.717"></a>
+<span class="sourceLineNo">718</span>     * @param type the type to be replaced<a name="line.718"></a>
+<span class="sourceLineNo">719</span>     * @param typeVarAssigns the map with type variables<a name="line.719"></a>
+<span class="sourceLineNo">720</span>     * @return the replaced type<a name="line.720"></a>
+<span class="sourceLineNo">721</span>     * @throws IllegalArgumentException if the type cannot be substituted<a name="line.721"></a>
+<span class="sourceLineNo">722</span>     */<a name="line.722"></a>
+<span class="sourceLineNo">723</span>    private static Type substituteTypeVariables(final Type type, final Map&lt;TypeVariable&lt;?&gt;, Type&gt; typeVarAssigns) {<a name="line.723"></a>
+<span class="sourceLineNo">724</span>        if (type instanceof TypeVariable&lt;?&gt; &amp;&amp; typeVarAssigns != null) {<a name="line.724"></a>
+<span class="sourceLineNo">725</span>            final Type replacementType = typeVarAssigns.get(type);<a name="line.725"></a>
+<span class="sourceLineNo">726</span><a name="line.726"></a>
+<span class="sourceLineNo">727</span>            if (replacementType == null) {<a name="line.727"></a>
+<span class="sourceLineNo">728</span>                throw new IllegalArgumentException("missing assignment type for type variable "<a name="line.728"></a>
+<span class="sourceLineNo">729</span>                        + type);<a name="line.729"></a>
+<span class="sourceLineNo">730</span>            }<a name="line.730"></a>
+<span class="sourceLineNo">731</span>            return replacementType;<a name="line.731"></a>
+<span class="sourceLineNo">732</span>        }<a name="line.732"></a>
+<span class="sourceLineNo">733</span>        return type;<a name="line.733"></a>
+<span class="sourceLineNo">734</span>    }<a name="line.734"></a>
+<span class="sourceLineNo">735</span><a name="line.735"></a>
+<span class="sourceLineNo">736</span>    /**<a name="line.736"></a>
+<span class="sourceLineNo">737</span>     * &lt;p&gt;Retrieves all the type arguments for this parameterized type<a name="line.737"></a>
+<span class="sourceLineNo">738</span>     * including owner hierarchy arguments such as<a name="line.738"></a>
+<span class="sourceLineNo">739</span>     * {@code Outer&lt;K, V&gt;.Inner&lt;T&gt;.DeepInner&lt;E&gt;} .<a name="line.739"></a>
+<span class="sourceLineNo">740</span>     * The arguments are returned in a<a name="line.740"></a>
+<span class="sourceLineNo">741</span>     * {@link Map} specifying the argument type for each {@link TypeVariable}.<a name="line.741"></a>
+<span class="sourceLineNo">742</span>     * &lt;/p&gt;<a name="line.742"></a>
+<span class="sourceLineNo">743</span>     *<a name="line.743"></a>
+<span class="sourceLineNo">744</span>     * @param type specifies the subject parameterized type from which to<a name="line.744"></a>
+<span class="sourceLineNo">745</span>     *             harvest the parameters.<a name="line.745"></a>
+<span class="sourceLineNo">746</span>     * @return a {@code Map} of the type arguments to their respective type<a name="line.746"></a>
+<span class="sourceLineNo">747</span>     * variables.<a name="line.747"></a>
+<span class="sourceLineNo">748</span>     */<a name="line.748"></a>
+<span class="sourceLineNo">749</span>    public static Map&lt;TypeVariable&lt;?&gt;, Type&gt; getTypeArguments(final ParameterizedType type) {<a name="line.749"></a>
+<span class="sourceLineNo">750</span>        return getTypeArguments(type, getRawType(type), null);<a name="line.750"></a>
+<span class="sourceLineNo">751</span>    }<a name="line.751"></a>
+<span class="sourceLineNo">752</span><a name="line.752"></a>
+<span class="sourceLineNo">753</span>    /**<a name="line.753"></a>
+<span class="sourceLineNo">754</span>     * &lt;p&gt;Gets the type arguments of a class/interface based on a subtype. For<a name="line.754"></a>
+<span class="sourceLineNo">755</span>     * instance, this method will determine that both of the parameters for the<a name="line.755"></a>
+<span class="sourceLineNo">756</span>     * interface {@link Map} are {@link Object} for the subtype<a name="line.756"></a>
+<span class="sourceLineNo">757</span>     * {@link java.util.Properties Properties} even though the subtype does not<a name="line.757"></a>
+<span class="sourceLineNo">758</span>     * directly implement the {@code Map} interface.&lt;/p&gt;<a name="line.758"></a>
+<span class="sourceLineNo">759</span>     * &lt;p&gt;This method returns {@code null} if {@code type} is not assignable to<a name="line.759"></a>
+<span class="sourceLineNo">760</span>     * {@code toClass}. It returns an empty map if none of the classes or<a name="line.760"></a>
+<span class="sourceLineNo">761</span>     * interfaces in its inheritance hierarchy specify any type arguments.&lt;/p&gt;<a name="line.761"></a>
+<span class="sourceLineNo">762</span>     * &lt;p&gt;A side effect of this method is that it also retrieves the type<a name="line.762"></a>
+<span class="sourceLineNo">763</span>     * arguments for the classes and interfaces that are part of the hierarchy<a name="line.763"></a>
+<span class="sourceLineNo">764</span>     * between {@code type} and {@code toClass}. So with the above<a name="line.764"></a>
+<span class="sourceLineNo">765</span>     * example, this method will also determine that the type arguments for<a name="line.765"></a>
+<span class="sourceLineNo">766</span>     * {@link java.util.Hashtable Hashtable} are also both {@code Object}.<a name="line.766"></a>
+<span class="sourceLineNo">767</span>     * In cases where the interface specified by {@code toClass} is<a name="line.767"></a>
+<span class="sourceLineNo">768</span>     * (indirectly) implemented more than once (e.g. where {@code toClass}<a name="line.768"></a>
+<span class="sourceLineNo">769</span>     * specifies the interface {@link java.lang.Iterable Iterable} and<a name="line.769"></a>
+<span class="sourceLineNo">770</span>     * {@code type} specifies a parameterized type that implements both<a name="line.770"></a>
+<span class="sourceLineNo">771</span>     * {@link java.util.Set Set} and {@link java.util.Collection Collection}),<a name="line.771"></a>
+<span class="sourceLineNo">772</span>     * this method will look at the inheritance hierarchy of only one of the<a name="line.772"></a>
+<span class="sourceLineNo">773</span>     * implementations/subclasses; the first interface encountered that isn't a<a name="line.773"></a>
+<span class="sourceLineNo">774</span>     * subinterface to one of the others in the {@code type} to<a name="line.774"></a>
+<span class="sourceLineNo">775</span>     * {@code toClass} hierarchy.&lt;/p&gt;<a name="line.775"></a>
+<span class="sourceLineNo">776</span>     *<a name="line.776"></a>
+<span class="sourceLineNo">777</span>     * @param type the type from which to determine the type parameters of<a name="line.777"></a>
+<span class="sourceLineNo">778</span>     * {@code toClass}<a name="line.778"></a>
+<span class="sourceLineNo">779</span>     * @param toClass the class whose type parameters are to be determined based<a name="line.779"></a>
+<span class="sourceLineNo">780</span>     * on the subtype {@code type}<a name="line.780"></a>
+<span class="sourceLineNo">781</span>     * @return a {@code Map} of the type assignments for the type variables in<a name="line.781"></a>
+<span class="sourceLineNo">782</span>     * each type in the inheritance hierarchy from {@code type} to<a name="line.782"></a>
+<span class="sourceLineNo">783</span>     * {@code toClass} inclusive.<a name="line.783"></a>
+<span class="sourceLineNo">784</span>     */<a name="line.784"></a>
+<span class="sourceLineNo">785</span>    public static Map&lt;TypeVariable&lt;?&gt;, Type&gt; getTypeArguments(final Type type, final Class&lt;?&gt; toClass) {<a name="line.785"></a>
+<span class="sourceLineNo">786</span>        return getTypeArguments(type, toClass, null);<a name="line.786"></a>
+<span class="sourceLineNo">787</span>    }<a name="line.787"></a>
+<span class="sourceLineNo">788</span><a name="line.788"></a>
+<span class="sourceLineNo">789</span>    /**<a name="line.789"></a>
+<span class="sourceLineNo">790</span>     * &lt;p&gt;Return a map of the type arguments of {@code type} in the context of {@code toClass}.&lt;/p&gt;<a name="line.790"></a>
+<span class="sourceLineNo">791</span>     *<a name="line.791"></a>
+<span class="sourceLineNo">792</span>     * @param type the type in question<a name="line.792"></a>
+<span class="sourceLineNo">793</span>     * @param toClass the class<a name="line.793"></a>
+<span class="sourceLineNo">794</span>     * @param subtypeVarAssigns a map with type variables<a name="line.794"></a>
+<span class="sourceLineNo">795</span>     * @return the {@code Map} with type arguments<a name="line.795"></a>
+<span class="sourceLineNo">796</span>     */<a name="line.796"></a>
+<span class="sourceLineNo">797</span>    private static Map&lt;TypeVariable&lt;?&gt;, Type&gt; getTypeArguments(final Type type, final Class&lt;?&gt; toClass,<a name="line.797"></a>
+<span class="sourceLineNo">798</span>            final Map&lt;TypeVariable&lt;?&gt;, Type&gt; subtypeVarAssigns) {<a name="line.798"></a>
+<span class="sourceLineNo">799</span>        if (type instanceof Class&lt;?&gt;) {<a name="line.799"></a>
+<span class="sourceLineNo">800</span>            return getTypeArguments((Class&lt;?&gt;) type, toClass, subtypeVarAssigns);<a name="line.800"></a>
+<span class="sourceLineNo">801</span>        }<a name="line.801"></a>
+<span class="sourceLineNo">802</span><a name="line.802"></a>
+<span class="sourceLineNo">803</span>        if (type instanceof ParameterizedType) {<a name="line.803"></a>
+<span class="sourceLineNo">804</span>            return getTypeArguments((ParameterizedType) type, toClass, subtypeVarAssigns);<a name="line.804"></a>
+<span class="sourceLineNo">805</span>        }<a name="line.805"></a>
+<span class="sourceLineNo">806</span><a name="line.806"></a>
+<span class="sourceLineNo">807</span>        if (type instanceof GenericArrayType) {<a name="line.807"></a>
+<span class="sourceLineNo">808</span>            return getTypeArguments(((GenericArrayType) type).getGenericComponentType(), toClass<a name="line.808"></a>
+<span class="sourceLineNo">809</span>                    .isArray() ? toClass.getComponentType() : toClass, subtypeVarAssigns);<a name="line.809"></a>
+<span class="sourceLineNo">810</span>        }<a name="line.810"></a>
+<span class="sourceLineNo">811</span><a name="line.811"></a>
+<span class="sourceLineNo">812</span>        // since wildcard types are not assignable to classes, should this just<a name="line.812"></a>
+<span class="sourceLineNo">813</span>        // return null?<a name="line.813"></a>
+<span class="sourceLineNo">814</span>        if (type instanceof WildcardType) {<a name="line.814"></a>
+<span class="sourceLineNo">815</span>            for (final Type bound : getImplicitUpperBounds((WildcardType) type)) {<a name="line.815"></a>
+<span class="sourceLineNo">816</span>                // find the first bound that is assignable to the target class<a name="line.816"></a>
+<span class="sourceLineNo">817</span>                if (isAssignable(bound, toClass)) {<a name="line.817"></a>
+<span class="sourceLineNo">818</span>                    return getTypeArguments(bound, toClass, subtypeVarAssigns);<a name="line.818"></a>
+<span class="sourceLineNo">819</span>                }<a name="line.819"></a>
+<span class="sourceLineNo">820</span>            }<a name="line.820"></a>
+<span class="sourceLineNo">821</span><a name="line.821"></a>
+<span class="sourceLineNo">822</span>            return null;<a name="line.822"></a>
+<span class="sourceLineNo">823</span>        }<a name="line.823"></a>
+<span class="sourceLineNo">824</span><a name="line.824"></a>
+<span class="sourceLineNo">825</span>        if (type instanceof TypeVariable&lt;?&gt;) {<a name="line.825"></a>
+<span class="sourceLineNo">826</span>            for (final Type bound : getImplicitBounds((TypeVariable&lt;?&gt;) type)) {<a name="line.826"></a>
+<span class="sourceLineNo">827</span>                // find the first bound that is assignable to the target class<a name="line.827"></a>
+<span class="sourceLineNo">828</span>                if (isAssignable(bound, toClass)) {<a name="line.828"></a>
+<span class="sourceLineNo">829</span>                    return getTypeArguments(bound, toClass, subtypeVarAssigns);<a name="line.829"></a>
+<span class="sourceLineNo">830</span>                }<a name="line.830"></a>
+<span class="sourceLineNo">831</span>            }<a name="line.831"></a>
+<span class="sourceLineNo">832</span><a name="line.832"></a>
+<span class="sourceLineNo">833</span>            return null;<a name="line.833"></a>
+<span class="sourceLineNo">834</span>        }<a name="line.834"></a>
+<span class="sourceLineNo">835</span>        throw new IllegalStateException("found an unhandled type: " + type);<a name="line.835"></a>
+<span class="sourceLineNo">836</span>    }<a name="line.836"></a>
+<span class="sourceLineNo">837</span><a name="line.837"></a>
+<span class="sourceLineNo">838</span>    /**<a name="line.838"></a>
+<span class="sourceLineNo">839</span>     * &lt;p&gt;Return a map of the type arguments of a parameterized type in the context of {@code toClass}.&lt;/p&gt;<a name="line.839"></a>
+<span class="sourceLineNo">840</span>     *<a name="line.840"></a>
+<span class="sourceLineNo">841</span>     * @param parameterizedType the parameterized type<a name="line.841"></a>
+<span class="sourceLineNo">842</span>     * @param toClass the class<a name="line.842"></a>
+<span class="sourceLineNo">843</span>     * @param subtypeVarAssigns a map with type variables<a name="line.843"></a>
+<span class="sourceLineNo">844</span>     * @return the {@code Map} with type arguments<a name="line.844"></a>
+<span class="sourceLineNo">845</span>     */<a name="line.845"></a>
+<span class="sourceLineNo">846</span>    private static Map&lt;TypeVariable&lt;?&gt;, Type&gt; getTypeArguments(<a name="line.846"></a>
+<span class="sourceLineNo">847</span>            final ParameterizedType parameterizedType, final Class&lt;?&gt; toClass,<a name="line.847"></a>
+<span class="sourceLineNo">848</span>            final Map&lt;TypeVariable&lt;?&gt;, Type&gt; subtypeVarAssigns) {<a name="line.848"></a>
+<span class="sourceLineNo">849</span>        final Class&lt;?&gt; cls = getRawType(parameterizedType);<a name="line.849"></a>
+<span class="sourceLineNo">850</span><a name="line.850"></a>
+<span class="sourceLineNo">851</span>        // make sure they're assignable<a name="line.851"></a>
+<span class="sourceLineNo">852</span>        if (!isAssignable(cls, toClass)) {<a name="line.852"></a>
+<span class="sourceLineNo">853</span>            return null;<a name="line.853"></a>
+<span class="sourceLineNo">854</span>        }<a name="line.854"></a>
+<span class="sourceLineNo">855</span><a name="line.855"></a>
+<span class="sourceLineNo">856</span>        final Type ownerType = parameterizedType.getOwnerType();<a name="line.856"></a>
+<span class="sourceLineNo">857</span>        Map&lt;TypeVariable&lt;?&gt;, Type&gt; typeVarAssigns;<a name="line.857"></a>
+<span class="sourceLineNo">858</span><a name="line.858"></a>
+<span class="sourceLineNo">859</span>        if (ownerType instanceof ParameterizedType) {<a name="line.859"></a>
+<span class="sourceLineNo">860</span>            // get the owner type arguments first<a name="line.860"></a>
+<span class="sourceLineNo">861</span>            final ParameterizedType parameterizedOwnerType = (ParameterizedType) ownerType;<a name="line.861"></a>
+<span class="sourceLineNo">862</span>            typeVarAssigns = getTypeArguments(parameterizedOwnerType,<a name="line.862"></a>
+<span class="sourceLineNo">863</span>                    getRawType(parameterizedOwnerType), subtypeVarAssigns);<a name="line.863"></a>
+<span class="sourceLineNo">864</span>        } else {<a name="line.864"></a>
+<span class="sourceLineNo">865</span>            // no owner, prep the type variable assignments map<a name="line.865"></a>
+<span class="sourceLineNo">866</span>            typeVarAssigns = subtypeVarAssigns == null ? new HashMap&lt;&gt;()<a name="line.866"></a>
+<span class="sourceLineNo">867</span>                    : new HashMap&lt;&gt;(subtypeVarAssigns);<a name="line.867"></a>
+<span class="sourceLineNo">868</span>        }<a name="line.868"></a>
+<span class="sourceLineNo">869</span><a name="line.869"></a>
+<span class="sourceLineNo">870</span>        // get the subject parameterized type's arguments<a name="line.870"></a>
+<span class="sourceLineNo">871</span>        final Type[] typeArgs = parameterizedType.getActualTypeArguments();<a name="line.871"></a>
+<span class="sourceLineNo">872</span>        // and get the corresponding type variables from the raw class<a name="line.872"></a>
+<span class="sourceLineNo">873</span>        final TypeVariable&lt;?&gt;[] typeParams = cls.getTypeParameters();<a name="line.873"></a>
+<span class="sourceLineNo">874</span><a name="line.874"></a>
+<span class="sourceLineNo">875</span>        // map the arguments to their respective type variables<a name="line.875"></a>
+<span class="sourceLineNo">876</span>        for (int i = 0; i &lt; typeParams.length; i++) {<a name="line.876"></a>
+<span class="sourceLineNo">877</span>            final Type typeArg = typeArgs[i];<a name="line.877"></a>
+<span class="sourceLineNo">878</span>            typeVarAssigns.put(typeParams[i], typeVarAssigns.containsKey(typeArg) ? typeVarAssigns<a name="line.878"></a>
+<span class="sourceLineNo">879</span>                    .get(typeArg) : typeArg);<a name="line.879"></a>
+<span class="sourceLineNo">880</span>        }<a name="line.880"></a>
+<span class="sourceLineNo">881</span><a name="line.881"></a>
+<span class="sourceLineNo">882</span>        if (toClass.equals(cls)) {<a name="line.882"></a>
+<span class="sourceLineNo">883</span>            // target class has been reached. Done.<a name="line.883"></a>
+<span class="sourceLineNo">884</span>            return typeVarAssigns;<a name="line.884"></a>
+<span class="sourceLineNo">885</span>        }<a name="line.885"></a>
+<span class="sourceLineNo">886</span><a name="line.886"></a>
+<span class="sourceLineNo">887</span>        // walk the inheritance hierarchy until the target class is reached<a name="line.887"></a>
+<span class="sourceLineNo">888</span>        return getTypeArguments(getClosestParentType(cls, toClass), toClass, typeVarAssigns);<a name="line.888"></a>
+<span class="sourceLineNo">889</span>    }<a name="line.889"></a>
+<span class="sourceLineNo">890</span><a name="line.890"></a>
+<span class="sourceLineNo">891</span>    /**<a name="line.891"></a>
+<span class="sourceLineNo">892</span>     * &lt;p&gt;Return a map of the type arguments of a class in the context of {@code toClass}.&lt;/p&gt;<a name="line.892"></a>
+<span class="sourceLineNo">893</span>     *<a name="line.893"></a>
+<span class="sourceLineNo">894</span>     * @param cls the class in question<a name="line.894"></a>
+<span class="sourceLineNo">895</span>     * @param toClass the context class<a name="line.895"></a>
+<span class="sourceLineNo">896</span>     * @param subtypeVarAssigns a map with type variables<a name="line.896"></a>
+<span class="sourceLineNo">897</span>     * @return the {@code Map} with type arguments<a name="line.897"></a>
+<span class="sourceLineNo">898</span>     */<a name="line.898"></a>
+<span class="sourceLineNo">899</span>    private static Map&lt;TypeVariable&lt;?&gt;, Type&gt; getTypeArguments(Class&lt;?&gt; cls, final Class&lt;?&gt; toClass,<a name="line.899"></a>
+<span class="sourceLineNo">900</span>            final Map&lt;TypeVariable&lt;?&gt;, Type&gt; subtypeVarAssigns) {<a name="line.900"></a>
+<span class="sourceLineNo">901</span>        // make sure they're assignable<a name="line.901"></a>
+<span class="sourceLineNo">902</span>        if (!isAssignable(cls, toClass)) {<a name="line.902"></a>
+<span class="sourceLineNo">903</span>            return null;<a name="line.903"></a>
+<span class="sourceLineNo">904</span>        }<a name="line.904"></a>
+<span class="sourceLineNo">905</span><a name="line.905"></a>
+<span class="sourceLineNo">906</span>        // can't work with primitives<a name="line.906"></a>
+<span class="sourceLineNo">907</span>        if (cls.isPrimitive()) {<a name="line.907"></a>
+<span class="sourceLineNo">908</span>            // both classes are primitives?<a name="line.908"></a>
+<span class="sourceLineNo">909</span>            if (toClass.isPrimitive()) {<a name="line.909"></a>
+<span class="sourceLineNo">910</span>                // dealing with widening here. No type arguments to be<a name="line.910"></a>
+<span class="sourceLineNo">911</span>                // harvested with these two types.<a name="line.911"></a>
+<span class="sourceLineNo">912</span>                return new HashMap&lt;&gt;();<a name="line.912"></a>
+<span class="sourceLineNo">913</span>            }<a name="line.913"></a>
+<span class="sourceLineNo">914</span><a name="line.914"></a>
+<span class="sourceLineNo">915</span>            // work with wrapper the wrapper class instead of the primitive<a name="line.915"></a>
+<span class="sourceLineNo">916</span>            cls = ClassUtils.primitiveToWrapper(cls);<a name="line.916"></a>
+<span class="sourceLineNo">917</span>        }<a name="line.917"></a>
+<span class="sourceLineNo">918</span><a name="line.918"></a>
+<span class="sourceLineNo">919</span>        // create a copy of the incoming map, or an empty one if it's null<a name="line.919"></a>
+<span class="sourceLineNo">920</span>        final HashMap&lt;TypeVariable&lt;?&gt;, Type&gt; typeVarAssigns = subtypeVarAssigns == null ? new HashMap&lt;&gt;()<a name="line.920"></a>
+<span class="sourceLineNo">921</span>                : new HashMap&lt;&gt;(subtypeVarAssigns);<a name="line.921"></a>
+<span class="sourceLineNo">922</span><a name="line.922"></a>
+<span class="sourceLineNo">923</span>        // has target class been reached?<a name="line.923"></a>
+<span class="sourceLineNo">924</span>        if (toClass.equals(cls)) {<a name="line.924"></a>
+<span class="sourceLineNo">925</span>            return typeVarAssigns;<a name="line.925"></a>
+<span class="sourceLineNo">926</span>        }<a name="line.926"></a>
+<span class="sourceLineNo">927</span><a name="line.927"></a>
+<span class="sourceLineNo">928</span>        // walk the inheritance hierarchy until the target class is reached<a name="line.928"></a>
+<span class="sourceLineNo">929</span>        return getTypeArguments(getClosestParentType(cls, toClass), toClass, typeVarAssigns);<a name="line.929"></a>
+<span class="sourceLineNo">930</span>    }<a name="line.930"></a>
+<span class="sourceLineNo">931</span><a name="line.931"></a>
+<span class="sourceLineNo">932</span>    /**<a name="line.932"></a>
+<span class="sourceLineNo">933</span>     * &lt;p&gt;Tries to determine the type arguments of a class/interface based on a<a name="line.933"></a>
+<span class="sourceLineNo">934</span>     * super parameterized type's type arguments. This method is the inverse of<a name="line.934"></a>
+<span class="sourceLineNo">935</span>     * {@link #getTypeArguments(Type, Class)} which gets a class/interface's<a name="line.935"></a>
+<span class="sourceLineNo">936</span>     * type arguments based on a subtype. It is far more limited in determining<a name="line.936"></a>
+<span class="sourceLineNo">937</span>     * the type arguments for the subject class's type variables in that it can<a name="line.937"></a>
+<span class="sourceLineNo">938</span>     * only determine those parameters that map from the subject {@link Class}<a name="line.938"></a>
+<span class="sourceLineNo">939</span>     * object to the supertype.&lt;/p&gt; &lt;p&gt;Example: {@link java.util.TreeSet<a name="line.939"></a>
+<span class="sourceLineNo">940</span>     * TreeSet} sets its parameter as the parameter for<a name="line.940"></a>
+<span class="sourceLineNo">941</span>     * {@link java.util.NavigableSet NavigableSet}, which in turn sets the<a name="line.941"></a>
+<span class="sourceLineNo">942</span>     * parameter of {@link java.util.SortedSet}, which in turn sets the<a name="line.942"></a>
+<span class="sourceLineNo">943</span>     * parameter of {@link Set}, which in turn sets the parameter of<a name="line.943"></a>
+<span class="sourceLineNo">944</span>     * {@link java.util.Collection}, which in turn sets the parameter of<a name="line.944"></a>
+<span class="sourceLineNo">945</span>     * {@link java.lang.Iterable}. Since {@code TreeSet}'s parameter maps<a name="line.945"></a>
+<span class="sourceLineNo">946</span>     * (indirectly) to {@code Iterable}'s parameter, it will be able to<a name="line.946"></a>
+<span class="sourceLineNo">947</span>     * determine that based on the super type {@code Iterable&lt;? extends<a name="line.947"></a>
+<span class="sourceLineNo">948</span>     * Map&lt;Integer, ? extends Collection&lt;?&gt;&gt;&gt;}, the parameter of<a name="line.948"></a>
+<span class="sourceLineNo">949</span>     * {@code TreeSet} is {@code ? extends Map&lt;Integer, ? extends<a name="line.949"></a>
+<span class="sourceLineNo">950</span>     * Collection&lt;?&gt;&gt;}.&lt;/p&gt;<a name="line.950"></a>
+<span class="sourceLineNo">951</span>     *<a name="line.951"></a>
+<span class="sourceLineNo">952</span>     * @param cls the class whose type parameters are to be determined, not {@code null}<a name="line.952"></a>
+<span class="sourceLineNo">953</span>     * @param superType the super type from which {@code cls}'s type<a name="line.953"></a>
+<span class="sourceLineNo">954</span>     * arguments are to be determined, not {@code null}<a name="line.954"></a>
+<span class="sourceLineNo">955</span>     * @return a {@code Map} of the type assignments that could be determined<a name="line.955"></a>
+<span class="sourceLineNo">956</span>     * for the type variables in each type in the inheritance hierarchy from<a name="line.956"></a>
+<span class="sourceLineNo">957</span>     * {@code type} to {@code toClass} inclusive.<a name="line.957"></a>
+<span class="sourceLineNo">958</span>     */<a name="line.958"></a>
+<span class="sourceLineNo">959</span>    public static Map&lt;TypeVariable&lt;?&gt;, Type&gt; determineTypeArguments(final Class&lt;?&gt; cls,<a name="line.959"></a>
+<span class="sourceLineNo">960</span>            final ParameterizedType superType) {<a name="line.960"></a>
+<span class="sourceLineNo">961</span>        Validate.notNull(cls, "cls is null");<a name="line.961"></a>
+<span class="sourceLineNo">962</span>        Validate.notNull(superType, "superType is null");<a name="line.962"></a>
+<span class="sourceLineNo">963</span><a name="line.963"></a>
+<span class="sourceLineNo">964</span>        final Class&lt;?&gt; superClass = getRawType(superType);<a name="line.964"></a>
+<span class="sourceLineNo">965</span><a name="line.965"></a>
+<span class="sourceLineNo">966</span>        // compatibility check<a name="line.966"></a>
+<span class="sourceLineNo">967</span>        if (!isAssignable(cls, superClass)) {<a name="line.967"></a>
+<span class="sourceLineNo">968</span>            return null;<a name="line.968"></a>
+<span class="sourceLineNo">969</span>        }<a name="line.969"></a>
+<span class="sourceLineNo">970</span><a name="line.970"></a>
+<span class="sourceLineNo">971</span>        if (cls.equals(superClass)) {<a name="line.971"></a>
+<span class="sourceLineNo">972</span>            return getTypeArguments(superType, superClass, null);<a name="line.972"></a>
+<span class="sourceLineNo">973</span>        }<a name="line.973"></a>
+<span class="sourceLineNo">974</span><a name="line.974"></a>
+<span class="sourceLineNo">975</span>        // get the next class in the inheritance hierarchy<a name="line.975"></a>
+<span class="sourceLineNo">976</span>        final Type midType = getClosestParentType(cls, superClass);<a name="line.976"></a>
+<span class="sourceLineNo">977</span><a name="line.977"></a>
+<span class="sourceLineNo">978</span>        // can only be a class or a parameterized type<a name="line.978"></a>
+<span class="sourceLineNo">979</span>        if (midType instanceof Class&lt;?&gt;) {<a name="line.979"></a>
+<span class="sourceLineNo">980</span>            return determineTypeArguments((Class&lt;?&gt;) midType, superType);<a name="line.980"></a>
+<span class="sourceLineNo">981</span>        }<a name="line.981"></a>
+<span class="sourceLineNo">982</span><a name="line.982"></a>
+<span class="sourceLineNo">983</span>        final ParameterizedType midParameterizedType = (ParameterizedType) midType;<a name="line.983"></a>
+<span class="sourceLineNo">984</span>        final Class&lt;?&gt; midClass = getRawType(midParameterizedType);<a name="line.984"></a>
+<span class="sourceLineNo">985</span>        // get the type variables of the mid class that map to the type<a name="line.985"></a>
+<span class="sourceLineNo">986</span>        // arguments of the super class<a name="line.986"></a>
+<span class="sourceLineNo">987</span>        final Map&lt;TypeVariable&lt;?&gt;, Type&gt; typeVarAssigns = determineTypeArguments(midClass, superType);<a name="line.987"></a>
+<span class="sourceLineNo">988</span>        // map the arguments of the mid type to the class type variables<a name="line.988"></a>
+<span class="sourceLineNo">989</span>        mapTypeVariablesToArguments(cls, midParameterizedType, typeVarAssigns);<a name="line.989"></a>
+<span class="sourceLineNo">990</span><a name="line.990"></a>
+<span class="sourceLineNo">991</span>        return typeVarAssigns;<a name="line.991"></a>
+<span class="sourceLineNo">992</span>    }<a name="line.992"></a>
+<span class="sourceLineNo">993</span><a name="line.993"></a>
+<span class="sourceLineNo">994</span>    /**<a name="line.994"></a>
+<span class="sourceLineNo">995</span>     * &lt;p&gt;Performs a mapping of type variables.&lt;/p&gt;<a name="line.995"></a>
+<span class="sourceLineNo">996</span>     *<a name="line.996"></a>
+<span class="sourceLineNo">997</span>     * @param &lt;T&gt; the generic type of the class in question<a name="line.997"></a>
+<span class="sourceLineNo">998</span>     * @param cls the class in question<a name="line.998"></a>
+<span class="sourceLineNo">999</span>     * @param parameterizedType the parameterized type<a name="line.999"></a>
+<span class="sourceLineNo">1000</span>     * @param typeVarAssigns the map to be filled<a name="line.1000"></a>
+<span class="sourceLineNo">1001</span>     */<a name="line.1001"></a>
+<span class="sourceLineNo">1002</span>    private static &lt;T&gt; void mapTypeVariablesToArguments(final Class&lt;T&gt; cls,<a name="line.1002"></a>
+<span class="sourceLineNo">1003</span>            final ParameterizedType parameterizedType, final Map&lt;TypeVariable&lt;?&gt;, Type&gt; typeVarAssigns) {<a name="line.1003"></a>
+<span class="sourceLineNo">1004</span>        // capture the type variables from the owner type that have assignments<a name="line.1004"></a>
+<span class="sourceLineNo">1005</span>        final Type ownerType = parameterizedType.getOwnerType();<a name="line.1005"></a>
+<span class="sourceLineNo">1006</span><a name="line.1006"></a>
+<span class="sourceLineNo">1007</span>        if (ownerType instanceof ParameterizedType) {<a name="line.1007"></a>
+<span class="sourceLineNo">1008</span>            // recursion to make sure the owner's owner type gets processed<a name="line.1008"></a>
+<span class="sourceLineNo">1009</span>            mapTypeVariablesToArguments(cls, (ParameterizedType) ownerType, typeVarAssigns);<a name="line.1009"></a>
+<span class="sourceLineNo">1010</span>        }<a name="line.1010"></a>
+<span class="sourceLineNo">1011</span><a name="line.1011"></a>
+<span class="sourceLineNo">1012</span>        // parameterizedType is a generic interface/class (or it's in the owner<a name="line.1012"></a>
+<span class="sourceLineNo">1013</span>        // hierarchy of said interface/class) implemented/extended by the class<a name="line.1013"></a>
+<span class="sourceLineNo">1014</span>        // cls. Find out which type variables of cls are type arguments of<a name="line.1014"></a>
+<span class="sourceLineNo">1015</span>        // parameterizedType:<a name="line.1015"></a>
+<span class="sourceLineNo">1016</span>        final Type[] typeArgs = parameterizedType.getActualTypeArguments();<a name="line.1016"></a>
+<span class="sourceLineNo">1017</span><a name="line.1017"></a>
+<span class="sourceLineNo">1018</span>        // of the cls's type variables that are arguments of parameterizedType,<a name="line.1018"></a>
+<span class="sourceLineNo">1019</span>        // find out which ones can be determined from the super type's arguments<a name="line.1019"></a>
+<span class="sourceLineNo">1020</span>        final TypeVariable&lt;?&gt;[] typeVars = getRawType(parameterizedType).getTypeParameters();<a name="line.1020"></a>
+<span class="sourceLineNo">1021</span><a name="line.1021"></a>
+<span class="sourceLineNo">1022</span>        // use List view of type parameters of cls so the contains() method can be used:<a name="line.1022"></a>
+<span class="sourceLineNo">1023</span>        final List&lt;TypeVariable&lt;Class&lt;T&gt;&gt;&gt; typeVarList = Arrays.asList(cls<a name="line.1023"></a>
+<span class="sourceLineNo">1024</span>                .getTypeParameters());<a name="line.1024"></a>
+<span class="sourceLineNo">1025</span><a name="line.1025"></a>
+<span class="sourceLineNo">1026</span>        for (int i = 0; i &lt; typeArgs.length; i++) {<a name="line.1026"></a>
+<span class="sourceLineNo">1027</span>            final TypeVariable&lt;?&gt; typeVar = typeVars[i];<a name="line.1027"></a>
+<span class="sourceLineNo">1028</span>            final Type typeArg = typeArgs[i];<a name="line.1028"></a>
+<span class="sourceLineNo">1029</span><a name="line.1029"></a>
+<span class="sourceLineNo">1030</span>            // argument of parameterizedType is a type variable of cls<a name="line.1030"></a>
+<span class="sourceLineNo">1031</span>            if (typeVarList.contains(typeArg)<a name="line.1031"></a>
+<span class="sourceLineNo">1032</span>            // type variable of parameterizedType has an assignment in<a name="line.1032"></a>
+<span class="sourceLineNo">1033</span>                    // the super type.<a name="line.1033"></a>
+<span class="sourceLineNo">1034</span>                    &amp;&amp; typeVarAssigns.containsKey(typeVar)) {<a name="line.1034"></a>
+<span class="sourceLineNo">1035</span>                // map the assignment to the cls's type variable<a name="line.1035"></a>
+<span class="sourceLineNo">1036</span>                typeVarAssigns.put((TypeVariable&lt;?&gt;) typeArg, typeVarAssigns.get(typeVar));<a name="line.1036"></a>
+<span class="sourceLineNo">1037</span>            }<a name="line.1037"></a>
+<span class="sourceLineNo">1038</span>        }<a name="line.1038"></a>
+<span class="sourceLineNo">1039</span>    }<a name="line.1039"></a>
+<span class="sourceLineNo">1040</span><a name="line.1040"></a>
+<span class="sourceLineNo">1041</span>    /**<a name="line.1041"></a>
+<span class="sourceLineNo">1042</span>     * &lt;p&gt;Get the closest parent type to the<a name="line.1042"></a>
+<span class="sourceLineNo">1043</span>     * super class specified by {@code superClass}.&lt;/p&gt;<a name="line.1043"></a>
+<span class="sourceLineNo">1044</span>     *<a name="line.1044"></a>
+<span class="sourceLineNo">1045</span>     * @param cls the class in question<a name="line.1045"></a>
+<span class="sourceLineNo">1046</span>     * @param superClass the super class<a name="line.1046"></a>
+<span class="sourceLineNo">1047</span>     * @return the closes parent type<a name="line.1047"></a>
+<span class="sourceLineNo">1048</span>     */<a name="line.1048"></a>
+<span class="sourceLineNo">1049</span>    private static Type getClosestParentType(final Class&lt;?&gt; cls, final Class&lt;?&gt; superClass) {<a name="line.1049"></a>
+<span class="sourceLineNo">1050</span>        // only look at the interfaces if the super class is also an interface<a name="line.1050"></a>
+<span class="sourceLineNo">1051</span>        if (superClass.isInterface()) {<a name="line.1051"></a>
+<span class="sourceLineNo">1052</span>            // get the generic interfaces of the subject class<a name="line.1052"></a>
+<span class="sourceLineNo">1053</span>            final Type[] interfaceTypes = cls.getGenericInterfaces();<a name="line.1053"></a>
+<span class="sourceLineNo">1054</span>            // will hold the best generic interface match found<a name="line.1054"></a>
+<span class="sourceLineNo">1055</span>            Type genericInterface = null;<a name="line.1055"></a>
+<span class="sourceLineNo">1056</span><a name="line.1056"></a>
+<span class="sourceLineNo">1057</span>            // find the interface closest to the super class<a name="line.1057"></a>
+<span class="sourceLineNo">1058</span>            for (final Type midType : interfaceTypes) {<a name="line.1058"></a>
+<span class="sourceLineNo">1059</span>                Class&lt;?&gt; midClass = null;<a name="line.1059"></a>
+<span class="sourceLineNo">1060</span><a name="line.1060"></a>
+<span class="sourceLineNo">1061</span>                if (midType instanceof ParameterizedType) {<a name="line.1061"></a>
+<span class="sourceLineNo">1062</span>                    midClass = getRawType((ParameterizedType) midType);<a name="line.1062"></a>
+<span class="sourceLineNo">1063</span>                } else if (midType instanceof Class&lt;?&gt;) {<a name="line.1063"></a>
+<span class="sourceLineNo">1064</span>                    midClass = (Class&lt;?&gt;) midType;<a name="line.1064"></a>
+<span class="sourceLineNo">1065</span>                } else {<a name="line.1065"></a>
+<span class="sourceLineNo">1066</span>                    throw new IllegalStateException("Unexpected generic"<a name="line.1066"></a>
+<span class="sourceLineNo">1067</span>                            + " interface type found: " + midType);<a name="line.1067"></a>
+<span class="sourceLineNo">1068</span>                }<a name="line.1068"></a>
+<span class="sourceLineNo">1069</span><a name="line.1069"></a>
+<span class="sourceLineNo">1070</span>                // check if this interface is further up the inheritance chain<a name="line.1070"></a>
+<span class="sourceLineNo">1071</span>                // than the previously found match<a name="line.1071"></a>
+<span class="sourceLineNo">1072</span>                if (isAssignable(midClass, superClass)<a name="line.1072"></a>
+<span class="sourceLineNo">1073</span>                        &amp;&amp; isAssignable(genericInterface, (Type) midClass)) {<a name="line.1073"></a>
+<span class="sourceLineNo">1074</span>                    genericInterface = midType;<a name="line.1074"></a>
+<span class="sourceLineNo">1075</span>                }<a name="line.1075"></a>
+<span class="sourceLineNo">1076</span>            }<a name="line.1076"></a>
+<span class="sourceLineNo">1077</span><a name="line.1077"></a>
+<span class="sourceLineNo">1078</span>            // found a match?<a name="line.1078"></a>
+<span class="sourceLineNo">1079</span>            if (genericInterface != null) {<a name="line.1079"></a>
+<span class="sourceLineNo">1080</span>                return genericInterface;<a name="line.1080"></a>
+<span class="sourceLineNo">1081</span>            }<a name="line.1081"></a>
+<span class="sourceLineNo">1082</span>        }<a name="line.1082"></a>
+<span class="sourceLineNo">1083</span><a name="line.1083"></a>
+<span class="sourceLineNo">1084</span>        // none of the interfaces were descendants of the target class, so the<a name="line.1084"></a>
+<span class="sourceLineNo">1085</span>        // super class has to be one, instead<a name="line.1085"></a>
+<span class="sourceLineNo">1086</span>        return cls.getGenericSuperclass();<a name="line.1086"></a>
+<span class="sourceLineNo">1087</span>    }<a name="line.1087"></a>
+<span class="sourceLineNo">1088</span><a name="line.1088"></a>
+<span class="sourceLineNo">1089</span>    /**<a name="line.1089"></a>
+<span class="sourceLineNo">1090</span>     * &lt;p&gt;Checks if the given value can be assigned to the target type<a name="line.1090"></a>
+<span class="sourceLineNo">1091</span>     * following the Java generics rules.&lt;/p&gt;<a name="line.1091"></a>
+<span class="sourceLineNo">1092</span>     *<a name="line.1092"></a>
+<span class="sourceLineNo">1093</span>     * @param value the value to be checked<a name="line.1093"></a>
+<span class="sourceLineNo">1094</span>     * @param type the target type<a name="line.1094"></a>
+<span class="sourceLineNo">1095</span>     * @return {@code true} if {@code value} is an instance of {@code type}.<a name="line.1095"></a>
+<span class="sourceLineNo">1096</span>     */<a name="line.1096"></a>
+<span class="sourceLineNo">1097</span>    public static boolean isInstance(final Object value, final Type type) {<a name="line.1097"></a>
+<span class="sourceLineNo">1098</span>        if (type == null) {<a name="line.1098"></a>
+<span class="sourceLineNo">1099</span>            return false;<a name="line.1099"></a>
+<span class="sourceLineNo">1100</span>        }<a name="line.1100"></a>
+<span class="sourceLineNo">1101</span><a name="line.1101"></a>
+<span class="sourceLineNo">1102</span>        return value == null ? !(type instanceof Class&lt;?&gt;) || !((Class&lt;?&gt;) type).isPrimitive()<a name="line.1102"></a>
+<span class="sourceLineNo">1103</span>                : isAssignable(value.getClass(), type, null);<a name="line.1103"></a>
+<span class="sourceLineNo">1104</span>    }<a name="line.1104"></a>
+<span class="sourceLineNo">1105</span><a name="line.1105"></a>
+<span class="sourceLineNo">1106</span>    /**<a name="line.1106"></a>
+<span class="sourceLineNo">1107</span>     * &lt;p&gt;This method strips out the redundant upper bound types in type<a name="line.1107"></a>
+<span class="sourceLineNo">1108</span>     * variable types and wildcard types (or it would with wildcard types if<a name="line.1108"></a>
+<span class="sourceLineNo">1109</span>     * multiple upper bounds were allowed).&lt;/p&gt; &lt;p&gt;Example, with the variable<a name="line.1109"></a>
+<span class="sourceLineNo">1110</span>     * type declaration:<a name="line.1110"></a>
+<span class="sourceLineNo">1111</span>     *<a name="line.1111"></a>
+<span class="sourceLineNo">1112</span>     * &lt;pre&gt;&amp;lt;K extends java.util.Collection&amp;lt;String&amp;gt; &amp;amp;<a name="line.1112"></a>
+<span class="sourceLineNo">1113</span>     * java.util.List&amp;lt;String&amp;gt;&amp;gt;&lt;/pre&gt;<a name="line.1113"></a>
+<span class="sourceLineNo">1114</span>     *<a name="line.1114"></a>
+<span class="sourceLineNo">1115</span>     * &lt;p&gt;<a name="line.1115"></a>
+<span class="sourceLineNo">1116</span>     * since {@code List} is a subinterface of {@code Collection},<a name="line.1116"></a>
+<span class="sourceLineNo">1117</span>     * this method will return the bounds as if the declaration had been:<a name="line.1117"></a>
+<span class="sourceLineNo">1118</span>     * &lt;/p&gt;<a name="line.1118"></a>
+<span class="sourceLineNo">1119</span>     *<a name="line.1119"></a>
+<span class="sourceLineNo">1120</span>     * &lt;pre&gt;&amp;lt;K extends java.util.List&amp;lt;String&amp;gt;&amp;gt;&lt;/pre&gt;<a name="line.1120"></a>
+<span class="sourceLineNo">1121</span>     *<a name="line.1121"></a>
+<span class="sourceLineNo">1122</span>     * @param bounds an array of types representing the upper bounds of either<a name="line.1122"></a>
+<span class="sourceLineNo">1123</span>     * {@link WildcardType} or {@link TypeVariable}, not {@code null}.<a name="line.1123"></a>
+<span class="sourceLineNo">1124</span>     * @return an array containing the values from {@code bounds} minus the<a name="line.1124"></a>
+<span class="sourceLineNo">1125</span>     * redundant types.<a name="line.1125"></a>
+<span class="sourceLineNo">1126</span>     */<a name="line.1126"></a>
+<span class="sourceLineNo">1127</span>    public static Type[] normalizeUpperBounds(final Type[] bounds) {<a name="line.1127"></a>
+<span class="sourceLineNo">1128</span>        Validate.notNull(bounds, "null value specified for bounds array");<a name="line.1128"></a>
+<span class="sourceLineNo">1129</span>        // don't bother if there's only one (or none) type<a name="line.1129"></a>
+<span class="sourceLineNo">1130</span>        if (bounds.length &lt; 2) {<a name="line.1130"></a>
+<span class="sourceLineNo">1131</span>            return bounds;<a name="line.1131"></a>
+<span class="sourceLineNo">1132</span>        }<a name="line.1132"></a>
+<span class="sourceLineNo">1133</span><a name="line.1133"></a>
+<span class="sourceLineNo">1134</span>        final Set&lt;Type&gt; types = new HashSet&lt;&gt;(bounds.length);<a name="line.1134"></a>
+<span class="sourceLineNo">1135</span><a name="line.1135"></a>
+<span class="sourceLineNo">1136</span>        for (final Type type1 : bounds) {<a name="line.1136"></a>
+<span class="sourceLineNo">1137</span>            boolean subtypeFound = false;<a name="line.1137"></a>
+<span class="sourceLineNo">1138</span><a name="line.1138"></a>
+<span class="sourceLineNo">1139</span>            for (final Type type2 : bounds) {<a name="line.1139"></a>
+<span class="sourceLineNo">1140</span>                if (type1 != type2 &amp;&amp; isAssignable(type2, type1, null)) {<a name="line.1140"></a>
+<span class="sourceLineNo">1141</span>                    subtypeFound = true;<a name="line.1141"></a>
+<span class="sourceLineNo">1142</span>                    break;<a name="line.1142"></a>
+<span class="sourceLineNo">1143</span>                }<a name="line.1143"></a>
+<span class="sourceLineNo">1144</span>            }<a name="line.1144"></a>
+<span class="sourceLineNo">1145</span><a name="line.1145"></a>
+<span class="sourceLineNo">1146</span>            if (!subtypeFound) {<a name="line.1146"></a>
+<span class="sourceLineNo">1147</span>                types.add(type1);<a name="line.1147"></a>
+<span class="sourceLineNo">1148</span>            }<a name="line.1148"></a>
+<span class="sourceLineNo">1149</span>        }<a name="line.1149"></a>
+<span class="sourceLineNo">1150</span><a name="line.1150"></a>
+<span class="sourceLineNo">1151</span>        return types.toArray(ArrayUtils.EMPTY_TYPE_ARRAY);<a name="line.1151"></a>
+<span class="sourceLineNo">1152</span>    }<a name="line.1152"></a>
+<span class="sourceLineNo">1153</span><a name="line.1153"></a>
+<span class="sourceLineNo">1154</span>    /**<a name="line.1154"></a>
+<span class="sourceLineNo">1155</span>     * &lt;p&gt;Returns an array containing the sole type of {@link Object} if<a name="line.1155"></a>
+<span class="sourceLineNo">1156</span>     * {@link TypeVariable#getBounds()} returns an empty array. Otherwise, it<a name="line.1156"></a>
+<span class="sourceLineNo">1157</span>     * returns the result of {@link TypeVariable#getBounds()} passed into<a name="line.1157"></a>
+<span class="sourceLineNo">1158</span>     * {@link #normalizeUpperBounds}.&lt;/p&gt;<a name="line.1158"></a>
+<span class="sourceLineNo">1159</span>     *<a name="line.1159"></a>
+<span class="sourceLineNo">1160</span>     * @param typeVariable the subject type variable, not {@code null}<a name="line.1160"></a>
+<span class="sourceLineNo">1161</span>     * @return a non-empty array containing the bounds of the type variable.<a name="line.1161"></a>
+<span class="sourceLineNo">1162</span>     */<a name="line.1162"></a>
+<span class="sourceLineNo">1163</span>    public static Type[] getImplicitBounds(final TypeVariable&lt;?&gt; typeVariable) {<a name="line.1163"></a>
+<span class="sourceLineNo">1164</span>        Validate.notNull(typeVariable, "typeVariable is null");<a name="line.1164"></a>
+<span class="sourceLineNo">1165</span>        final Type[] bounds = typeVariable.getBounds();<a name="line.1165"></a>
+<span class="sourceLineNo">1166</span><a name="line.1166"></a>
+<span class="sourceLineNo">1167</span>        return bounds.length == 0 ? new Type[] { Object.class } : normalizeUpperBounds(bounds);<a name="line.1167"></a>
+<span class="sourceLineNo">1168</span>    }<a name="line.1168"></a>
+<span class="sourceLineNo">1169</span><a name="line.1169"></a>
+<span class="sourceLineNo">1170</span>    /**<a name="line.1170"></a>
+<span class="sourceLineNo">1171</span>     * &lt;p&gt;Returns an array containing the sole value of {@link Object} if<a name="line.1171"></a>
+<span class="sourceLineNo">1172</span>     * {@link WildcardType#getUpperBounds()} returns an empty array. Otherwise,<a name="line.1172"></a>
+<span class="sourceLineNo">1173</span>     * it returns the result of {@link WildcardType#getUpperBounds()}<a name="line.1173"></a>
+<span class="sourceLineNo">1174</span>     * passed into {@link #normalizeUpperBounds}.&lt;/p&gt;<a name="line.1174"></a>
+<span class="sourceLineNo">1175</span>     *<a name="line.1175"></a>
+<span class="sourceLineNo">1176</span>     * @param wildcardType the subject wildcard type, not {@code null}<a name="line.1176"></a>
+<span class="sourceLineNo">1177</span>     * @return a non-empty array containing the upper bounds of the wildcard<a name="line.1177"></a>
+<span class="sourceLineNo">1178</span>     * type.<a name="line.1178"></a>
+<span class="sourceLineNo">1179</span>     */<a name="line.1179"></a>
+<span class="sourceLineNo">1180</span>    public static Type[] getImplicitUpperBounds(final WildcardType wildcardType) {<a name="line.1180"></a>
+<span class="sourceLineNo">1181</span>        Validate.notNull(wildcardType, "wildcardType is null");<a name="line.1181"></a>
+<span class="sourceLineNo">1182</span>        final Type[] bounds = wildcardType.getUpperBounds();<a name="line.1182"></a>
+<span class="sourceLineNo">1183</span><a name="line.1183"></a>
+<span class="sourceLineNo">1184</span>        return bounds.length == 0 ? new Type[] { Object.class } : normalizeUpperBounds(bounds);<a name="line.1184"></a>
+<span class="sourceLineNo">1185</span>    }<a name="line.1185"></a>
+<span class="sourceLineNo">1186</span><a name="line.1186"></a>
+<span class="sourceLineNo">1187</span>    /**<a name="line.1187"></a>
+<span class="sourceLineNo">1188</span>     * &lt;p&gt;Returns an array containing a single value of {@code null} if<a name="line.1188"></a>
+<span class="sourceLineNo">1189</span>     * {@link WildcardType#getLowerBounds()} returns an empty array. Otherwise,<a name="line.1189"></a>
+<span class="sourceLineNo">1190</span>     * it returns the result of {@link WildcardType#getLowerBounds()}.&lt;/p&gt;<a name="line.1190"></a>
+<span class="sourceLineNo">1191</span>     *<a name="line.1191"></a>
+<span class="sourceLineNo">1192</span>     * @param wildcardType the subject wildcard type, not {@code null}<a name="line.1192"></a>
+<span class="sourceLineNo">1193</span>     * @return a non-empty array containing the lower bounds of the wildcard<a name="line.1193"></a>
+<span class="sourceLineNo">1194</span>     * type.<a name="line.1194"></a>
+<span class="sourceLineNo">1195</span>     */<a name="line.1195"></a>
+<span class="sourceLineNo">1196</span>    public static Type[] getImplicitLowerBounds(final WildcardType wildcardType) {<a name="line.1196"></a>
+<span class="sourceLineNo">1197</span>        Validate.notNull(wildcardType, "wildcardType is null");<a name="line.1197"></a>
+<span class="sourceLineNo">1198</span>        final Type[] bounds = wildcardType.getLowerBounds();<a name="line.1198"></a>
+<span class="sourceLineNo">1199</span><a name="line.1199"></a>
+<span class="sourceLineNo">1200</span>        return bounds.length == 0 ? new Type[] { null } : bounds;<a name="line.1200"></a>
+<span class="sourceLineNo">1201</span>    }<a name="line.1201"></a>
+<span class="sourceLineNo">1202</span><a name="line.1202"></a>
+<span class="sourceLineNo">1203</span>    /**<a name="line.1203"></a>
+<span class="sourceLineNo">1204</span>     * &lt;p&gt;Determines whether or not specified types satisfy the bounds of their<a name="line.1204"></a>
+<span class="sourceLineNo">1205</span>     * mapped type variables. When a type parameter extends another (such as<a name="line.1205"></a>
+<span class="sourceLineNo">1206</span>     * {@code &lt;T, S extends T&gt;}), uses another as a type parameter (such as<a name="line.1206"></a>
+<span class="sourceLineNo">1207</span>     * {@code &lt;T, S extends Comparable&gt;&gt;}), or otherwise depends on<a name="line.1207"></a>
+<span class="sourceLineNo">1208</span>     * another type variable to be specified, the dependencies must be included<a name="line.1208"></a>
+<span class="sourceLineNo">1209</span>     * in {@code typeVarAssigns}.&lt;/p&gt;<a name="line.1209"></a>
+<span class="sourceLineNo">1210</span>     *<a name="line.1210"></a>
+<span class="sourceLineNo">1211</span>     * @param typeVarAssigns specifies the potential types to be assigned to the<a name="line.1211"></a>
+<span class="sourceLineNo">1212</span>     * type variables, not {@code null}.<a name="line.1212"></a>
+<span class="sourceLineNo">1213</span>     * @return whether or not the types can be assigned to their respective type<a name="line.1213"></a>
+<span class="sourceLineNo">1214</span>     * variables.<a name="line.1214"></a>
+<span class="sourceLineNo">1215</span>     */<a name="line.1215"></a>
+<span class="sourceLineNo">1216</span>    public static boolean typesSatisfyVariables(final Map&lt;TypeVariable&lt;?&gt;, Type&gt; typeVarAssigns) {<a name="line.1216"></a>
+<span class="sourceLineNo">1217</span>        Validate.notNull(typeVarAssigns, "typeVarAssigns is null");<a name="line.1217"></a>
+<span class="sourceLineNo">1218</span>        // all types must be assignable to all the bounds of their mapped<a name="line.1218"></a>
+<span class="sourceLineNo">1219</span>        // type variable.<a name="line.1219"></a>
+<span class="sourceLineNo">1220</span>        for (final Map.Entry&lt;TypeVariable&lt;?&gt;, Type&gt; entry : typeVarAssigns.entrySet()) {<a name="line.1220"></a>
+<span class="sourceLineNo">1221</span>            final TypeVariable&lt;?&gt; typeVar = entry.getKey();<a name="line.1221"></a>
+<span class="sourceLineNo">1222</span>            final Type type = entry.getValue();<a name="line.1222"></a>
+<span class="sourceLineNo">1223</span><a name="line.1223"></a>
+<span class="sourceLineNo">1224</span>            for (final Type bound : getImplicitBounds(typeVar)) {<a name="line.1224"></a>
+<span class="sourceLineNo">1225</span>                if (!isAssignable(type, substituteTypeVariables(bound, typeVarAssigns),<a name="line.1225"></a>
+<span class="sourceLineNo">1226</span>                        typeVarAssigns)) {<a name="line.1226"></a>
+<span class="sourceLineNo">1227</span>                    return false;<a name="line.1227"></a>
+<span class="sourceLineNo">1228</span>                }<a name="line.1228"></a>
+<span class="sourceLineNo">1229</span>            }<a name="line.1229"></a>
+<span class="sourceLineNo">1230</span>        }<a name="line.1230"></a>
+<span class="sourceLineNo">1231</span>        return true;<a name="line.1231"></a>
+<span class="sourceLineNo">1232</span>    }<a name="line.1232"></a>
+<span class="sourceLineNo">1233</span><a name="line.1233"></a>
+<span class="sourceLineNo">1234</span>    /**<a name="line.1234"></a>
+<span class="sourceLineNo">1235</span>     * &lt;p&gt;Transforms the passed in type to a {@link Class} object. Type-checking method of convenience.&lt;/p&gt;<a name="line.1235"></a>
+<span class="sourceLineNo">1236</span>     *<a name="line.1236"></a>
+<span class="sourceLineNo">1237</span>     * @param parameterizedType the type to be converted<a name="line.1237"></a>
+<span class="sourceLineNo">1238</span>     * @return the corresponding {@code Class} object<a name="line.1238"></a>
+<span class="sourceLineNo">1239</span>     * @throws IllegalStateException if the conversion fails<a name="line.1239"></a>
+<span class="sourceLineNo">1240</span>     */<a name="line.1240"></a>
+<span class="sourceLineNo">1241</span>    private static Class&lt;?&gt; getRawType(final ParameterizedType parameterizedType) {<a name="line.1241"></a>
+<span class="sourceLineNo">1242</span>        final Type rawType = parameterizedType.getRawType();<a name="line.1242"></a>
+<span class="sourceLineNo">1243</span><a name="line.1243"></a>
+<span class="sourceLineNo">1244</span>        // check if raw type is a Class object<a name="line.1244"></a>
+<span class="sourceLineNo">1245</span>        // not currently necessary, but since the return type is Type instead of<a name="line.1245"></a>
+<span class="sourceLineNo">1246</span>        // Class, there's enough reason to believe that future versions of Java<a name="line.1246"></a>
+<span class="sourceLineNo">1247</span>        // may return other Type implementations. And type-safety checking is<a name="line.1247"></a>
+<span class="sourceLineNo">1248</span>        // rarely a bad idea.<a name="line.1248"></a>
+<span class="sourceLineNo">1249</span>        if (!(rawType instanceof Class&lt;?&gt;)) {<a name="line.1249"></a>
+<span class="sourceLineNo">1250</span>            throw new IllegalStateException("Wait... What!? Type of rawType: " + rawType);<a name="line.1250"></a>
+<span class="sourceLineNo">1251</span>        }<a name="line.1251"></a>
+<span class="sourceLineNo">1252</span><a name="line.1252"></a>
+<span class="sourceLineNo">1253</span>        return (Class&lt;?&gt;) rawType;<a name="line.1253"></a>
+<span class="sourceLineNo">1254</span>    }<a name="line.1254"></a>
+<span class="sourceLineNo">1255</span><a name="line.1255"></a>
+<span class="sourceLineNo">1256</span>    /**<a name="line.1256"></a>
+<span class="sourceLineNo">1257</span>     * &lt;p&gt;Get the raw type of a Java type, given its context. Primarily for use<a name="line.1257"></a>
+<span class="sourceLineNo">1258</span>     * with {@link TypeVariable}s and {@link GenericArrayType}s, or when you do<a name="line.1258"></a>
+<span class="sourceLineNo">1259</span>     * not know the runtime type of {@code type}: if you know you have a<a name="line.1259"></a>
+<span class="sourceLineNo">1260</span>     * {@link Class} instance, it is already raw; if you know you have a<a name="line.1260"></a>
+<span class="sourceLineNo">1261</span>     * {@link ParameterizedType}, its raw type is only a method call away.&lt;/p&gt;<a name="line.1261"></a>
+<span class="sourceLineNo">1262</span>     *<a name="line.1262"></a>
+<span class="sourceLineNo">1263</span>     * @param type to resolve<a name="line.1263"></a>
+<span class="sourceLineNo">1264</span>     * @param assigningType type to be resolved against<a name="line.1264"></a>
+<span class="sourceLineNo">1265</span>     * @return the resolved {@link Class} object or {@code null} if<a name="line.1265"></a>
+<span class="sourceLineNo">1266</span>     * the type could not be resolved<a name="line.1266"></a>
+<span class="sourceLineNo">1267</span>     */<a name="line.1267"></a>
+<span class="sourceLineNo">1268</span>    public static Class&lt;?&gt; getRawType(final Type type, final Type assigningType) {<a name="line.1268"></a>
+<span class="sourceLineNo">1269</span>        if (type instanceof Class&lt;?&gt;) {<a name="line.1269"></a>
+<span class="sourceLineNo">1270</span>            // it is raw, no problem<a name="line.1270"></a>
+<span class="sourceLineNo">1271</span>            return (Class&lt;?&gt;) type;<a name="line.1271"></a>
+<span class="sourceLineNo">1272</span>        }<a name="line.1272"></a>
+<span class="sourceLineNo">1273</span><a name="line.1273"></a>
+<span class="sourceLineNo">1274</span>        if (type instanceof ParameterizedType) {<a name="line.1274"></a>
+<span class="sourceLineNo">1275</span>            // simple enough to get the raw type of a ParameterizedType<a name="line.1275"></a>
+<span class="sourceLineNo">1276</span>            return getRawType((ParameterizedType) type);<a name="line.1276"></a>
+<span class="sourceLineNo">1277</span>        }<a name="line.1277"></a>
+<span class="sourceLineNo">1278</span><a name="line.1278"></a>
+<span class="sourceLineNo">1279</span>        if (type instanceof TypeVariable&lt;?&gt;) {<a name="line.1279"></a>
+<span class="sourceLineNo">1280</span>            if (assigningType == null) {<a name="line.1280"></a>
+<span class="sourceLineNo">1281</span>                return null;<a name="line.1281"></a>
+<span class="sourceLineNo">1282</span>            }<a name="line.1282"></a>
+<span class="sourceLineNo">1283</span><a name="line.1283"></a>
+<span class="sourceLineNo">1284</span>            // get the entity declaring this type variable<a name="line.1284"></a>
+<span class="sourceLineNo">1285</span>            final Object genericDeclaration = ((TypeVariable&lt;?&gt;) type).getGenericDeclaration();<a name="line.1285"></a>
+<span class="sourceLineNo">1286</span><a name="line.1286"></a>
+<span class="sourceLineNo">1287</span>            // can't get the raw type of a method- or constructor-declared type<a name="line.1287"></a>
+<span class="sourceLineNo">1288</span>            // variable<a name="line.1288"></a>
+<span class="sourceLineNo">1289</span>            if (!(genericDeclaration instanceof Class&lt;?&gt;)) {<a name="line.1289"></a>
+<span class="sourceLineNo">1290</span>                return null;<a name="line.1290"></a>
+<span class="sourceLineNo">1291</span>            }<a name="line.1291"></a>
+<span class="sourceLineNo">1292</span><a name="line.1292"></a>
+<span class="sourceLineNo">1293</span>            // get the type arguments for the declaring class/interface based<a name="line.1293"></a>
+<span class="sourceLineNo">1294</span>            // on the enclosing type<a name="line.1294"></a>
+<span class="sourceLineNo">1295</span>            final Map&lt;TypeVariable&lt;?&gt;, Type&gt; typeVarAssigns = getTypeArguments(assigningType,<a name="line.1295"></a>
+<span class="sourceLineNo">1296</span>                    (Class&lt;?&gt;) genericDeclaration);<a name="line.1296"></a>
+<span class="sourceLineNo">1297</span><a name="line.1297"></a>
+<span class="sourceLineNo">1298</span>            // enclosingType has to be a subclass (or subinterface) of the<a name="line.1298"></a>
+<span class="sourceLineNo">1299</span>            // declaring type<a name="line.1299"></a>
+<span class="sourceLineNo">1300</span>            if (typeVarAssigns == null) {<a name="line.1300"></a>
+<span class="sourceLineNo">1301</span>                return null;<a name="line.1301"></a>
+<span class="sourceLineNo">1302</span>            }<a name="line.1302"></a>
+<span class="sourceLineNo">1303</span><a name="line.1303"></a>
+<span class="sourceLineNo">1304</span>            // get the argument assigned to this type variable<a name="line.1304"></a>
+<span class="sourceLineNo">1305</span>            final Type typeArgument = typeVarAssigns.get(type);<a name="line.1305"></a>
+<span class="sourceLineNo">1306</span><a name="line.1306"></a>
+<span class="sourceLineNo">1307</span>            if (typeArgument == null) {<a name="line.1307"></a>
+<span class="sourceLineNo">1308</span>                return null;<a name="line.1308"></a>
+<span class="sourceLineNo">1309</span>            }<a name="line.1309"></a>
+<span class="sourceLineNo">1310</span><a name="line.1310"></a>
+<span class="sourceLineNo">1311</span>            // get the argument for this type variable<a name="line.1311"></a>
+<span class="sourceLineNo">1312</span>            return getRawType(typeArgument, assigningType);<a name="line.1312"></a>
+<span class="sourceLineNo">1313</span>        }<a name="line.1313"></a>
+<span class="sourceLineNo">1314</span><a name="line.1314"></a>
+<span class="sourceLineNo">1315</span>        if (type instanceof GenericArrayType) {<a name="line.1315"></a>
+<span class="sourceLineNo">1316</span>            // get raw component type<a name="line.1316"></a>
+<span class="sourceLineNo">1317</span>            final Class&lt;?&gt; rawComponentType = getRawType(((GenericArrayType) type)<a name="line.1317"></a>
+<span class="sourceLineNo">1318</span>                    .getGenericComponentType(), assigningType);<a name="line.1318"></a>
+<span class="sourceLineNo">1319</span><a name="line.1319"></a>
+<span class="sourceLineNo">1320</span>            // create array type from raw component type and return its class<a name="line.1320"></a>
+<span class="sourceLineNo">1321</span>            return Array.newInstance(rawComponentType, 0).getClass();<a name="line.1321"></a>
+<span class="sourceLineNo">1322</span>        }<a name="line.1322"></a>
+<span class="sourceLineNo">1323</span><a name="line.1323"></a>
+<span class="sourceLineNo">1324</span>        // (hand-waving) this is not the method you're looking for<a name="line.1324"></a>
+<span class="sourceLineNo">1325</span>        if (type instanceof WildcardType) {<a name="line.1325"></a>
+<span class="sourceLineNo">1326</span>            return null;<a name="line.1326"></a>
+<span class="sourceLineNo">1327</span>        }<a name="line.1327"></a>
+<span class="sourceLineNo">1328</span><a name="line.1328"></a>
+<span class="sourceLineNo">1329</span>        throw new IllegalArgumentException("unknown type: " + type);<a name="line.1329"></a>
+<span class="sourceLineNo">1330</span>    }<a name="line.1330"></a>
+<span class="sourceLineNo">1331</span><a name="line.1331"></a>
+<span class="sourceLineNo">1332</span>    /**<a name="line.1332"></a>
+<span class="sourceLineNo">1333</span>     * Learn whether the specified type denotes an array type.<a name="line.1333"></a>
+<span class="sourceLineNo">1334</span>     * @param type the type to be checked<a name="line.1334"></a>
+<span class="sourceLineNo">1335</span>     * @return {@code true} if {@code type} is an array class or a {@link GenericArrayType}.<a name="line.1335"></a>
+<span class="sourceLineNo">1336</span>     */<a name="line.1336"></a>
+<span class="sourceLineNo">1337</span>    public static boolean isArrayType(final Type type) {<a name="line.1337"></a>
+<span class="sourceLineNo">1338</span>        return type instanceof GenericArrayType || type instanceof Class&lt;?&gt; &amp;&amp; ((Class&lt;?&gt;) type).isArray();<a name="line.1338"></a>
+<span class="sourceLineNo">1339</span>    }<a name="line.1339"></a>
+<span class="sourceLineNo">1340</span><a name="line.1340"></a>
+<span class="sourceLineNo">1341</span>    /**<a name="line.1341"></a>
+<span class="sourceLineNo">1342</span>     * Gets the array component type of {@code type}.<a name="line.1342"></a>
+<span class="sourceLineNo">1343</span>     * @param type the type to be checked<a name="line.1343"></a>
+<span class="sourceLineNo">1344</span>     * @return component type or null if type is not an array type<a name="line.1344"></a>
+<span class="sourceLineNo">1345</span>     */<a name="line.1345"></a>
+<span class="sourceLineNo">1346</span>    public static Type getArrayComponentType(final Type type) {<a name="line.1346"></a>
+<span class="sourceLineNo">1347</span>        if (type instanceof Class&lt;?&gt;) {<a name="line.1347"></a>
+<span class="sourceLineNo">1348</span>            final Class&lt;?&gt; cls = (Class&lt;?&gt;) type;<a name="line.1348"></a>
+<span class="sourceLineNo">1349</span>            return cls.isArray() ? cls.getComponentType() : null;<a name="line.1349"></a>
+<span class="sourceLineNo">1350</span>        }<a name="line.1350"></a>
+<span class="sourceLineNo">1351</span>        if (type instanceof GenericArrayType) {<a name="line.1351"></a>
+<span class="sourceLineNo">1352</span>            return ((GenericArrayType) type).getGenericComponentType();<a name="line.1352"></a>
+<span class="sourceLineNo">1353</span>        }<a name="line.1353"></a>
+<span class="sourceLineNo">1354</span>        return null;<a name="line.1354"></a>
+<span class="sourceLineNo">1355</span>    }<a name="line.1355"></a>
+<span class="sourceLineNo">1356</span><a name="line.1356"></a>
+<span class="sourceLineNo">1357</span>    /**<a name="line.1357"></a>
+<span class="sourceLineNo">1358</span>     * Gets a type representing {@code type} with variable assignments "unrolled."<a name="line.1358"></a>
+<span class="sourceLineNo">1359</span>     *<a name="line.1359"></a>
+<span class="sourceLineNo">1360</span>     * @param typeArguments as from {@link TypeUtils#getTypeArguments(Type, Class)}<a name="line.1360"></a>
+<span class="sourceLineNo">1361</span>     * @param type the type to unroll variable assignments for<a name="line.1361"></a>
+<span class="sourceLineNo">1362</span>     * @return Type<a name="line.1362"></a>
+<span class="sourceLineNo">1363</span>     * @since 3.2<a name="line.1363"></a>
+<span class="sourceLineNo">1364</span>     */<a name="line.1364"></a>
+<span class="sourceLineNo">1365</span>    public static Type unrollVariables(Map&lt;TypeVariable&lt;?&gt;, Type&gt; typeArguments, final Type type) {<a name="line.1365"></a>
+<span class="sourceLineNo">1366</span>        if (typeArguments == null) {<a name="line.1366"></a>
+<span class="sourceLineNo">1367</span>            typeArguments = Collections.emptyMap();<a name="line.1367"></a>
+<span class="sourceLineNo">1368</span>        }<a name="line.1368"></a>
+<span class="sourceLineNo">1369</span>        if (containsTypeVariables(type)) {<a name="line.1369"></a>
+<span class="sourceLineNo">1370</span>            if (type instanceof TypeVariable&lt;?&gt;) {<a name="line.1370"></a>
+<span class="sourceLineNo">1371</span>                return unrollVariables(typeArguments, typeArguments.get(type));<a name="line.1371"></a>
+<span class="sourceLineNo">1372</span>            }<a name="line.1372"></a>
+<span class="sourceLineNo">1373</span>            if (type instanceof ParameterizedType) {<a name="line.1373"></a>
+<span class="sourceLineNo">1374</span>                final ParameterizedType p = (ParameterizedType) type;<a name="line.1374"></a>
+<span class="sourceLineNo">1375</span>                final Map&lt;TypeVariable&lt;?&gt;, Type&gt; parameterizedTypeArguments;<a name="line.1375"></a>
+<span class="sourceLineNo">1376</span>                if (p.getOwnerType() == null) {<a name="line.1376"></a>
+<span class="sourceLineNo">1377</span>                    parameterizedTypeArguments = typeArguments;<a name="line.1377"></a>
+<span class="sourceLineNo">1378</span>                } else {<a name="line.1378"></a>
+<span class="sourceLineNo">1379</span>                    parameterizedTypeArguments = new HashMap&lt;&gt;(typeArguments);<a name="line.1379"></a>
+<span class="sourceLineNo">1380</span>                    parameterizedTypeArguments.putAll(getTypeArguments(p));<a name="line.1380"></a>
+<span class="sourceLineNo">1381</span>                }<a name="line.1381"></a>
+<span class="sourceLineNo">1382</span>                final Type[] args = p.getActualTypeArguments();<a name="line.1382"></a>
+<span class="sourceLineNo">1383</span>                for (int i = 0; i &lt; args.length; i++) {<a name="line.1383"></a>
+<span class="sourceLineNo">1384</span>                    final Type unrolled = unrollVariables(parameterizedTypeArguments, args[i]);<a name="line.1384"></a>
+<span class="sourceLineNo">1385</span>                    if (unrolled != null) {<a name="line.1385"></a>
+<span class="sourceLineNo">1386</span>                        args[i] = unrolled;<a name="line.1386"></a>
+<span class="sourceLineNo">1387</span>                    }<a name="line.1387"></a>
+<span class="sourceLineNo">1388</span>                }<a name="line.1388"></a>
+<span class="sourceLineNo">1389</span>                return parameterizeWithOwner(p.getOwnerType(), (Class&lt;?&gt;) p.getRawType(), args);<a name="line.1389"></a>
+<span class="sourceLineNo">1390</span>            }<a name="line.1390"></a>
+<span class="sourceLineNo">1391</span>            if (type instanceof WildcardType) {<a name="line.1391"></a>
+<span class="sourceLineNo">1392</span>                final WildcardType wild = (WildcardType) type;<a name="line.1392"></a>
+<span class="sourceLineNo">1393</span>                return wildcardType().withUpperBounds(unrollBounds(typeArguments, wild.getUpperBounds()))<a name="line.1393"></a>
+<span class="sourceLineNo">1394</span>                    .withLowerBounds(unrollBounds(typeArguments, wild.getLowerBounds())).build();<a name="line.1394"></a>
+<span class="sourceLineNo">1395</span>            }<a name="line.1395"></a>
+<span class="sourceLineNo">1396</span>        }<a name="line.1396"></a>
+<span class="sourceLineNo">1397</span>        return type;<a name="line.1397"></a>
+<span class="sourceLineNo">1398</span>    }<a name="line.1398"></a>
+<span class="sourceLineNo">1399</span><a name="line.1399"></a>
+<span class="sourceLineNo">1400</span>    /**<a name="line.1400"></a>
+<span class="sourceLineNo">1401</span>     * Local helper method to unroll variables in a type bounds array.<a name="line.1401"></a>
+<span class="sourceLineNo">1402</span>     *<a name="line.1402"></a>
+<span class="sourceLineNo">1403</span>     * @param typeArguments assignments {@link Map}<a name="line.1403"></a>
+<span class="sourceLineNo">1404</span>     * @param bounds in which to expand variables<a name="line.1404"></a>
+<span class="sourceLineNo">1405</span>     * @return {@code bounds} with any variables reassigned<a name="line.1405"></a>
+<span class="sourceLineNo">1406</span>     * @since 3.2<a name="line.1406"></a>
+<span class="sourceLineNo">1407</span>     */<a name="line.1407"></a>
+<span class="sourceLineNo">1408</span>    private static Type[] unrollBounds(final Map&lt;TypeVariable&lt;?&gt;, Type&gt; typeArguments, final Type[] bounds) {<a name="line.1408"></a>
+<span class="sourceLineNo">1409</span>        Type[] result = bounds;<a name="line.1409"></a>
+<span class="sourceLineNo">1410</span>        int i = 0;<a name="line.1410"></a>
+<span class="sourceLineNo">1411</span>        for (; i &lt; result.length; i++) {<a name="line.1411"></a>
+<span class="sourceLineNo">1412</span>            final Type unrolled = unrollVariables(typeArguments, result[i]);<a name="line.1412"></a>
+<span class="sourceLineNo">1413</span>            if (unrolled == null) {<a name="line.1413"></a>
+<span class="sourceLineNo">1414</span>                result = ArrayUtils.remove(result, i--);<a name="line.1414"></a>
+<span class="sourceLineNo">1415</span>            } else {<a name="line.1415"></a>
+<span class="sourceLineNo">1416</span>                result[i] = unrolled;<a name="line.1416"></a>
+<span class="sourceLineNo">1417</span>            }<a name="line.1417"></a>
+<span class="sourceLineNo">1418</span>        }<a name="line.1418"></a>
+<span class="sourceLineNo">1419</span>        return result;<a name="line.1419"></a>
+<span class="sourceLineNo">1420</span>    }<a name="line.1420"></a>
+<span class="sourceLineNo">1421</span><a name="line.1421"></a>
+<span class="sourceLineNo">1422</span>    /**<a name="line.1422"></a>
+<span class="sourceLineNo">1423</span>     * Learn, recursively, whether any of the type parameters associated with {@code type} are bound to variables.<a name="line.1423"></a>
+<span class="sourceLineNo">1424</span>     *<a name="line.1424"></a>
+<span class="sourceLineNo">1425</span>     * @param type the type to check for type variables<a name="line.1425"></a>
+<span class="sourceLineNo">1426</span>     * @return boolean<a name="line.1426"></a>
+<span class="sourceLineNo">1427</span>     * @since 3.2<a name="line.1427"></a>
+<span class="sourceLineNo">1428</span>     */<a name="line.1428"></a>
+<span class="sourceLineNo">1429</span>    public static boolean containsTypeVariables(final Type type) {<a name="line.1429"></a>
+<span class="sourceLineNo">1430</span>        if (type instanceof TypeVariable&lt;?&gt;) {<a name="line.1430"></a>
+<span class="sourceLineNo">1431</span>            return true;<a name="line.1431"></a>
+<span class="sourceLineNo">1432</span>        }<a name="line.1432"></a>
+<span class="sourceLineNo">1433</span>        if (type instanceof Class&lt;?&gt;) {<a name="line.1433"></a>
+<span class="sourceLineNo">1434</span>            return ((Class&lt;?&gt;) type).getTypeParameters().length &gt; 0;<a name="line.1434"></a>
+<span class="sourceLineNo">1435</span>        }<a name="line.1435"></a>
+<span class="sourceLineNo">1436</span>        if (type instanceof ParameterizedType) {<a name="line.1436"></a>
+<span class="sourceLineNo">1437</span>            for (final Type arg : ((ParameterizedType) type).getActualTypeArguments()) {<a name="line.1437"></a>
+<span class="sourceLineNo">1438</span>                if (containsTypeVariables(arg)) {<a name="line.1438"></a>
+<span class="sourceLineNo">1439</span>                    return true;<a name="line.1439"></a>
+<span class="sourceLineNo">1440</span>                }<a name="line.1440"></a>
+<span class="sourceLineNo">1441</span>            }<a name="line.1441"></a>
+<span class="sourceLineNo">1442</span>            return false;<a name="line.1442"></a>
+<span class="sourceLineNo">1443</span>        }<a name="line.1443"></a>
+<span class="sourceLineNo">1444</span>        if (type instanceof WildcardType) {<a name="line.1444"></a>
+<span class="sourceLineNo">1445</span>            final WildcardType wild = (WildcardType) type;<a name="line.1445"></a>
+<span class="sourceLineNo">1446</span>            return containsTypeVariables(getImplicitLowerBounds(wild)[0])<a name="line.1446"></a>
+<span class="sourceLineNo">1447</span>                || containsTypeVariables(getImplicitUpperBounds(wild)[0]);<a name="line.1447"></a>
+<span class="sourceLineNo">1448</span>        }<a name="line.1448"></a>
+<span class="sourceLineNo">1449</span>        return false;<a name="line.1449"></a>
+<span class="sourceLineNo">1450</span>    }<a name="line.1450"></a>
+<span class="sourceLineNo">1451</span><a name="line.1451"></a>
+<span class="sourceLineNo">1452</span>    /**<a name="line.1452"></a>
+<span class="sourceLineNo">1453</span>     * Create a parameterized type instance.<a name="line.1453"></a>
+<span class="sourceLineNo">1454</span>     *<a name="line.1454"></a>
+<span class="sourceLineNo">1455</span>     * @param rawClass the raw class to create a parameterized type instance for<a name="line.1455"></a>
+<span class="sourceLineNo">1456</span>     * @param typeArguments the types used for parameterization<a name="line.1456"></a>
+<span class="sourceLineNo">1457</span>     * @return {@link ParameterizedType}<a name="line.1457"></a>
+<span class="sourceLineNo">1458</span>     * @since 3.2<a name="line.1458"></a>
+<span class="sourceLineNo">1459</span>     */<a name="line.1459"></a>
+<span class="sourceLineNo">1460</span>    public static final ParameterizedType parameterize(final Class&lt;?&gt; rawClass, final Type... typeArguments) {<a name="line.1460"></a>
+<span class="sourceLineNo">1461</span>        return parameterizeWithOwner(null, rawClass, typeArguments);<a name="line.1461"></a>
+<span class="sourceLineNo">1462</span>    }<a name="line.1462"></a>
+<span class="sourceLineNo">1463</span><a name="line.1463"></a>
+<span class="sourceLineNo">1464</span>    /**<a name="line.1464"></a>
+<span class="sourceLineNo">1465</span>     * Create a parameterized type instance.<a name="line.1465"></a>
+<span class="sourceLineNo">1466</span>     *<a name="line.1466"></a>
+<span class="sourceLineNo">1467</span>     * @param rawClass the raw class to create a parameterized type instance for<a name="line.1467"></a>
+<span class="sourceLineNo">1468</span>     * @param typeArgMappings the mapping used for parameterization<a name="line.1468"></a>
+<span class="sourceLineNo">1469</span>     * @return {@link ParameterizedType}<a name="line.1469"></a>
+<span class="sourceLineNo">1470</span>     * @since 3.2<a name="line.1470"></a>
+<span class="sourceLineNo">1471</span>     */<a name="line.1471"></a>
+<span class="sourceLineNo">1472</span>    public static final ParameterizedType parameterize(final Class&lt;?&gt; rawClass,<a name="line.1472"></a>
+<span class="sourceLineNo">1473</span>        final Map&lt;TypeVariable&lt;?&gt;, Type&gt; typeArgMappings) {<a name="line.1473"></a>
+<span class="sourceLineNo">1474</span>        Validate.notNull(rawClass, "raw class is null");<a name="line.1474"></a>
+<span class="sourceLineNo">1475</span>        Validate.notNull(typeArgMappings, "typeArgMappings is null");<a name="line.1475"></a>
+<span class="sourceLineNo">1476</span>        return parameterizeWithOwner(null, rawClass,<a name="line.1476"></a>
+<span class="sourceLineNo">1477</span>            extractTypeArgumentsFrom(typeArgMappings, rawClass.getTypeParameters()));<a name="line.1477"></a>
+<span class="sourceLineNo">1478</span>    }<a name="line.1478"></a>
+<span class="sourceLineNo">1479</span><a name="line.1479"></a>
+<span class="sourceLineNo">1480</span>    /**<a name="line.1480"></a>
+<span class="sourceLineNo">1481</span>     * Create a parameterized type instance.<a name="line.1481"></a>
+<span class="sourceLineNo">1482</span>     *<a name="line.1482"></a>
+<span class="sourceLineNo">1483</span>     * @param owner the owning type<a name="line.1483"></a>
+<span class="sourceLineNo">1484</span>     * @param rawClass the raw class to create a parameterized type instance for<a name="line.1484"></a>
+<span class="sourceLineNo">1485</span>     * @param typeArguments the types used for parameterization<a name="line.1485"></a>
+<span class="sourceLineNo">1486</span>     *<a name="line.1486"></a>
+<span class="sourceLineNo">1487</span>     * @return {@link ParameterizedType}<a name="line.1487"></a>
+<span class="sourceLineNo">1488</span>     * @since 3.2<a name="line.1488"></a>
+<span class="sourceLineNo">1489</span>     */<a name="line.1489"></a>
+<span class="sourceLineNo">1490</span>    public static final ParameterizedType parameterizeWithOwner(final Type owner, final Class&lt;?&gt; rawClass,<a name="line.1490"></a>
+<span class="sourceLineNo">1491</span>        final Type... typeArguments) {<a name="line.1491"></a>
+<span class="sourceLineNo">1492</span>        Validate.notNull(rawClass, "raw class is null");<a name="line.1492"></a>
+<span class="sourceLineNo">1493</span>        final Type useOwner;<a name="line.1493"></a>
+<span class="sourceLineNo">1494</span>        if (rawClass.getEnclosingClass() == null) {<a name="line.1494"></a>
+<span class="sourceLineNo">1495</span>            Validate.isTrue(owner == null, "no owner allowed for top-level %s", rawClass);<a name="line.1495"></a>
+<span class="sourceLineNo">1496</span>            useOwner = null;<a name="line.1496"></a>
+<span class="sourceLineNo">1497</span>        } else if (owner == null) {<a name="line.1497"></a>
+<span class="sourceLineNo">1498</span>            useOwner = rawClass.getEnclosingClass();<a name="line.1498"></a>
+<span class="sourceLineNo">1499</span>        } else {<a name="line.1499"></a>
+<span class="sourceLineNo">1500</span>            Validate.isTrue(isAssignable(owner, rawClass.getEnclosingClass()),<a name="line.1500"></a>
+<span class="sourceLineNo">1501</span>                "%s is invalid owner type for parameterized %s", owner, rawClass);<a name="line.1501"></a>
+<span class="sourceLineNo">1502</span>            useOwner = owner;<a name="line.1502"></a>
+<span class="sourceLineNo">1503</span>        }<a name="line.1503"></a>
+<span class="sourceLineNo">1504</span>        Validate.noNullElements(typeArguments, "null type argument at index %s");<a name="line.1504"></a>
+<span class="sourceLineNo">1505</span>        Validate.isTrue(rawClass.getTypeParameters().length == typeArguments.length,<a name="line.1505"></a>
+<span class="sourceLineNo">1506</span>            "invalid number of type parameters specified: expected %d, got %d", rawClass.getTypeParameters().length,<a name="line.1506"></a>
+<span class="sourceLineNo">1507</span>            typeArguments.length);<a name="line.1507"></a>
+<span class="sourceLineNo">1508</span><a name="line.1508"></a>
+<span class="sourceLineNo">1509</span>        return new ParameterizedTypeImpl(rawClass, useOwner, typeArguments);<a name="line.1509"></a>
+<span class="sourceLineNo">1510</span>    }<a name="line.1510"></a>
+<span class="sourceLineNo">1511</span><a name="line.1511"></a>
+<span class="sourceLineNo">1512</span>    /**<a name="line.1512"></a>
+<span class="sourceLineNo">1513</span>     * Create a parameterized type instance.<a name="line.1513"></a>
+<span class="sourceLineNo">1514</span>     *<a name="line.1514"></a>
+<span class="sourceLineNo">1515</span>     * @param owner the owning type<a name="line.1515"></a>
+<span class="sourceLineNo">1516</span>     * @param rawClass the raw class to create a parameterized type instance for<a name="line.1516"></a>
+<span class="sourceLineNo">1517</span>     * @param typeArgMappings the mapping used for parameterization<a name="line.1517"></a>
+<span class="sourceLineNo">1518</span>     * @return {@link ParameterizedType}<a name="line.1518"></a>
+<span class="sourceLineNo">1519</span>     * @since 3.2<a name="line.1519"></a>
+<span class="sourceLineNo">1520</span>     */<a name="line.1520"></a>
+<span class="sourceLineNo">1521</span>    public static final ParameterizedType parameterizeWithOwner(final Type owner, final Class&lt;?&gt; rawClass,<a name="line.1521"></a>
+<span class="sourceLineNo">1522</span>        final Map&lt;TypeVariable&lt;?&gt;, Type&gt; typeArgMappings) {<a name="line.1522"></a>
+<span class="sourceLineNo">1523</span>        Validate.notNull(rawClass, "raw class is null");<a name="line.1523"></a>
+<span class="sourceLineNo">1524</span>        Validate.notNull(typeArgMappings, "typeArgMappings is null");<a name="line.1524"></a>
+<span class="sourceLineNo">1525</span>        return parameterizeWithOwner(owner, rawClass,<a name="line.1525"></a>
+<span class="sourceLineNo">1526</span>            extractTypeArgumentsFrom(typeArgMappings, rawClass.getTypeParameters()));<a name="line.1526"></a>
+<span class="sourceLineNo">1527</span>    }<a name="line.1527"></a>
+<span class="sourceLineNo">1528</span><a name="line.1528"></a>
+<span class="sourceLineNo">1529</span>    /**<a name="line.1529"></a>
+<span class="sourceLineNo">1530</span>     * Helper method to establish the formal parameters for a parameterized type.<a name="line.1530"></a>
+<span class="sourceLineNo">1531</span>     * @param mappings map containing the assignments<a name="line.1531"></a>
+<span class="sourceLineNo">1532</span>     * @param variables expected map keys<a name="line.1532"></a>
+<span class="sourceLineNo">1533</span>     * @return array of map values corresponding to specified keys<a name="line.1533"></a>
+<span class="sourceLineNo">1534</span>     */<a name="line.1534"></a>
+<span class="sourceLineNo">1535</span>    private static Type[] extractTypeArgumentsFrom(final Map&lt;TypeVariable&lt;?&gt;, Type&gt; mappings, final TypeVariable&lt;?&gt;[] variables) {<a name="line.1535"></a>
+<span class="sourceLineNo">1536</span>        final Type[] result = new Type[variables.length];<a name="line.1536"></a>
+<span class="sourceLineNo">1537</span>        int index = 0;<a name="line.1537"></a>
+<span class="sourceLineNo">1538</span>        for (final TypeVariable&lt;?&gt; var : variables) {<a name="line.1538"></a>
+<span class="sourceLineNo">1539</span>            Validate.isTrue(mappings.containsKey(var), "missing argument mapping for %s", toString(var));<a name="line.1539"></a>
+<span class="sourceLineNo">1540</span>            result[index++] = mappings.get(var);<a name="line.1540"></a>
+<span class="sourceLineNo">1541</span>        }<a name="line.1541"></a>
+<span class="sourceLineNo">1542</span>        return result;<a name="line.1542"></a>
+<span class="sourceLineNo">1543</span>    }<a name="line.1543"></a>
+<span class="sourceLineNo">1544</span><a name="line.1544"></a>
+<span class="sourceLineNo">1545</span>    /**<a name="line.1545"></a>
+<span class="sourceLineNo">1546</span>     * Gets a {@link WildcardTypeBuilder}.<a name="line.1546"></a>
+<span class="sourceLineNo">1547</span>     * @return {@link WildcardTypeBuilder}<a name="line.1547"></a>
+<span class="sourceLineNo">1548</span>     * @since 3.2<a name="line.1548"></a>
+<span class="sourceLineNo">1549</span>     */<a name="line.1549"></a>
+<span class="sourceLineNo">1550</span>    public static WildcardTypeBuilder wildcardType() {<a name="line.1550"></a>
+<span class="sourceLineNo">1551</span>        return new WildcardTypeBuilder();<a name="line.1551"></a>
+<span class="sourceLineNo">1552</span>    }<a name="line.1552"></a>
+<span class="sourceLineNo">1553</span><a name="line.1553"></a>
+<span class="sourceLineNo">1554</span>    /**<a name="line.1554"></a>
+<span class="sourceLineNo">1555</span>     * Create a generic array type instance.<a name="line.1555"></a>
+<span class="sourceLineNo">1556</span>     *<a name="line.1556"></a>
+<span class="sourceLineNo">1557</span>     * @param componentType the type of the elements of the array. For example the component type of {@code boolean[]}<a name="line.1557"></a>
+<span class="sourceLineNo">1558</span>     *                      is {@code boolean}<a name="line.1558"></a>
+<span class="sourceLineNo">1559</span>     * @return {@link GenericArrayType}<a name="line.1559"></a>
+<span class="sourceLineNo">1560</span>     * @since 3.2<a name="line.1560"></a>
+<span class="sourceLineNo">1561</span>     */<a name="line.1561"></a>
+<span class="sourceLineNo">1562</span>    public static GenericArrayType genericArrayType(final Type componentType) {<a name="line.1562"></a>
+<span class="sourceLineNo">1563</span>        return new GenericArrayTypeImpl(Validate.notNull(componentType, "componentType is null"));<a name="line.1563"></a>
+<span class="sourceLineNo">1564</span>    }<a name="line.1564"></a>
+<span class="sourceLineNo">1565</span><a name="line.1565"></a>
+<span class="sourceLineNo">1566</span>    /**<a name="line.1566"></a>
+<span class="sourceLineNo">1567</span>     * Check equality of types.<a name="line.1567"></a>
+<span class="sourceLineNo">1568</span>     *<a name="line.1568"></a>
+<span class="sourceLineNo">1569</span>     * @param type1 the first type<a name="line.1569"></a>
+<span class="sourceLineNo">1570</span>     * @param type2 the second type<a name="line.1570"></a>
+<span class="sourceLineNo">1571</span>     * @return boolean<a name="line.1571"></a>
+<span class="sourceLineNo">1572</span>     * @since 3.2<a name="line.1572"></a>
+<span class="sourceLineNo">1573</span>     */<a name="line.1573"></a>
+<span class="sourceLineNo">1574</span>    public static boolean equals(final Type type1, final Type type2) {<a name="line.1574"></a>
+<span class="sourceLineNo">1575</span>        if (Objects.equals(type1, type2)) {<a name="line.1575"></a>
+<span class="sourceLineNo">1576</span>            return true;<a name="line.1576"></a>
+<span class="sourceLineNo">1577</span>        }<a name="line.1577"></a>
+<span class="sourceLineNo">1578</span>        if (type1 instanceof ParameterizedType) {<a name="line.1578"></a>
+<span class="sourceLineNo">1579</span>            return equals((ParameterizedType) type1, type2);<a name="line.1579"></a>
+<span class="sourceLineNo">1580</span>        }<a name="line.1580"></a>
+<span class="sourceLineNo">1581</span>        if (type1 instanceof GenericArrayType) {<a name="line.1581"></a>
+<span class="sourceLineNo">1582</span>            return equals((GenericArrayType) type1, type2);<a name="line.1582"></a>
+<span class="sourceLineNo">1583</span>        }<a name="line.1583"></a>
+<span class="sourceLineNo">1584</span>        if (type1 instanceof WildcardType) {<a name="line.1584"></a>
+<span class="sourceLineNo">1585</span>            return equals((WildcardType) type1, type2);<a name="line.1585"></a>
+<span class="sourceLineNo">1586</span>        }<a name="line.1586"></a>
+<span class="sourceLineNo">1587</span>        return false;<a name="line.1587"></a>
+<span class="sourceLineNo">1588</span>    }<a name="line.1588"></a>
+<span class="sourceLineNo">1589</span><a name="line.1589"></a>
+<span class="sourceLineNo">1590</span>    /**<a name="line.1590"></a>
+<span class="sourceLineNo">1591</span>     * Learn whether {@code t} equals {@code p}.<a name="line.1591"></a>
+<span class="sourceLineNo">1592</span>     * @param parameterizedType LHS<a name="line.1592"></a>
+<span class="sourceLineNo">1593</span>     * @param type RHS<a name="line.1593"></a>
+<span class="sourceLineNo">1594</span>     * @return boolean<a name="line.1594"></a>
+<span class="sourceLineNo">1595</span>     * @since 3.2<a name="line.1595"></a>
+<span class="sourceLineNo">1596</span>     */<a name="line.1596"></a>
+<span class="sourceLineNo">1597</span>    private static boolean equals(final ParameterizedType parameterizedType, final Type type) {<a name="line.1597"></a>
+<span class="sourceLineNo">1598</span>        if (type instanceof ParameterizedType) {<a name="line.1598"></a>
+<span class="sourceLineNo">1599</span>            final ParameterizedType other = (ParameterizedType) type;<a name="line.1599"></a>
+<span class="sourceLineNo">1600</span>            if (equals(parameterizedType.getRawType(), other.getRawType())<a name="line.1600"></a>
+<span class="sourceLineNo">1601</span>                &amp;&amp; equals(parameterizedType.getOwnerType(), other.getOwnerType())) {<a name="line.1601"></a>
+<span class="sourceLineNo">1602</span>                return equals(parameterizedType.getActualTypeArguments(), other.getActualTypeArguments());<a name="line.1602"></a>
+<span class="sourceLineNo">1603</span>            }<a name="line.1603"></a>
+<span class="sourceLineNo">1604</span>        }<a name="line.1604"></a>
+<span class="sourceLineNo">1605</span>        return false;<a name="line.1605"></a>
+<span class="sourceLineNo">1606</span>    }<a name="line.1606"></a>
+<span class="sourceLineNo">1607</span><a name="line.1607"></a>
+<span class="sourceLineNo">1608</span>    /**<a name="line.1608"></a>
+<span class="sourceLineNo">1609</span>     * Learn whether {@code t} equals {@code a}.<a name="line.1609"></a>
+<span class="sourceLineNo">1610</span>     * @param genericArrayType LHS<a name="line.1610"></a>
+<span class="sourceLineNo">1611</span>     * @param type RHS<a name="line.1611"></a>
+<span class="sourceLineNo">1612</span>     * @return boolean<a name="line.1612"></a>
+<span class="sourceLineNo">1613</span>     * @since 3.2<a name="line.1613"></a>
+<span class="sourceLineNo">1614</span>     */<a name="line.1614"></a>
+<span class="sourceLineNo">1615</span>    private static boolean equals(final GenericArrayType genericArrayType, final Type type) {<a name="line.1615"></a>
+<span class="sourceLineNo">1616</span>        return type instanceof GenericArrayType<a name="line.1616"></a>
+<span class="sourceLineNo">1617</span>            &amp;&amp; equals(genericArrayType.getGenericComponentType(), ((GenericArrayType) type).getGenericComponentType());<a name="line.1617"></a>
+<span class="sourceLineNo">1618</span>    }<a name="line.1618"></a>
+<span class="sourceLineNo">1619</span><a name="line.1619"></a>
+<span class="sourceLineNo">1620</span>    /**<a name="line.1620"></a>
+<span class="sourceLineNo">1621</span>     * Learn whether {@code t} equals {@code w}.<a name="line.1621"></a>
+<span class="sourceLineNo">1622</span>     * @param wildcardType LHS<a name="line.1622"></a>
+<span class="sourceLineNo">1623</span>     * @param type RHS<a name="line.1623"></a>
+<span class="sourceLineNo">1624</span>     * @return boolean<a name="line.1624"></a>
+<span class="sourceLineNo">1625</span>     * @since 3.2<a name="line.1625"></a>
+<span class="sourceLineNo">1626</span>     */<a name="line.1626"></a>
+<span class="sourceLineNo">1627</span>    private static boolean equals(final WildcardType wildcardType, final Type type) {<a name="line.1627"></a>
+<span class="sourceLineNo">1628</span>        if (type instanceof WildcardType) {<a name="line.1628"></a>
+<span class="sourceLineNo">1629</span>            final WildcardType other = (WildcardType) type;<a name="line.1629"></a>
+<span class="sourceLineNo">1630</span>            return equals(getImplicitLowerBounds(wildcardType), getImplicitLowerBounds(other))<a name="line.1630"></a>
+<span class="sourceLineNo">1631</span>                &amp;&amp; equals(getImplicitUpperBounds(wildcardType), getImplicitUpperBounds(other));<a name="line.1631"></a>
+<span class="sourceLineNo">1632</span>        }<a name="line.1632"></a>
+<span class="sourceLineNo">1633</span>        return false;<a name="line.1633"></a>
+<span class="sourceLineNo">1634</span>    }<a name="line.1634"></a>
+<span class="sourceLineNo">1635</span><a name="line.1635"></a>
+<span class="sourceLineNo">1636</span>    /**<a name="line.1636"></a>
+<span class="sourceLineNo">1637</span>     * Learn whether {@code t1} equals {@code t2}.<a name="line.1637"></a>
+<span class="sourceLineNo">1638</span>     * @param type1 LHS<a name="line.1638"></a>
+<span class="sourceLineNo">1639</span>     * @param type2 RHS<a name="line.1639"></a>
+<span class="sourceLineNo">1640</span>     * @return boolean<a name="line.1640"></a>
+<span class="sourceLineNo">1641</span>     * @since 3.2<a name="line.1641"></a>
+<span class="sourceLineNo">1642</span>     */<a name="line.1642"></a>
+<span class="sourceLineNo">1643</span>    private static boolean equals(final Type[] type1, final Type[] type2) {<a name="line.1643"></a>
+<span class="sourceLineNo">1644</span>        if (type1.length == type2.length) {<a name="line.1644"></a>
+<span class="sourceLineNo">1645</span>            for (int i = 0; i &lt; type1.length; i++) {<a name="line.1645"></a>
+<span class="sourceLineNo">1646</span>                if (!equals(type1[i], type2[i])) {<a name="line.1646"></a>
+<span class="sourceLineNo">1647</span>                    return false;<a name="line.1647"></a>
+<span class="sourceLineNo">1648</span>                }<a name="line.1648"></a>
+<span class="sourceLineNo">1649</span>            }<a name="line.1649"></a>
+<span class="sourceLineNo">1650</span>            return true;<a name="line.1650"></a>
+<span class="sourceLineNo">1651</span>        }<a name="line.1651"></a>
+<span class="sourceLineNo">1652</span>        return false;<a name="line.1652"></a>
+<span class="sourceLineNo">1653</span>    }<a name="line.1653"></a>
+<span class="sourceLineNo">1654</span><a name="line.1654"></a>
+<span class="sourceLineNo">1655</span>    /**<a name="line.1655"></a>
+<span class="sourceLineNo">1656</span>     * Present a given type as a Java-esque String.<a name="line.1656"></a>
+<span class="sourceLineNo">1657</span>     *<a name="line.1657"></a>
+<span class="sourceLineNo">1658</span>     * @param type the type to create a String representation for, not {@code null}<a name="line.1658"></a>
+<span class="sourceLineNo">1659</span>     * @return String<a name="line.1659"></a>
+<span class="sourceLineNo">1660</span>     * @since 3.2<a name="line.1660"></a>
+<span class="sourceLineNo">1661</span>     */<a name="line.1661"></a>
+<span class="sourceLineNo">1662</span>    public static String toString(final Type type) {<a name="line.1662"></a>
+<span class="sourceLineNo">1663</span>        Validate.notNull(type);<a name="line.1663"></a>
+<span class="sourceLineNo">1664</span>        if (type instanceof Class&lt;?&gt;) {<a name="line.1664"></a>
+<span class="sourceLineNo">1665</span>            return classToString((Class&lt;?&gt;) type);<a name="line.1665"></a>
+<span class="sourceLineNo">1666</span>        }<a name="line.1666"></a>
+<span class="sourceLineNo">1667</span>        if (type instanceof ParameterizedType) {<a name="line.1667"></a>
+<span class="sourceLineNo">1668</span>            return parameterizedTypeToString((ParameterizedType) type);<a name="line.1668"></a>
+<span class="sourceLineNo">1669</span>        }<a name="line.1669"></a>
+<span class="sourceLineNo">1670</span>        if (type instanceof WildcardType) {<a name="line.1670"></a>
+<span class="sourceLineNo">1671</span>            return wildcardTypeToString((WildcardType) type);<a name="line.1671"></a>
+<span class="sourceLineNo">1672</span>        }<a name="line.1672"></a>
+<span class="sourceLineNo">1673</span>        if (type instanceof TypeVariable&lt;?&gt;) {<a name="line.1673"></a>
+<span class="sourceLineNo">1674</span>            return typeVariableToString((TypeVariable&lt;?&gt;) type);<a name="line.1674"></a>
+<span class="sourceLineNo">1675</span>        }<a name="line.1675"></a>
+<span class="sourceLineNo">1676</span>        if (type instanceof GenericArrayType) {<a name="line.1676"></a>
+<span class="sourceLineNo">1677</span>            return genericArrayTypeToString((GenericArrayType) type);<a name="line.1677"></a>
+<span class="sourceLineNo">1678</span>        }<a name="line.1678"></a>
+<span class="sourceLineNo">1679</span>        throw new IllegalArgumentException(ObjectUtils.identityToString(type));<a name="line.1679"></a>
+<span class="sourceLineNo">1680</span>    }<a name="line.1680"></a>
+<span class="sourceLineNo">1681</span><a name="line.1681"></a>
+<span class="sourceLineNo">1682</span>    /**<a name="line.1682"></a>
+<span class="sourceLineNo">1683</span>     * Format a {@link TypeVariable} including its {@link GenericDeclaration}.<a name="line.1683"></a>
+<span class="sourceLineNo">1684</span>     *<a name="line.1684"></a>
+<span class="sourceLineNo">1685</span>     * @param var the type variable to create a String representation for, not {@code null}<a name="line.1685"></a>
+<span class="sourceLineNo">1686</span>     * @return String<a name="line.1686"></a>
+<span class="sourceLineNo">1687</span>     * @since 3.2<a name="line.1687"></a>
+<span class="sourceLineNo">1688</span>     */<a name="line.1688"></a>
+<span class="sourceLineNo">1689</span>    public static String toLongString(final TypeVariable&lt;?&gt; var) {<a name="line.1689"></a>
+<span class="sourceLineNo">1690</span>        Validate.notNull(var, "var is null");<a name="line.1690"></a>
+<span class="sourceLineNo">1691</span>        final StringBuilder buf = new StringBuilder();<a name="line.1691"></a>
+<span class="sourceLineNo">1692</span>        final GenericDeclaration d = var.getGenericDeclaration();<a name="line.1692"></a>
+<span class="sourceLineNo">1693</span>        if (d instanceof Class&lt;?&gt;) {<a name="line.1693"></a>
+<span class="sourceLineNo">1694</span>            Class&lt;?&gt; c = (Class&lt;?&gt;) d;<a name="line.1694"></a>
+<span class="sourceLineNo">1695</span>            while (true) {<a name="line.1695"></a>
+<span class="sourceLineNo">1696</span>                if (c.getEnclosingClass() == null) {<a name="line.1696"></a>
+<span class="sourceLineNo">1697</span>                    buf.insert(0, c.getName());<a name="line.1697"></a>
+<span class="sourceLineNo">1698</span>                    break;<a name="line.1698"></a>
+<span class="sourceLineNo">1699</span>                }<a name="line.1699"></a>
+<span class="sourceLineNo">1700</span>                buf.insert(0, c.getSimpleName()).insert(0, '.');<a name="line.1700"></a>
+<span class="sourceLineNo">1701</span>                c = c.getEnclosingClass();<a name="line.1701"></a>
+<span class="sourceLineNo">1702</span>            }<a name="line.1702"></a>
+<span class="sourceLineNo">1703</span>        } else if (d instanceof Type) {// not possible as of now<a name="line.1703"></a>
+<span class="sourceLineNo">1704</span>            buf.append(toString((Type) d));<a name="line.1704"></a>
+<span class="sourceLineNo">1705</span>        } else {<a name="line.1705"></a>
+<span class="sourceLineNo">1706</span>            buf.append(d);<a name="line.1706"></a>
+<span class="sourceLineNo">1707</span>        }<a name="line.1707"></a>
+<span class="sourceLineNo">1708</span>        return buf.append(':').append(typeVariableToString(var)).toString();<a name="line.1708"></a>
+<span class="sourceLineNo">1709</span>    }<a name="line.1709"></a>
+<span class="sourceLineNo">1710</span><a name="line.1710"></a>
+<span class="sourceLineNo">1711</span>    /**<a name="line.1711"></a>
+<span class="sourceLineNo">1712</span>     * Wrap the specified {@link Type} in a {@link Typed} wrapper.<a name="line.1712"></a>
+<span class="sourceLineNo">1713</span>     *<a name="line.1713"></a>
+<span class="sourceLineNo">1714</span>     * @param &lt;T&gt; inferred generic type<a name="line.1714"></a>
+<span class="sourceLineNo">1715</span>     * @param type to wrap<a name="line.1715"></a>
+<span class="sourceLineNo">1716</span>     * @return Typed&amp;lt;T&amp;gt;<a name="line.1716"></a>
+<span class="sourceLineNo">1717</span>     * @since 3.2<a name="line.1717"></a>
+<span class="sourceLineNo">1718</span>     */<a name="line.1718"></a>
+<span class="sourceLineNo">1719</span>    public static &lt;T&gt; Typed&lt;T&gt; wrap(final Type type) {<a name="line.1719"></a>
+<span class="sourceLineNo">1720</span>        return () -&gt; type;<a name="line.1720"></a>
+<span class="sourceLineNo">1721</span>    }<a name="line.1721"></a>
+<span class="sourceLineNo">1722</span><a name="line.1722"></a>
+<span class="sourceLineNo">1723</span>    /**<a name="line.1723"></a>
+<span class="sourceLineNo">1724</span>     * Wrap the specified {@link Class} in a {@link Typed} wrapper.<a name="line.1724"></a>
+<span class="sourceLineNo">1725</span>     *<a name="line.1725"></a>
+<span class="sourceLineNo">1726</span>     * @param &lt;T&gt; generic type<a name="line.1726"></a>
+<span class="sourceLineNo">1727</span>     * @param type to wrap<a name="line.1727"></a>
+<span class="sourceLineNo">1728</span>     * @return Typed&amp;lt;T&amp;gt;<a name="line.1728"></a>
+<span class="sourceLineNo">1729</span>     * @since 3.2<a name="line.1729"></a>
+<span class="sourceLineNo">1730</span>     */<a name="line.1730"></a>
+<span class="sourceLineNo">1731</span>    public static &lt;T&gt; Typed&lt;T&gt; wrap(final Class&lt;T&gt; type) {<a name="line.1731"></a>
+<span class="sourceLineNo">1732</span>        return wrap((Type) type);<a name="line.1732"></a>
+<span class="sourceLineNo">1733</span>    }<a name="line.1733"></a>
+<span class="sourceLineNo">1734</span><a name="line.1734"></a>
+<span class="sourceLineNo">1735</span>    /**<a name="line.1735"></a>
+<span class="sourceLineNo">1736</span>     * Format a {@link Class} as a {@link String}.<a name="line.1736"></a>
+<span class="sourceLineNo">1737</span>     * @param cls {@code Class} to format<a name="line.1737"></a>
+<span class="sourceLineNo">1738</span>     * @return String<a name="line.1738"></a>
+<span class="sourceLineNo">1739</span>     * @since 3.2<a name="line.1739"></a>
+<span class="sourceLineNo">1740</span>     */<a name="line.1740"></a>
+<span class="sourceLineNo">1741</span>    private static String classToString(final Class&lt;?&gt; cls) {<a name="line.1741"></a>
+<span class="sourceLineNo">1742</span>        if (cls.isArray()) {<a name="line.1742"></a>
+<span class="sourceLineNo">1743</span>            return toString(cls.getComponentType()) + "[]";<a name="line.1743"></a>
+<span class="sourceLineNo">1744</span>        }<a name="line.1744"></a>
+<span class="sourceLineNo">1745</span><a name="line.1745"></a>
+<span class="sourceLineNo">1746</span>        final StringBuilder buf = new StringBuilder();<a name="line.1746"></a>
+<span class="sourceLineNo">1747</span><a name="line.1747"></a>
+<span class="sourceLineNo">1748</span>        if (cls.getEnclosingClass() != null) {<a name="line.1748"></a>
+<span class="sourceLineNo">1749</span>            buf.append(classToString(cls.getEnclosingClass())).append('.').append(cls.getSimpleName());<a name="line.1749"></a>
+<span class="sourceLineNo">1750</span>        } else {<a name="line.1750"></a>
+<span class="sourceLineNo">1751</span>            buf.append(cls.getName());<a name="line.1751"></a>
+<span class="sourceLineNo">1752</span>        }<a name="line.1752"></a>
+<span class="sourceLineNo">1753</span>        if (cls.getTypeParameters().length &gt; 0) {<a name="line.1753"></a>
+<span class="sourceLineNo">1754</span>            buf.append('&lt;');<a name="line.1754"></a>
+<span class="sourceLineNo">1755</span>            appendAllTo(buf, ", ", cls.getTypeParameters());<a name="line.1755"></a>
+<span class="sourceLineNo">1756</span>            buf.append('&gt;');<a name="line.1756"></a>
+<span class="sourceLineNo">1757</span>        }<a name="line.1757"></a>
+<span class="sourceLineNo">1758</span>        return buf.toString();<a name="line.1758"></a>
+<span class="sourceLineNo">1759</span>    }<a name="line.1759"></a>
+<span class="sourceLineNo">1760</span><a name="line.1760"></a>
+<span class="sourceLineNo">1761</span>    /**<a name="line.1761"></a>
+<span class="sourceLineNo">1762</span>     * Format a {@link TypeVariable} as a {@link String}.<a name="line.1762"></a>
+<span class="sourceLineNo">1763</span>     * @param typeVariable {@code TypeVariable} to format<a name="line.1763"></a>
+<span class="sourceLineNo">1764</span>     * @return String<a name="line.1764"></a>
+<span class="sourceLineNo">1765</span>     * @since 3.2<a name="line.1765"></a>
+<span class="sourceLineNo">1766</span>     */<a name="line.1766"></a>
+<span class="sourceLineNo">1767</span>    private static String typeVariableToString(final TypeVariable&lt;?&gt; typeVariable) {<a name="line.1767"></a>
+<span class="sourceLineNo">1768</span>        final StringBuilder buf = new StringBuilder(typeVariable.getName());<a name="line.1768"></a>
+<span class="sourceLineNo">1769</span>        final Type[] bounds = typeVariable.getBounds();<a name="line.1769"></a>
+<span class="sourceLineNo">1770</span>        if (bounds.length &gt; 0 &amp;&amp; !(bounds.length == 1 &amp;&amp; Object.class.equals(bounds[0]))) {<a name="line.1770"></a>
+<span class="sourceLineNo">1771</span>            buf.append(" extends ");<a name="line.1771"></a>
+<span class="sourceLineNo">1772</span>            appendAllTo(buf, " &amp; ", typeVariable.getBounds());<a name="line.1772"></a>
+<span class="sourceLineNo">1773</span>        }<a name="line.1773"></a>
+<span class="sourceLineNo">1774</span>        return buf.toString();<a name="line.1774"></a>
+<span class="sourceLineNo">1775</span>    }<a name="line.1775"></a>
+<span class="sourceLineNo">1776</span><a name="line.1776"></a>
+<span class="sourceLineNo">1777</span>    /**<a name="line.1777"></a>
+<span class="sourceLineNo">1778</span>     * Format a {@link ParameterizedType} as a {@link String}.<a name="line.1778"></a>
+<span class="sourceLineNo">1779</span>     * @param parameterizedType {@code ParameterizedType} to format<a name="line.1779"></a>
+<span class="sourceLineNo">1780</span>     * @return String<a name="line.1780"></a>
+<span class="sourceLineNo">1781</span>     * @since 3.2<a name="line.1781"></a>
+<span class="sourceLineNo">1782</span>     */<a name="line.1782"></a>
+<span class="sourceLineNo">1783</span>    private static String parameterizedTypeToString(final ParameterizedType parameterizedType) {<a name="line.1783"></a>
+<span class="sourceLineNo">1784</span>        final StringBuilder builder = new StringBuilder();<a name="line.1784"></a>
+<span class="sourceLineNo">1785</span><a name="line.1785"></a>
+<span class="sourceLineNo">1786</span>        final Type useOwner = parameterizedType.getOwnerType();<a name="line.1786"></a>
+<span class="sourceLineNo">1787</span>        final Class&lt;?&gt; raw = (Class&lt;?&gt;) parameterizedType.getRawType();<a name="line.1787"></a>
+<span class="sourceLineNo">1788</span><a name="line.1788"></a>
+<span class="sourceLineNo">1789</span>        if (useOwner == null) {<a name="line.1789"></a>
+<span class="sourceLineNo">1790</span>            builder.append(raw.getName());<a name="line.1790"></a>
+<span class="sourceLineNo">1791</span>        } else {<a name="line.1791"></a>
+<span class="sourceLineNo">1792</span>            if (useOwner instanceof Class&lt;?&gt;) {<a name="line.1792"></a>
+<span class="sourceLineNo">1793</span>                builder.append(((Class&lt;?&gt;) useOwner).getName());<a name="line.1793"></a>
+<span class="sourceLineNo">1794</span>            } else {<a name="line.1794"></a>
+<span class="sourceLineNo">1795</span>                builder.append(useOwner.toString());<a name="line.1795"></a>
+<span class="sourceLineNo">1796</span>            }<a name="line.1796"></a>
+<span class="sourceLineNo">1797</span>            builder.append('.').append(raw.getSimpleName());<a name="line.1797"></a>
+<span class="sourceLineNo">1798</span>        }<a name="line.1798"></a>
+<span class="sourceLineNo">1799</span><a name="line.1799"></a>
+<span class="sourceLineNo">1800</span>        final int[] recursiveTypeIndexes = findRecursiveTypes(parameterizedType);<a name="line.1800"></a>
+<span class="sourceLineNo">1801</span><a name="line.1801"></a>
+<span class="sourceLineNo">1802</span>        if (recursiveTypeIndexes.length &gt; 0) {<a name="line.1802"></a>
+<span class="sourceLineNo">1803</span>            appendRecursiveTypes(builder, recursiveTypeIndexes, parameterizedType.getActualTypeArguments());<a name="line.1803"></a>
+<span class="sourceLineNo">1804</span>        } else {<a name="line.1804"></a>
+<span class="sourceLineNo">1805</span>            appendAllTo(builder.append('&lt;'), ", ", parameterizedType.getActualTypeArguments()).append('&gt;');<a name="line.1805"></a>
+<span class="sourceLineNo">1806</span>        }<a name="line.1806"></a>
+<span class="sourceLineNo">1807</span><a name="line.1807"></a>
+<span class="sourceLineNo">1808</span>        return builder.toString();<a name="line.1808"></a>
+<span class="sourceLineNo">1809</span>    }<a name="line.1809"></a>
+<span class="sourceLineNo">1810</span><a name="line.1810"></a>
+<span class="sourceLineNo">1811</span>    private static void appendRecursiveTypes(final StringBuilder builder, final int[] recursiveTypeIndexes,<a name="line.1811"></a>
+<span class="sourceLineNo">1812</span>        final Type[] argumentTypes) {<a name="line.1812"></a>
+<span class="sourceLineNo">1813</span>        for (int i = 0; i &lt; recursiveTypeIndexes.length; i++) {<a name="line.1813"></a>
+<span class="sourceLineNo">1814</span>            appendAllTo(builder.append('&lt;'), ", ", argumentTypes[i].toString()).append('&gt;');<a name="line.1814"></a>
+<span class="sourceLineNo">1815</span>        }<a name="line.1815"></a>
+<span class="sourceLineNo">1816</span><a name="line.1816"></a>
+<span class="sourceLineNo">1817</span>        final Type[] argumentsFiltered = ArrayUtils.removeAll(argumentTypes, recursiveTypeIndexes);<a name="line.1817"></a>
+<span class="sourceLineNo">1818</span><a name="line.1818"></a>
+<span class="sourceLineNo">1819</span>        if (argumentsFiltered.length &gt; 0) {<a name="line.1819"></a>
+<span class="sourceLineNo">1820</span>            appendAllTo(builder.append('&lt;'), ", ", argumentsFiltered).append('&gt;');<a name="line.1820"></a>
+<span class="sourceLineNo">1821</span>        }<a name="line.1821"></a>
+<span class="sourceLineNo">1822</span>    }<a name="line.1822"></a>
+<span class="sourceLineNo">1823</span><a name="line.1823"></a>
+<span class="sourceLineNo">1824</span>    private static int[] findRecursiveTypes(final ParameterizedType parameterizedType) {<a name="line.1824"></a>
+<span class="sourceLineNo">1825</span>        final Type[] filteredArgumentTypes = Arrays.copyOf(parameterizedType.getActualTypeArguments(),<a name="line.1825"></a>
+<span class="sourceLineNo">1826</span>            parameterizedType.getActualTypeArguments().length);<a name="line.1826"></a>
+<span class="sourceLineNo">1827</span>        int[] indexesToRemove = {};<a name="line.1827"></a>
+<span class="sourceLineNo">1828</span>        for (int i = 0; i &lt; filteredArgumentTypes.length; i++) {<a name="line.1828"></a>
+<span class="sourceLineNo">1829</span>            if (filteredArgumentTypes[i] instanceof TypeVariable&lt;?&gt;) {<a name="line.1829"></a>
+<span class="sourceLineNo">1830</span>                if (containsVariableTypeSameParametrizedTypeBound(((TypeVariable&lt;?&gt;) filteredArgumentTypes[i]),<a name="line.1830"></a>
+<span class="sourceLineNo">1831</span>                    parameterizedType)) {<a name="line.1831"></a>
+<span class="sourceLineNo">1832</span>                    indexesToRemove = ArrayUtils.add(indexesToRemove, i);<a name="line.1832"></a>
+<span class="sourceLineNo">1833</span>                }<a name="line.1833"></a>
+<span class="sourceLineNo">1834</span>            }<a name="line.1834"></a>
+<span class="sourceLineNo">1835</span>        }<a name="line.1835"></a>
+<span class="sourceLineNo">1836</span>        return indexesToRemove;<a name="line.1836"></a>
+<span class="sourceLineNo">1837</span>    }<a name="line.1837"></a>
+<span class="sourceLineNo">1838</span><a name="line.1838"></a>
+<span class="sourceLineNo">1839</span>    private static boolean containsVariableTypeSameParametrizedTypeBound(final TypeVariable&lt;?&gt; typeVariable,<a name="line.1839"></a>
+<span class="sourceLineNo">1840</span>        final ParameterizedType parameterizedType) {<a name="line.1840"></a>
+<span class="sourceLineNo">1841</span>        return ArrayUtils.contains(typeVariable.getBounds(), parameterizedType);<a name="line.1841"></a>
+<span class="sourceLineNo">1842</span>    }<a name="line.1842"></a>
+<span class="sourceLineNo">1843</span><a name="line.1843"></a>
+<span class="sourceLineNo">1844</span>    /**<a name="line.1844"></a>
+<span class="sourceLineNo">1845</span>     * Format a {@link WildcardType} as a {@link String}.<a name="line.1845"></a>
+<span class="sourceLineNo">1846</span>     * @param wildcardType {@code WildcardType} to format<a name="line.1846"></a>
+<span class="sourceLineNo">1847</span>     * @return String<a name="line.1847"></a>
+<span class="sourceLineNo">1848</span>     * @since 3.2<a name="line.1848"></a>
+<span class="sourceLineNo">1849</span>     */<a name="line.1849"></a>
+<span class="sourceLineNo">1850</span>    private static String wildcardTypeToString(final WildcardType wildcardType) {<a name="line.1850"></a>
+<span class="sourceLineNo">1851</span>        final StringBuilder buf = new StringBuilder().append('?');<a name="line.1851"></a>
+<span class="sourceLineNo">1852</span>        final Type[] lowerBounds = wildcardType.getLowerBounds();<a name="line.1852"></a>
+<span class="sourceLineNo">1853</span>        final Type[] upperBounds = wildcardType.getUpperBounds();<a name="line.1853"></a>
+<span class="sourceLineNo">1854</span>        if (lowerBounds.length &gt; 1 || lowerBounds.length == 1 &amp;&amp; lowerBounds[0] != null) {<a name="line.1854"></a>
+<span class="sourceLineNo">1855</span>            appendAllTo(buf.append(" super "), " &amp; ", lowerBounds);<a name="line.1855"></a>
+<span class="sourceLineNo">1856</span>        } else if (upperBounds.length &gt; 1 || upperBounds.length == 1 &amp;&amp; !Object.class.equals(upperBounds[0])) {<a name="line.1856"></a>
+<span class="sourceLineNo">1857</span>            appendAllTo(buf.append(" extends "), " &amp; ", upperBounds);<a name="line.1857"></a>
+<span class="sourceLineNo">1858</span>        }<a name="line.1858"></a>
+<span class="sourceLineNo">1859</span>        return buf.toString();<a name="line.1859"></a>
+<span class="sourceLineNo">1860</span>    }<a name="line.1860"></a>
+<span class="sourceLineNo">1861</span><a name="line.1861"></a>
+<span class="sourceLineNo">1862</span>    /**<a name="line.1862"></a>
+<span class="sourceLineNo">1863</span>     * Format a {@link GenericArrayType} as a {@link String}.<a name="line.1863"></a>
+<span class="sourceLineNo">1864</span>     * @param genericArrayType {@code GenericArrayType} to format<a name="line.1864"></a>
+<span class="sourceLineNo">1865</span>     * @return String<a name="line.1865"></a>
+<span class="sourceLineNo">1866</span>     * @since 3.2<a name="line.1866"></a>
+<span class="sourceLineNo">1867</span>     */<a name="line.1867"></a>
+<span class="sourceLineNo">1868</span>    private static String genericArrayTypeToString(final GenericArrayType genericArrayType) {<a name="line.1868"></a>
+<span class="sourceLineNo">1869</span>        return String.format("%s[]", toString(genericArrayType.getGenericComponentType()));<a name="line.1869"></a>
+<span class="sourceLineNo">1870</span>    }<a name="line.1870"></a>
+<span class="sourceLineNo">1871</span><a name="line.1871"></a>
+<span class="sourceLineNo">1872</span>    /**<a name="line.1872"></a>
+<span class="sourceLineNo">1873</span>     * Append {@code types} to {@code builder} with separator {@code sep}.<a name="line.1873"></a>
+<span class="sourceLineNo">1874</span>     * @param builder destination<a name="line.1874"></a>
+<span class="sourceLineNo">1875</span>     * @param sep separator<a name="line.1875"></a>
+<span class="sourceLineNo">1876</span>     * @param types to append<a name="line.1876"></a>
+<span class="sourceLineNo">1877</span>     * @return {@code builder}<a name="line.1877"></a>
+<span class="sourceLineNo">1878</span>     * @since 3.2<a name="line.1878"></a>
+<span class="sourceLineNo">1879</span>     */<a name="line.1879"></a>
+<span class="sourceLineNo">1880</span>    private static &lt;T&gt; StringBuilder appendAllTo(final StringBuilder builder, final String sep,<a name="line.1880"></a>
+<span class="sourceLineNo">1881</span>        @SuppressWarnings("unchecked") final T... types) {<a name="line.1881"></a>
+<span class="sourceLineNo">1882</span>        Validate.notEmpty(Validate.noNullElements(types));<a name="line.1882"></a>
+<span class="sourceLineNo">1883</span>        if (types.length &gt; 0) {<a name="line.1883"></a>
+<span class="sourceLineNo">1884</span>            builder.append(toString(types[0]));<a name="line.1884"></a>
+<span class="sourceLineNo">1885</span>            for (int i = 1; i &lt; types.length; i++) {<a name="line.1885"></a>
+<span class="sourceLineNo">1886</span>                builder.append(sep).append(toString(types[i]));<a name="line.1886"></a>
+<span class="sourceLineNo">1887</span>            }<a name="line.1887"></a>
+<span class="sourceLineNo">1888</span>        }<a name="line.1888"></a>
+<span class="sourceLineNo">1889</span>        return builder;<a name="line.1889"></a>
+<span class="sourceLineNo">1890</span>    }<a name="line.1890"></a>
+<span class="sourceLineNo">1891</span><a name="line.1891"></a>
+<span class="sourceLineNo">1892</span>    private static &lt;T&gt; String toString(final T object) {<a name="line.1892"></a>
+<span class="sourceLineNo">1893</span>        return object instanceof Type ? toString((Type) object) : object.toString();<a name="line.1893"></a>
+<span class="sourceLineNo">1894</span>    }<a name="line.1894"></a>
+<span class="sourceLineNo">1895</span><a name="line.1895"></a>
+<span class="sourceLineNo">1896</span>}<a name="line.1896"></a>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</pre>
+</div>
+</body>
+</html>

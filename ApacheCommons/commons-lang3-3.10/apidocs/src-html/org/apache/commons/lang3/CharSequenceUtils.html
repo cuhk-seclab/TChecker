@@ -1,0 +1,378 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en">
+<head>
+<title>Source code</title>
+<link rel="stylesheet" type="text/css" href="../../../../../stylesheet.css" title="Style">
+</head>
+<body>
+<div class="sourceContainer">
+<pre><span class="sourceLineNo">001</span>/*<a name="line.1"></a>
+<span class="sourceLineNo">002</span> * Licensed to the Apache Software Foundation (ASF) under one or more<a name="line.2"></a>
+<span class="sourceLineNo">003</span> * contributor license agreements.  See the NOTICE file distributed with<a name="line.3"></a>
+<span class="sourceLineNo">004</span> * this work for additional information regarding copyright ownership.<a name="line.4"></a>
+<span class="sourceLineNo">005</span> * The ASF licenses this file to You under the Apache License, Version 2.0<a name="line.5"></a>
+<span class="sourceLineNo">006</span> * (the "License"); you may not use this file except in compliance with<a name="line.6"></a>
+<span class="sourceLineNo">007</span> * the License.  You may obtain a copy of the License at<a name="line.7"></a>
+<span class="sourceLineNo">008</span> *<a name="line.8"></a>
+<span class="sourceLineNo">009</span> *      http://www.apache.org/licenses/LICENSE-2.0<a name="line.9"></a>
+<span class="sourceLineNo">010</span> *<a name="line.10"></a>
+<span class="sourceLineNo">011</span> * Unless required by applicable law or agreed to in writing, software<a name="line.11"></a>
+<span class="sourceLineNo">012</span> * distributed under the License is distributed on an "AS IS" BASIS,<a name="line.12"></a>
+<span class="sourceLineNo">013</span> * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.<a name="line.13"></a>
+<span class="sourceLineNo">014</span> * See the License for the specific language governing permissions and<a name="line.14"></a>
+<span class="sourceLineNo">015</span> * limitations under the License.<a name="line.15"></a>
+<span class="sourceLineNo">016</span> */<a name="line.16"></a>
+<span class="sourceLineNo">017</span>package org.apache.commons.lang3;<a name="line.17"></a>
+<span class="sourceLineNo">018</span><a name="line.18"></a>
+<span class="sourceLineNo">019</span>/**<a name="line.19"></a>
+<span class="sourceLineNo">020</span> * &lt;p&gt;Operations on {@link CharSequence} that are<a name="line.20"></a>
+<span class="sourceLineNo">021</span> * {@code null} safe.&lt;/p&gt;<a name="line.21"></a>
+<span class="sourceLineNo">022</span> *<a name="line.22"></a>
+<span class="sourceLineNo">023</span> * @see CharSequence<a name="line.23"></a>
+<span class="sourceLineNo">024</span> * @since 3.0<a name="line.24"></a>
+<span class="sourceLineNo">025</span> */<a name="line.25"></a>
+<span class="sourceLineNo">026</span>public class CharSequenceUtils {<a name="line.26"></a>
+<span class="sourceLineNo">027</span><a name="line.27"></a>
+<span class="sourceLineNo">028</span>    private static final int NOT_FOUND = -1;<a name="line.28"></a>
+<span class="sourceLineNo">029</span><a name="line.29"></a>
+<span class="sourceLineNo">030</span>    /**<a name="line.30"></a>
+<span class="sourceLineNo">031</span>     * &lt;p&gt;{@code CharSequenceUtils} instances should NOT be constructed in<a name="line.31"></a>
+<span class="sourceLineNo">032</span>     * standard programming. &lt;/p&gt;<a name="line.32"></a>
+<span class="sourceLineNo">033</span>     *<a name="line.33"></a>
+<span class="sourceLineNo">034</span>     * &lt;p&gt;This constructor is public to permit tools that require a JavaBean<a name="line.34"></a>
+<span class="sourceLineNo">035</span>     * instance to operate.&lt;/p&gt;<a name="line.35"></a>
+<span class="sourceLineNo">036</span>     */<a name="line.36"></a>
+<span class="sourceLineNo">037</span>    public CharSequenceUtils() {<a name="line.37"></a>
+<span class="sourceLineNo">038</span>        super();<a name="line.38"></a>
+<span class="sourceLineNo">039</span>    }<a name="line.39"></a>
+<span class="sourceLineNo">040</span><a name="line.40"></a>
+<span class="sourceLineNo">041</span>    //-----------------------------------------------------------------------<a name="line.41"></a>
+<span class="sourceLineNo">042</span>    /**<a name="line.42"></a>
+<span class="sourceLineNo">043</span>     * &lt;p&gt;Returns a new {@code CharSequence} that is a subsequence of this<a name="line.43"></a>
+<span class="sourceLineNo">044</span>     * sequence starting with the {@code char} value at the specified index.&lt;/p&gt;<a name="line.44"></a>
+<span class="sourceLineNo">045</span>     *<a name="line.45"></a>
+<span class="sourceLineNo">046</span>     * &lt;p&gt;This provides the {@code CharSequence} equivalent to {@link String#substring(int)}.<a name="line.46"></a>
+<span class="sourceLineNo">047</span>     * The length (in {@code char}) of the returned sequence is {@code length() - start},<a name="line.47"></a>
+<span class="sourceLineNo">048</span>     * so if {@code start == end} then an empty sequence is returned.&lt;/p&gt;<a name="line.48"></a>
+<span class="sourceLineNo">049</span>     *<a name="line.49"></a>
+<span class="sourceLineNo">050</span>     * @param cs  the specified subsequence, null returns null<a name="line.50"></a>
+<span class="sourceLineNo">051</span>     * @param start  the start index, inclusive, valid<a name="line.51"></a>
+<span class="sourceLineNo">052</span>     * @return a new subsequence, may be null<a name="line.52"></a>
+<span class="sourceLineNo">053</span>     * @throws IndexOutOfBoundsException if {@code start} is negative or if<a name="line.53"></a>
+<span class="sourceLineNo">054</span>     *  {@code start} is greater than {@code length()}<a name="line.54"></a>
+<span class="sourceLineNo">055</span>     */<a name="line.55"></a>
+<span class="sourceLineNo">056</span>    public static CharSequence subSequence(final CharSequence cs, final int start) {<a name="line.56"></a>
+<span class="sourceLineNo">057</span>        return cs == null ? null : cs.subSequence(start, cs.length());<a name="line.57"></a>
+<span class="sourceLineNo">058</span>    }<a name="line.58"></a>
+<span class="sourceLineNo">059</span><a name="line.59"></a>
+<span class="sourceLineNo">060</span>    //-----------------------------------------------------------------------<a name="line.60"></a>
+<span class="sourceLineNo">061</span>    /**<a name="line.61"></a>
+<span class="sourceLineNo">062</span>     * Returns the index within {@code cs} of the first occurrence of the<a name="line.62"></a>
+<span class="sourceLineNo">063</span>     * specified character, starting the search at the specified index.<a name="line.63"></a>
+<span class="sourceLineNo">064</span>     * &lt;p&gt;<a name="line.64"></a>
+<span class="sourceLineNo">065</span>     * If a character with value {@code searchChar} occurs in the<a name="line.65"></a>
+<span class="sourceLineNo">066</span>     * character sequence represented by the {@code cs}<a name="line.66"></a>
+<span class="sourceLineNo">067</span>     * object at an index no smaller than {@code start}, then<a name="line.67"></a>
+<span class="sourceLineNo">068</span>     * the index of the first such occurrence is returned. For values<a name="line.68"></a>
+<span class="sourceLineNo">069</span>     * of {@code searchChar} in the range from 0 to 0xFFFF (inclusive),<a name="line.69"></a>
+<span class="sourceLineNo">070</span>     * this is the smallest value &lt;i&gt;k&lt;/i&gt; such that:<a name="line.70"></a>
+<span class="sourceLineNo">071</span>     * &lt;blockquote&gt;&lt;pre&gt;<a name="line.71"></a>
+<span class="sourceLineNo">072</span>     * (this.charAt(&lt;i&gt;k&lt;/i&gt;) == searchChar) &amp;amp;&amp;amp; (&lt;i&gt;k&lt;/i&gt; &amp;gt;= start)<a name="line.72"></a>
+<span class="sourceLineNo">073</span>     * &lt;/pre&gt;&lt;/blockquote&gt;<a name="line.73"></a>
+<span class="sourceLineNo">074</span>     * is true. For other values of {@code searchChar}, it is the<a name="line.74"></a>
+<span class="sourceLineNo">075</span>     * smallest value &lt;i&gt;k&lt;/i&gt; such that:<a name="line.75"></a>
+<span class="sourceLineNo">076</span>     * &lt;blockquote&gt;&lt;pre&gt;<a name="line.76"></a>
+<span class="sourceLineNo">077</span>     * (this.codePointAt(&lt;i&gt;k&lt;/i&gt;) == searchChar) &amp;amp;&amp;amp; (&lt;i&gt;k&lt;/i&gt; &amp;gt;= start)<a name="line.77"></a>
+<span class="sourceLineNo">078</span>     * &lt;/pre&gt;&lt;/blockquote&gt;<a name="line.78"></a>
+<span class="sourceLineNo">079</span>     * is true. In either case, if no such character occurs inm {@code cs}<a name="line.79"></a>
+<span class="sourceLineNo">080</span>     * at or after position {@code start}, then<a name="line.80"></a>
+<span class="sourceLineNo">081</span>     * {@code -1} is returned.<a name="line.81"></a>
+<span class="sourceLineNo">082</span>     *<a name="line.82"></a>
+<span class="sourceLineNo">083</span>     * &lt;p&gt;<a name="line.83"></a>
+<span class="sourceLineNo">084</span>     * There is no restriction on the value of {@code start}. If it<a name="line.84"></a>
+<span class="sourceLineNo">085</span>     * is negative, it has the same effect as if it were zero: the entire<a name="line.85"></a>
+<span class="sourceLineNo">086</span>     * {@code CharSequence} may be searched. If it is greater than<a name="line.86"></a>
+<span class="sourceLineNo">087</span>     * the length of {@code cs}, it has the same effect as if it were<a name="line.87"></a>
+<span class="sourceLineNo">088</span>     * equal to the length of {@code cs}: {@code -1} is returned.<a name="line.88"></a>
+<span class="sourceLineNo">089</span>     *<a name="line.89"></a>
+<span class="sourceLineNo">090</span>     * &lt;p&gt;All indices are specified in {@code char} values<a name="line.90"></a>
+<span class="sourceLineNo">091</span>     * (Unicode code units).<a name="line.91"></a>
+<span class="sourceLineNo">092</span>     *<a name="line.92"></a>
+<span class="sourceLineNo">093</span>     * @param cs  the {@code CharSequence} to be processed, not null<a name="line.93"></a>
+<span class="sourceLineNo">094</span>     * @param searchChar  the char to be searched for<a name="line.94"></a>
+<span class="sourceLineNo">095</span>     * @param start  the start index, negative starts at the string start<a name="line.95"></a>
+<span class="sourceLineNo">096</span>     * @return the index where the search char was found, -1 if not found<a name="line.96"></a>
+<span class="sourceLineNo">097</span>     * @since 3.6 updated to behave more like {@code String}<a name="line.97"></a>
+<span class="sourceLineNo">098</span>     */<a name="line.98"></a>
+<span class="sourceLineNo">099</span>    static int indexOf(final CharSequence cs, final int searchChar, int start) {<a name="line.99"></a>
+<span class="sourceLineNo">100</span>        if (cs instanceof String) {<a name="line.100"></a>
+<span class="sourceLineNo">101</span>            return ((String) cs).indexOf(searchChar, start);<a name="line.101"></a>
+<span class="sourceLineNo">102</span>        }<a name="line.102"></a>
+<span class="sourceLineNo">103</span>        final int sz = cs.length();<a name="line.103"></a>
+<span class="sourceLineNo">104</span>        if (start &lt; 0) {<a name="line.104"></a>
+<span class="sourceLineNo">105</span>            start = 0;<a name="line.105"></a>
+<span class="sourceLineNo">106</span>        }<a name="line.106"></a>
+<span class="sourceLineNo">107</span>        if (searchChar &lt; Character.MIN_SUPPLEMENTARY_CODE_POINT) {<a name="line.107"></a>
+<span class="sourceLineNo">108</span>            for (int i = start; i &lt; sz; i++) {<a name="line.108"></a>
+<span class="sourceLineNo">109</span>                if (cs.charAt(i) == searchChar) {<a name="line.109"></a>
+<span class="sourceLineNo">110</span>                    return i;<a name="line.110"></a>
+<span class="sourceLineNo">111</span>                }<a name="line.111"></a>
+<span class="sourceLineNo">112</span>            }<a name="line.112"></a>
+<span class="sourceLineNo">113</span>        }<a name="line.113"></a>
+<span class="sourceLineNo">114</span>        //supplementary characters (LANG1300)<a name="line.114"></a>
+<span class="sourceLineNo">115</span>        if (searchChar &lt;= Character.MAX_CODE_POINT) {<a name="line.115"></a>
+<span class="sourceLineNo">116</span>            final char[] chars = Character.toChars(searchChar);<a name="line.116"></a>
+<span class="sourceLineNo">117</span>            for (int i = start; i &lt; sz - 1; i++) {<a name="line.117"></a>
+<span class="sourceLineNo">118</span>                final char high = cs.charAt(i);<a name="line.118"></a>
+<span class="sourceLineNo">119</span>                final char low = cs.charAt(i + 1);<a name="line.119"></a>
+<span class="sourceLineNo">120</span>                if (high == chars[0] &amp;&amp; low == chars[1]) {<a name="line.120"></a>
+<span class="sourceLineNo">121</span>                    return i;<a name="line.121"></a>
+<span class="sourceLineNo">122</span>                }<a name="line.122"></a>
+<span class="sourceLineNo">123</span>            }<a name="line.123"></a>
+<span class="sourceLineNo">124</span>        }<a name="line.124"></a>
+<span class="sourceLineNo">125</span>        return NOT_FOUND;<a name="line.125"></a>
+<span class="sourceLineNo">126</span>    }<a name="line.126"></a>
+<span class="sourceLineNo">127</span><a name="line.127"></a>
+<span class="sourceLineNo">128</span>    /**<a name="line.128"></a>
+<span class="sourceLineNo">129</span>     * Used by the indexOf(CharSequence methods) as a green implementation of indexOf.<a name="line.129"></a>
+<span class="sourceLineNo">130</span>     *<a name="line.130"></a>
+<span class="sourceLineNo">131</span>     * @param cs the {@code CharSequence} to be processed<a name="line.131"></a>
+<span class="sourceLineNo">132</span>     * @param searchChar the {@code CharSequence} to be searched for<a name="line.132"></a>
+<span class="sourceLineNo">133</span>     * @param start the start index<a name="line.133"></a>
+<span class="sourceLineNo">134</span>     * @return the index where the search sequence was found<a name="line.134"></a>
+<span class="sourceLineNo">135</span>     */<a name="line.135"></a>
+<span class="sourceLineNo">136</span>    static int indexOf(final CharSequence cs, final CharSequence searchChar, final int start) {<a name="line.136"></a>
+<span class="sourceLineNo">137</span>        return cs.toString().indexOf(searchChar.toString(), start);<a name="line.137"></a>
+<span class="sourceLineNo">138</span>//        if (cs instanceof String &amp;&amp; searchChar instanceof String) {<a name="line.138"></a>
+<span class="sourceLineNo">139</span>//            // TODO: Do we assume searchChar is usually relatively small;<a name="line.139"></a>
+<span class="sourceLineNo">140</span>//            //       If so then calling toString() on it is better than reverting to<a name="line.140"></a>
+<span class="sourceLineNo">141</span>//            //       the green implementation in the else block<a name="line.141"></a>
+<span class="sourceLineNo">142</span>//            return ((String) cs).indexOf((String) searchChar, start);<a name="line.142"></a>
+<span class="sourceLineNo">143</span>//        } else {<a name="line.143"></a>
+<span class="sourceLineNo">144</span>//            // TODO: Implement rather than convert to String<a name="line.144"></a>
+<span class="sourceLineNo">145</span>//            return cs.toString().indexOf(searchChar.toString(), start);<a name="line.145"></a>
+<span class="sourceLineNo">146</span>//        }<a name="line.146"></a>
+<span class="sourceLineNo">147</span>    }<a name="line.147"></a>
+<span class="sourceLineNo">148</span><a name="line.148"></a>
+<span class="sourceLineNo">149</span>    /**<a name="line.149"></a>
+<span class="sourceLineNo">150</span>     * Returns the index within {@code cs} of the last occurrence of<a name="line.150"></a>
+<span class="sourceLineNo">151</span>     * the specified character, searching backward starting at the<a name="line.151"></a>
+<span class="sourceLineNo">152</span>     * specified index. For values of {@code searchChar} in the range<a name="line.152"></a>
+<span class="sourceLineNo">153</span>     * from 0 to 0xFFFF (inclusive), the index returned is the largest<a name="line.153"></a>
+<span class="sourceLineNo">154</span>     * value &lt;i&gt;k&lt;/i&gt; such that:<a name="line.154"></a>
+<span class="sourceLineNo">155</span>     * &lt;blockquote&gt;&lt;pre&gt;<a name="line.155"></a>
+<span class="sourceLineNo">156</span>     * (this.charAt(&lt;i&gt;k&lt;/i&gt;) == searchChar) &amp;amp;&amp;amp; (&lt;i&gt;k&lt;/i&gt; &amp;lt;= start)<a name="line.156"></a>
+<span class="sourceLineNo">157</span>     * &lt;/pre&gt;&lt;/blockquote&gt;<a name="line.157"></a>
+<span class="sourceLineNo">158</span>     * is true. For other values of {@code searchChar}, it is the<a name="line.158"></a>
+<span class="sourceLineNo">159</span>     * largest value &lt;i&gt;k&lt;/i&gt; such that:<a name="line.159"></a>
+<span class="sourceLineNo">160</span>     * &lt;blockquote&gt;&lt;pre&gt;<a name="line.160"></a>
+<span class="sourceLineNo">161</span>     * (this.codePointAt(&lt;i&gt;k&lt;/i&gt;) == searchChar) &amp;amp;&amp;amp; (&lt;i&gt;k&lt;/i&gt; &amp;lt;= start)<a name="line.161"></a>
+<span class="sourceLineNo">162</span>     * &lt;/pre&gt;&lt;/blockquote&gt;<a name="line.162"></a>
+<span class="sourceLineNo">163</span>     * is true. In either case, if no such character occurs in {@code cs}<a name="line.163"></a>
+<span class="sourceLineNo">164</span>     * at or before position {@code start}, then {@code -1} is returned.<a name="line.164"></a>
+<span class="sourceLineNo">165</span>     *<a name="line.165"></a>
+<span class="sourceLineNo">166</span>     * &lt;p&gt;All indices are specified in {@code char} values<a name="line.166"></a>
+<span class="sourceLineNo">167</span>     * (Unicode code units).<a name="line.167"></a>
+<span class="sourceLineNo">168</span>     *<a name="line.168"></a>
+<span class="sourceLineNo">169</span>     * @param cs  the {@code CharSequence} to be processed<a name="line.169"></a>
+<span class="sourceLineNo">170</span>     * @param searchChar  the char to be searched for<a name="line.170"></a>
+<span class="sourceLineNo">171</span>     * @param start  the start index, negative returns -1, beyond length starts at end<a name="line.171"></a>
+<span class="sourceLineNo">172</span>     * @return the index where the search char was found, -1 if not found<a name="line.172"></a>
+<span class="sourceLineNo">173</span>     * @since 3.6 updated to behave more like {@code String}<a name="line.173"></a>
+<span class="sourceLineNo">174</span>     */<a name="line.174"></a>
+<span class="sourceLineNo">175</span>    static int lastIndexOf(final CharSequence cs, final int searchChar, int start) {<a name="line.175"></a>
+<span class="sourceLineNo">176</span>        if (cs instanceof String) {<a name="line.176"></a>
+<span class="sourceLineNo">177</span>            return ((String) cs).lastIndexOf(searchChar, start);<a name="line.177"></a>
+<span class="sourceLineNo">178</span>        }<a name="line.178"></a>
+<span class="sourceLineNo">179</span>        final int sz = cs.length();<a name="line.179"></a>
+<span class="sourceLineNo">180</span>        if (start &lt; 0) {<a name="line.180"></a>
+<span class="sourceLineNo">181</span>            return NOT_FOUND;<a name="line.181"></a>
+<span class="sourceLineNo">182</span>        }<a name="line.182"></a>
+<span class="sourceLineNo">183</span>        if (start &gt;= sz) {<a name="line.183"></a>
+<span class="sourceLineNo">184</span>            start = sz - 1;<a name="line.184"></a>
+<span class="sourceLineNo">185</span>        }<a name="line.185"></a>
+<span class="sourceLineNo">186</span>        if (searchChar &lt; Character.MIN_SUPPLEMENTARY_CODE_POINT) {<a name="line.186"></a>
+<span class="sourceLineNo">187</span>            for (int i = start; i &gt;= 0; --i) {<a name="line.187"></a>
+<span class="sourceLineNo">188</span>                if (cs.charAt(i) == searchChar) {<a name="line.188"></a>
+<span class="sourceLineNo">189</span>                    return i;<a name="line.189"></a>
+<span class="sourceLineNo">190</span>                }<a name="line.190"></a>
+<span class="sourceLineNo">191</span>            }<a name="line.191"></a>
+<span class="sourceLineNo">192</span>        }<a name="line.192"></a>
+<span class="sourceLineNo">193</span>        //supplementary characters (LANG1300)<a name="line.193"></a>
+<span class="sourceLineNo">194</span>        //NOTE - we must do a forward traversal for this to avoid duplicating code points<a name="line.194"></a>
+<span class="sourceLineNo">195</span>        if (searchChar &lt;= Character.MAX_CODE_POINT) {<a name="line.195"></a>
+<span class="sourceLineNo">196</span>            final char[] chars = Character.toChars(searchChar);<a name="line.196"></a>
+<span class="sourceLineNo">197</span>            //make sure it's not the last index<a name="line.197"></a>
+<span class="sourceLineNo">198</span>            if (start == sz - 1) {<a name="line.198"></a>
+<span class="sourceLineNo">199</span>                return NOT_FOUND;<a name="line.199"></a>
+<span class="sourceLineNo">200</span>            }<a name="line.200"></a>
+<span class="sourceLineNo">201</span>            for (int i = start; i &gt;= 0; i--) {<a name="line.201"></a>
+<span class="sourceLineNo">202</span>                final char high = cs.charAt(i);<a name="line.202"></a>
+<span class="sourceLineNo">203</span>                final char low = cs.charAt(i + 1);<a name="line.203"></a>
+<span class="sourceLineNo">204</span>                if (chars[0] == high &amp;&amp; chars[1] == low) {<a name="line.204"></a>
+<span class="sourceLineNo">205</span>                    return i;<a name="line.205"></a>
+<span class="sourceLineNo">206</span>                }<a name="line.206"></a>
+<span class="sourceLineNo">207</span>            }<a name="line.207"></a>
+<span class="sourceLineNo">208</span>        }<a name="line.208"></a>
+<span class="sourceLineNo">209</span>        return NOT_FOUND;<a name="line.209"></a>
+<span class="sourceLineNo">210</span>    }<a name="line.210"></a>
+<span class="sourceLineNo">211</span><a name="line.211"></a>
+<span class="sourceLineNo">212</span>    /**<a name="line.212"></a>
+<span class="sourceLineNo">213</span>     * Used by the lastIndexOf(CharSequence methods) as a green implementation of lastIndexOf<a name="line.213"></a>
+<span class="sourceLineNo">214</span>     *<a name="line.214"></a>
+<span class="sourceLineNo">215</span>     * @param cs the {@code CharSequence} to be processed<a name="line.215"></a>
+<span class="sourceLineNo">216</span>     * @param searchChar the {@code CharSequence} to be searched for<a name="line.216"></a>
+<span class="sourceLineNo">217</span>     * @param start the start index<a name="line.217"></a>
+<span class="sourceLineNo">218</span>     * @return the index where the search sequence was found<a name="line.218"></a>
+<span class="sourceLineNo">219</span>     */<a name="line.219"></a>
+<span class="sourceLineNo">220</span>    static int lastIndexOf(final CharSequence cs, final CharSequence searchChar, final int start) {<a name="line.220"></a>
+<span class="sourceLineNo">221</span>        return cs.toString().lastIndexOf(searchChar.toString(), start);<a name="line.221"></a>
+<span class="sourceLineNo">222</span>//        if (cs instanceof String &amp;&amp; searchChar instanceof String) {<a name="line.222"></a>
+<span class="sourceLineNo">223</span>//            // TODO: Do we assume searchChar is usually relatively small;<a name="line.223"></a>
+<span class="sourceLineNo">224</span>//            //       If so then calling toString() on it is better than reverting to<a name="line.224"></a>
+<span class="sourceLineNo">225</span>//            //       the green implementation in the else block<a name="line.225"></a>
+<span class="sourceLineNo">226</span>//            return ((String) cs).lastIndexOf((String) searchChar, start);<a name="line.226"></a>
+<span class="sourceLineNo">227</span>//        } else {<a name="line.227"></a>
+<span class="sourceLineNo">228</span>//            // TODO: Implement rather than convert to String<a name="line.228"></a>
+<span class="sourceLineNo">229</span>//            return cs.toString().lastIndexOf(searchChar.toString(), start);<a name="line.229"></a>
+<span class="sourceLineNo">230</span>//        }<a name="line.230"></a>
+<span class="sourceLineNo">231</span>    }<a name="line.231"></a>
+<span class="sourceLineNo">232</span><a name="line.232"></a>
+<span class="sourceLineNo">233</span>    /**<a name="line.233"></a>
+<span class="sourceLineNo">234</span>     * Green implementation of toCharArray.<a name="line.234"></a>
+<span class="sourceLineNo">235</span>     *<a name="line.235"></a>
+<span class="sourceLineNo">236</span>     * @param cs the {@code CharSequence} to be processed<a name="line.236"></a>
+<span class="sourceLineNo">237</span>     * @return the resulting char array<a name="line.237"></a>
+<span class="sourceLineNo">238</span>     */<a name="line.238"></a>
+<span class="sourceLineNo">239</span>    static char[] toCharArray(final CharSequence cs) {<a name="line.239"></a>
+<span class="sourceLineNo">240</span>        if (cs instanceof String) {<a name="line.240"></a>
+<span class="sourceLineNo">241</span>            return ((String) cs).toCharArray();<a name="line.241"></a>
+<span class="sourceLineNo">242</span>        }<a name="line.242"></a>
+<span class="sourceLineNo">243</span>        final int sz = cs.length();<a name="line.243"></a>
+<span class="sourceLineNo">244</span>        final char[] array = new char[cs.length()];<a name="line.244"></a>
+<span class="sourceLineNo">245</span>        for (int i = 0; i &lt; sz; i++) {<a name="line.245"></a>
+<span class="sourceLineNo">246</span>            array[i] = cs.charAt(i);<a name="line.246"></a>
+<span class="sourceLineNo">247</span>        }<a name="line.247"></a>
+<span class="sourceLineNo">248</span>        return array;<a name="line.248"></a>
+<span class="sourceLineNo">249</span>    }<a name="line.249"></a>
+<span class="sourceLineNo">250</span><a name="line.250"></a>
+<span class="sourceLineNo">251</span>    /**<a name="line.251"></a>
+<span class="sourceLineNo">252</span>     * Green implementation of regionMatches.<a name="line.252"></a>
+<span class="sourceLineNo">253</span>     *<a name="line.253"></a>
+<span class="sourceLineNo">254</span>     * @param cs the {@code CharSequence} to be processed<a name="line.254"></a>
+<span class="sourceLineNo">255</span>     * @param ignoreCase whether or not to be case insensitive<a name="line.255"></a>
+<span class="sourceLineNo">256</span>     * @param thisStart the index to start on the {@code cs} CharSequence<a name="line.256"></a>
+<span class="sourceLineNo">257</span>     * @param substring the {@code CharSequence} to be looked for<a name="line.257"></a>
+<span class="sourceLineNo">258</span>     * @param start the index to start on the {@code substring} CharSequence<a name="line.258"></a>
+<span class="sourceLineNo">259</span>     * @param length character length of the region<a name="line.259"></a>
+<span class="sourceLineNo">260</span>     * @return whether the region matched<a name="line.260"></a>
+<span class="sourceLineNo">261</span>     */<a name="line.261"></a>
+<span class="sourceLineNo">262</span>    static boolean regionMatches(final CharSequence cs, final boolean ignoreCase, final int thisStart,<a name="line.262"></a>
+<span class="sourceLineNo">263</span>            final CharSequence substring, final int start, final int length)    {<a name="line.263"></a>
+<span class="sourceLineNo">264</span>        if (cs instanceof String &amp;&amp; substring instanceof String) {<a name="line.264"></a>
+<span class="sourceLineNo">265</span>            return ((String) cs).regionMatches(ignoreCase, thisStart, (String) substring, start, length);<a name="line.265"></a>
+<span class="sourceLineNo">266</span>        }<a name="line.266"></a>
+<span class="sourceLineNo">267</span>        int index1 = thisStart;<a name="line.267"></a>
+<span class="sourceLineNo">268</span>        int index2 = start;<a name="line.268"></a>
+<span class="sourceLineNo">269</span>        int tmpLen = length;<a name="line.269"></a>
+<span class="sourceLineNo">270</span><a name="line.270"></a>
+<span class="sourceLineNo">271</span>        // Extract these first so we detect NPEs the same as the java.lang.String version<a name="line.271"></a>
+<span class="sourceLineNo">272</span>        final int srcLen = cs.length() - thisStart;<a name="line.272"></a>
+<span class="sourceLineNo">273</span>        final int otherLen = substring.length() - start;<a name="line.273"></a>
+<span class="sourceLineNo">274</span><a name="line.274"></a>
+<span class="sourceLineNo">275</span>        // Check for invalid parameters<a name="line.275"></a>
+<span class="sourceLineNo">276</span>        if (thisStart &lt; 0 || start &lt; 0 || length &lt; 0) {<a name="line.276"></a>
+<span class="sourceLineNo">277</span>            return false;<a name="line.277"></a>
+<span class="sourceLineNo">278</span>        }<a name="line.278"></a>
+<span class="sourceLineNo">279</span><a name="line.279"></a>
+<span class="sourceLineNo">280</span>        // Check that the regions are long enough<a name="line.280"></a>
+<span class="sourceLineNo">281</span>        if (srcLen &lt; length || otherLen &lt; length) {<a name="line.281"></a>
+<span class="sourceLineNo">282</span>            return false;<a name="line.282"></a>
+<span class="sourceLineNo">283</span>        }<a name="line.283"></a>
+<span class="sourceLineNo">284</span><a name="line.284"></a>
+<span class="sourceLineNo">285</span>        while (tmpLen-- &gt; 0) {<a name="line.285"></a>
+<span class="sourceLineNo">286</span>            final char c1 = cs.charAt(index1++);<a name="line.286"></a>
+<span class="sourceLineNo">287</span>            final char c2 = substring.charAt(index2++);<a name="line.287"></a>
+<span class="sourceLineNo">288</span><a name="line.288"></a>
+<span class="sourceLineNo">289</span>            if (c1 == c2) {<a name="line.289"></a>
+<span class="sourceLineNo">290</span>                continue;<a name="line.290"></a>
+<span class="sourceLineNo">291</span>            }<a name="line.291"></a>
+<span class="sourceLineNo">292</span><a name="line.292"></a>
+<span class="sourceLineNo">293</span>            if (!ignoreCase) {<a name="line.293"></a>
+<span class="sourceLineNo">294</span>                return false;<a name="line.294"></a>
+<span class="sourceLineNo">295</span>            }<a name="line.295"></a>
+<span class="sourceLineNo">296</span><a name="line.296"></a>
+<span class="sourceLineNo">297</span>            // The same check as in String.regionMatches():<a name="line.297"></a>
+<span class="sourceLineNo">298</span>            if (Character.toUpperCase(c1) != Character.toUpperCase(c2)<a name="line.298"></a>
+<span class="sourceLineNo">299</span>                    &amp;&amp; Character.toLowerCase(c1) != Character.toLowerCase(c2)) {<a name="line.299"></a>
+<span class="sourceLineNo">300</span>                return false;<a name="line.300"></a>
+<span class="sourceLineNo">301</span>            }<a name="line.301"></a>
+<span class="sourceLineNo">302</span>        }<a name="line.302"></a>
+<span class="sourceLineNo">303</span><a name="line.303"></a>
+<span class="sourceLineNo">304</span>        return true;<a name="line.304"></a>
+<span class="sourceLineNo">305</span>    }<a name="line.305"></a>
+<span class="sourceLineNo">306</span>}<a name="line.306"></a>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</pre>
+</div>
+</body>
+</html>

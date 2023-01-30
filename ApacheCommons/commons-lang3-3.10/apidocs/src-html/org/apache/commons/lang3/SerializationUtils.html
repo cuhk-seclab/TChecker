@@ -1,0 +1,369 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en">
+<head>
+<title>Source code</title>
+<link rel="stylesheet" type="text/css" href="../../../../../stylesheet.css" title="Style">
+</head>
+<body>
+<div class="sourceContainer">
+<pre><span class="sourceLineNo">001</span>/*<a name="line.1"></a>
+<span class="sourceLineNo">002</span> * Licensed to the Apache Software Foundation (ASF) under one or more<a name="line.2"></a>
+<span class="sourceLineNo">003</span> * contributor license agreements.  See the NOTICE file distributed with<a name="line.3"></a>
+<span class="sourceLineNo">004</span> * this work for additional information regarding copyright ownership.<a name="line.4"></a>
+<span class="sourceLineNo">005</span> * The ASF licenses this file to You under the Apache License, Version 2.0<a name="line.5"></a>
+<span class="sourceLineNo">006</span> * (the "License"); you may not use this file except in compliance with<a name="line.6"></a>
+<span class="sourceLineNo">007</span> * the License.  You may obtain a copy of the License at<a name="line.7"></a>
+<span class="sourceLineNo">008</span> *<a name="line.8"></a>
+<span class="sourceLineNo">009</span> *      http://www.apache.org/licenses/LICENSE-2.0<a name="line.9"></a>
+<span class="sourceLineNo">010</span> *<a name="line.10"></a>
+<span class="sourceLineNo">011</span> * Unless required by applicable law or agreed to in writing, software<a name="line.11"></a>
+<span class="sourceLineNo">012</span> * distributed under the License is distributed on an "AS IS" BASIS,<a name="line.12"></a>
+<span class="sourceLineNo">013</span> * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.<a name="line.13"></a>
+<span class="sourceLineNo">014</span> * See the License for the specific language governing permissions and<a name="line.14"></a>
+<span class="sourceLineNo">015</span> * limitations under the License.<a name="line.15"></a>
+<span class="sourceLineNo">016</span> */<a name="line.16"></a>
+<span class="sourceLineNo">017</span>package org.apache.commons.lang3;<a name="line.17"></a>
+<span class="sourceLineNo">018</span><a name="line.18"></a>
+<span class="sourceLineNo">019</span>import java.io.ByteArrayInputStream;<a name="line.19"></a>
+<span class="sourceLineNo">020</span>import java.io.ByteArrayOutputStream;<a name="line.20"></a>
+<span class="sourceLineNo">021</span>import java.io.IOException;<a name="line.21"></a>
+<span class="sourceLineNo">022</span>import java.io.InputStream;<a name="line.22"></a>
+<span class="sourceLineNo">023</span>import java.io.ObjectInputStream;<a name="line.23"></a>
+<span class="sourceLineNo">024</span>import java.io.ObjectOutputStream;<a name="line.24"></a>
+<span class="sourceLineNo">025</span>import java.io.ObjectStreamClass;<a name="line.25"></a>
+<span class="sourceLineNo">026</span>import java.io.OutputStream;<a name="line.26"></a>
+<span class="sourceLineNo">027</span>import java.io.Serializable;<a name="line.27"></a>
+<span class="sourceLineNo">028</span>import java.util.HashMap;<a name="line.28"></a>
+<span class="sourceLineNo">029</span>import java.util.Map;<a name="line.29"></a>
+<span class="sourceLineNo">030</span><a name="line.30"></a>
+<span class="sourceLineNo">031</span>/**<a name="line.31"></a>
+<span class="sourceLineNo">032</span> * &lt;p&gt;Assists with the serialization process and performs additional functionality based<a name="line.32"></a>
+<span class="sourceLineNo">033</span> * on serialization.&lt;/p&gt;<a name="line.33"></a>
+<span class="sourceLineNo">034</span> *<a name="line.34"></a>
+<span class="sourceLineNo">035</span> * &lt;ul&gt;<a name="line.35"></a>
+<span class="sourceLineNo">036</span> * &lt;li&gt;Deep clone using serialization<a name="line.36"></a>
+<span class="sourceLineNo">037</span> * &lt;li&gt;Serialize managing finally and IOException<a name="line.37"></a>
+<span class="sourceLineNo">038</span> * &lt;li&gt;Deserialize managing finally and IOException<a name="line.38"></a>
+<span class="sourceLineNo">039</span> * &lt;/ul&gt;<a name="line.39"></a>
+<span class="sourceLineNo">040</span> *<a name="line.40"></a>
+<span class="sourceLineNo">041</span> * &lt;p&gt;This class throws exceptions for invalid {@code null} inputs.<a name="line.41"></a>
+<span class="sourceLineNo">042</span> * Each method documents its behaviour in more detail.&lt;/p&gt;<a name="line.42"></a>
+<span class="sourceLineNo">043</span> *<a name="line.43"></a>
+<span class="sourceLineNo">044</span> * &lt;p&gt;#ThreadSafe#&lt;/p&gt;<a name="line.44"></a>
+<span class="sourceLineNo">045</span> * @since 1.0<a name="line.45"></a>
+<span class="sourceLineNo">046</span> */<a name="line.46"></a>
+<span class="sourceLineNo">047</span>public class SerializationUtils {<a name="line.47"></a>
+<span class="sourceLineNo">048</span><a name="line.48"></a>
+<span class="sourceLineNo">049</span>    /**<a name="line.49"></a>
+<span class="sourceLineNo">050</span>     * &lt;p&gt;SerializationUtils instances should NOT be constructed in standard programming.<a name="line.50"></a>
+<span class="sourceLineNo">051</span>     * Instead, the class should be used as {@code SerializationUtils.clone(object)}.&lt;/p&gt;<a name="line.51"></a>
+<span class="sourceLineNo">052</span>     *<a name="line.52"></a>
+<span class="sourceLineNo">053</span>     * &lt;p&gt;This constructor is public to permit tools that require a JavaBean instance<a name="line.53"></a>
+<span class="sourceLineNo">054</span>     * to operate.&lt;/p&gt;<a name="line.54"></a>
+<span class="sourceLineNo">055</span>     * @since 2.0<a name="line.55"></a>
+<span class="sourceLineNo">056</span>     */<a name="line.56"></a>
+<span class="sourceLineNo">057</span>    public SerializationUtils() {<a name="line.57"></a>
+<span class="sourceLineNo">058</span>        super();<a name="line.58"></a>
+<span class="sourceLineNo">059</span>    }<a name="line.59"></a>
+<span class="sourceLineNo">060</span><a name="line.60"></a>
+<span class="sourceLineNo">061</span>    // Clone<a name="line.61"></a>
+<span class="sourceLineNo">062</span>    //-----------------------------------------------------------------------<a name="line.62"></a>
+<span class="sourceLineNo">063</span>    /**<a name="line.63"></a>
+<span class="sourceLineNo">064</span>     * &lt;p&gt;Deep clone an {@code Object} using serialization.&lt;/p&gt;<a name="line.64"></a>
+<span class="sourceLineNo">065</span>     *<a name="line.65"></a>
+<span class="sourceLineNo">066</span>     * &lt;p&gt;This is many times slower than writing clone methods by hand<a name="line.66"></a>
+<span class="sourceLineNo">067</span>     * on all objects in your object graph. However, for complex object<a name="line.67"></a>
+<span class="sourceLineNo">068</span>     * graphs, or for those that don't support deep cloning this can<a name="line.68"></a>
+<span class="sourceLineNo">069</span>     * be a simple alternative implementation. Of course all the objects<a name="line.69"></a>
+<span class="sourceLineNo">070</span>     * must be {@code Serializable}.&lt;/p&gt;<a name="line.70"></a>
+<span class="sourceLineNo">071</span>     *<a name="line.71"></a>
+<span class="sourceLineNo">072</span>     * @param &lt;T&gt; the type of the object involved<a name="line.72"></a>
+<span class="sourceLineNo">073</span>     * @param object  the {@code Serializable} object to clone<a name="line.73"></a>
+<span class="sourceLineNo">074</span>     * @return the cloned object<a name="line.74"></a>
+<span class="sourceLineNo">075</span>     * @throws SerializationException (runtime) if the serialization fails<a name="line.75"></a>
+<span class="sourceLineNo">076</span>     */<a name="line.76"></a>
+<span class="sourceLineNo">077</span>    public static &lt;T extends Serializable&gt; T clone(final T object) {<a name="line.77"></a>
+<span class="sourceLineNo">078</span>        if (object == null) {<a name="line.78"></a>
+<span class="sourceLineNo">079</span>            return null;<a name="line.79"></a>
+<span class="sourceLineNo">080</span>        }<a name="line.80"></a>
+<span class="sourceLineNo">081</span>        final byte[] objectData = serialize(object);<a name="line.81"></a>
+<span class="sourceLineNo">082</span>        final ByteArrayInputStream bais = new ByteArrayInputStream(objectData);<a name="line.82"></a>
+<span class="sourceLineNo">083</span><a name="line.83"></a>
+<span class="sourceLineNo">084</span>        try (ClassLoaderAwareObjectInputStream in = new ClassLoaderAwareObjectInputStream(bais,<a name="line.84"></a>
+<span class="sourceLineNo">085</span>                object.getClass().getClassLoader())) {<a name="line.85"></a>
+<span class="sourceLineNo">086</span>            /*<a name="line.86"></a>
+<span class="sourceLineNo">087</span>             * when we serialize and deserialize an object,<a name="line.87"></a>
+<span class="sourceLineNo">088</span>             * it is reasonable to assume the deserialized object<a name="line.88"></a>
+<span class="sourceLineNo">089</span>             * is of the same type as the original serialized object<a name="line.89"></a>
+<span class="sourceLineNo">090</span>             */<a name="line.90"></a>
+<span class="sourceLineNo">091</span>            @SuppressWarnings("unchecked") // see above<a name="line.91"></a>
+<span class="sourceLineNo">092</span>            final T readObject = (T) in.readObject();<a name="line.92"></a>
+<span class="sourceLineNo">093</span>            return readObject;<a name="line.93"></a>
+<span class="sourceLineNo">094</span><a name="line.94"></a>
+<span class="sourceLineNo">095</span>        } catch (final ClassNotFoundException ex) {<a name="line.95"></a>
+<span class="sourceLineNo">096</span>            throw new SerializationException("ClassNotFoundException while reading cloned object data", ex);<a name="line.96"></a>
+<span class="sourceLineNo">097</span>        } catch (final IOException ex) {<a name="line.97"></a>
+<span class="sourceLineNo">098</span>            throw new SerializationException("IOException while reading or closing cloned object data", ex);<a name="line.98"></a>
+<span class="sourceLineNo">099</span>        }<a name="line.99"></a>
+<span class="sourceLineNo">100</span>    }<a name="line.100"></a>
+<span class="sourceLineNo">101</span><a name="line.101"></a>
+<span class="sourceLineNo">102</span>    /**<a name="line.102"></a>
+<span class="sourceLineNo">103</span>     * Performs a serialization roundtrip. Serializes and deserializes the given object, great for testing objects that<a name="line.103"></a>
+<span class="sourceLineNo">104</span>     * implement {@link Serializable}.<a name="line.104"></a>
+<span class="sourceLineNo">105</span>     *<a name="line.105"></a>
+<span class="sourceLineNo">106</span>     * @param &lt;T&gt;<a name="line.106"></a>
+<span class="sourceLineNo">107</span>     *           the type of the object involved<a name="line.107"></a>
+<span class="sourceLineNo">108</span>     * @param msg<a name="line.108"></a>
+<span class="sourceLineNo">109</span>     *            the object to roundtrip<a name="line.109"></a>
+<span class="sourceLineNo">110</span>     * @return the serialized and deserialized object<a name="line.110"></a>
+<span class="sourceLineNo">111</span>     * @since 3.3<a name="line.111"></a>
+<span class="sourceLineNo">112</span>     */<a name="line.112"></a>
+<span class="sourceLineNo">113</span>    @SuppressWarnings("unchecked") // OK, because we serialized a type `T`<a name="line.113"></a>
+<span class="sourceLineNo">114</span>    public static &lt;T extends Serializable&gt; T roundtrip(final T msg) {<a name="line.114"></a>
+<span class="sourceLineNo">115</span>        return (T) deserialize(serialize(msg));<a name="line.115"></a>
+<span class="sourceLineNo">116</span>    }<a name="line.116"></a>
+<span class="sourceLineNo">117</span><a name="line.117"></a>
+<span class="sourceLineNo">118</span>    // Serialize<a name="line.118"></a>
+<span class="sourceLineNo">119</span>    //-----------------------------------------------------------------------<a name="line.119"></a>
+<span class="sourceLineNo">120</span>    /**<a name="line.120"></a>
+<span class="sourceLineNo">121</span>     * &lt;p&gt;Serializes an {@code Object} to the specified stream.&lt;/p&gt;<a name="line.121"></a>
+<span class="sourceLineNo">122</span>     *<a name="line.122"></a>
+<span class="sourceLineNo">123</span>     * &lt;p&gt;The stream will be closed once the object is written.<a name="line.123"></a>
+<span class="sourceLineNo">124</span>     * This avoids the need for a finally clause, and maybe also exception<a name="line.124"></a>
+<span class="sourceLineNo">125</span>     * handling, in the application code.&lt;/p&gt;<a name="line.125"></a>
+<span class="sourceLineNo">126</span>     *<a name="line.126"></a>
+<span class="sourceLineNo">127</span>     * &lt;p&gt;The stream passed in is not buffered internally within this method.<a name="line.127"></a>
+<span class="sourceLineNo">128</span>     * This is the responsibility of your application if desired.&lt;/p&gt;<a name="line.128"></a>
+<span class="sourceLineNo">129</span>     *<a name="line.129"></a>
+<span class="sourceLineNo">130</span>     * @param obj  the object to serialize to bytes, may be null<a name="line.130"></a>
+<span class="sourceLineNo">131</span>     * @param outputStream  the stream to write to, must not be null<a name="line.131"></a>
+<span class="sourceLineNo">132</span>     * @throws IllegalArgumentException if {@code outputStream} is {@code null}<a name="line.132"></a>
+<span class="sourceLineNo">133</span>     * @throws SerializationException (runtime) if the serialization fails<a name="line.133"></a>
+<span class="sourceLineNo">134</span>     */<a name="line.134"></a>
+<span class="sourceLineNo">135</span>    public static void serialize(final Serializable obj, final OutputStream outputStream) {<a name="line.135"></a>
+<span class="sourceLineNo">136</span>        Validate.notNull(outputStream, "The OutputStream must not be null");<a name="line.136"></a>
+<span class="sourceLineNo">137</span>        try (ObjectOutputStream out = new ObjectOutputStream(outputStream)) {<a name="line.137"></a>
+<span class="sourceLineNo">138</span>            out.writeObject(obj);<a name="line.138"></a>
+<span class="sourceLineNo">139</span>        } catch (final IOException ex) {<a name="line.139"></a>
+<span class="sourceLineNo">140</span>            throw new SerializationException(ex);<a name="line.140"></a>
+<span class="sourceLineNo">141</span>        }<a name="line.141"></a>
+<span class="sourceLineNo">142</span>    }<a name="line.142"></a>
+<span class="sourceLineNo">143</span><a name="line.143"></a>
+<span class="sourceLineNo">144</span>    /**<a name="line.144"></a>
+<span class="sourceLineNo">145</span>     * &lt;p&gt;Serializes an {@code Object} to a byte array for<a name="line.145"></a>
+<span class="sourceLineNo">146</span>     * storage/serialization.&lt;/p&gt;<a name="line.146"></a>
+<span class="sourceLineNo">147</span>     *<a name="line.147"></a>
+<span class="sourceLineNo">148</span>     * @param obj  the object to serialize to bytes<a name="line.148"></a>
+<span class="sourceLineNo">149</span>     * @return a byte[] with the converted Serializable<a name="line.149"></a>
+<span class="sourceLineNo">150</span>     * @throws SerializationException (runtime) if the serialization fails<a name="line.150"></a>
+<span class="sourceLineNo">151</span>     */<a name="line.151"></a>
+<span class="sourceLineNo">152</span>    public static byte[] serialize(final Serializable obj) {<a name="line.152"></a>
+<span class="sourceLineNo">153</span>        final ByteArrayOutputStream baos = new ByteArrayOutputStream(512);<a name="line.153"></a>
+<span class="sourceLineNo">154</span>        serialize(obj, baos);<a name="line.154"></a>
+<span class="sourceLineNo">155</span>        return baos.toByteArray();<a name="line.155"></a>
+<span class="sourceLineNo">156</span>    }<a name="line.156"></a>
+<span class="sourceLineNo">157</span><a name="line.157"></a>
+<span class="sourceLineNo">158</span>    // Deserialize<a name="line.158"></a>
+<span class="sourceLineNo">159</span>    //-----------------------------------------------------------------------<a name="line.159"></a>
+<span class="sourceLineNo">160</span>    /**<a name="line.160"></a>
+<span class="sourceLineNo">161</span>     * &lt;p&gt;<a name="line.161"></a>
+<span class="sourceLineNo">162</span>     * Deserializes an {@code Object} from the specified stream.<a name="line.162"></a>
+<span class="sourceLineNo">163</span>     * &lt;/p&gt;<a name="line.163"></a>
+<span class="sourceLineNo">164</span>     *<a name="line.164"></a>
+<span class="sourceLineNo">165</span>     * &lt;p&gt;<a name="line.165"></a>
+<span class="sourceLineNo">166</span>     * The stream will be closed once the object is written. This avoids the need for a finally clause, and maybe also<a name="line.166"></a>
+<span class="sourceLineNo">167</span>     * exception handling, in the application code.<a name="line.167"></a>
+<span class="sourceLineNo">168</span>     * &lt;/p&gt;<a name="line.168"></a>
+<span class="sourceLineNo">169</span>     *<a name="line.169"></a>
+<span class="sourceLineNo">170</span>     * &lt;p&gt;<a name="line.170"></a>
+<span class="sourceLineNo">171</span>     * The stream passed in is not buffered internally within this method. This is the responsibility of your<a name="line.171"></a>
+<span class="sourceLineNo">172</span>     * application if desired.<a name="line.172"></a>
+<span class="sourceLineNo">173</span>     * &lt;/p&gt;<a name="line.173"></a>
+<span class="sourceLineNo">174</span>     *<a name="line.174"></a>
+<span class="sourceLineNo">175</span>     * &lt;p&gt;<a name="line.175"></a>
+<span class="sourceLineNo">176</span>     * If the call site incorrectly types the return value, a {@link ClassCastException} is thrown from the call site.<a name="line.176"></a>
+<span class="sourceLineNo">177</span>     * Without Generics in this declaration, the call site must type cast and can cause the same ClassCastException.<a name="line.177"></a>
+<span class="sourceLineNo">178</span>     * Note that in both cases, the ClassCastException is in the call site, not in this method.<a name="line.178"></a>
+<span class="sourceLineNo">179</span>     * &lt;/p&gt;<a name="line.179"></a>
+<span class="sourceLineNo">180</span>     *<a name="line.180"></a>
+<span class="sourceLineNo">181</span>     * @param &lt;T&gt;  the object type to be deserialized<a name="line.181"></a>
+<span class="sourceLineNo">182</span>     * @param inputStream<a name="line.182"></a>
+<span class="sourceLineNo">183</span>     *            the serialized object input stream, must not be null<a name="line.183"></a>
+<span class="sourceLineNo">184</span>     * @return the deserialized object<a name="line.184"></a>
+<span class="sourceLineNo">185</span>     * @throws IllegalArgumentException<a name="line.185"></a>
+<span class="sourceLineNo">186</span>     *             if {@code inputStream} is {@code null}<a name="line.186"></a>
+<span class="sourceLineNo">187</span>     * @throws SerializationException<a name="line.187"></a>
+<span class="sourceLineNo">188</span>     *             (runtime) if the serialization fails<a name="line.188"></a>
+<span class="sourceLineNo">189</span>     */<a name="line.189"></a>
+<span class="sourceLineNo">190</span>    public static &lt;T&gt; T deserialize(final InputStream inputStream) {<a name="line.190"></a>
+<span class="sourceLineNo">191</span>        Validate.notNull(inputStream, "The InputStream must not be null");<a name="line.191"></a>
+<span class="sourceLineNo">192</span>        try (ObjectInputStream in = new ObjectInputStream(inputStream)) {<a name="line.192"></a>
+<span class="sourceLineNo">193</span>            @SuppressWarnings("unchecked")<a name="line.193"></a>
+<span class="sourceLineNo">194</span>            final T obj = (T) in.readObject();<a name="line.194"></a>
+<span class="sourceLineNo">195</span>            return obj;<a name="line.195"></a>
+<span class="sourceLineNo">196</span>        } catch (final ClassNotFoundException | IOException ex) {<a name="line.196"></a>
+<span class="sourceLineNo">197</span>            throw new SerializationException(ex);<a name="line.197"></a>
+<span class="sourceLineNo">198</span>        }<a name="line.198"></a>
+<span class="sourceLineNo">199</span>    }<a name="line.199"></a>
+<span class="sourceLineNo">200</span><a name="line.200"></a>
+<span class="sourceLineNo">201</span>    /**<a name="line.201"></a>
+<span class="sourceLineNo">202</span>     * &lt;p&gt;<a name="line.202"></a>
+<span class="sourceLineNo">203</span>     * Deserializes a single {@code Object} from an array of bytes.<a name="line.203"></a>
+<span class="sourceLineNo">204</span>     * &lt;/p&gt;<a name="line.204"></a>
+<span class="sourceLineNo">205</span>     *<a name="line.205"></a>
+<span class="sourceLineNo">206</span>     * &lt;p&gt;<a name="line.206"></a>
+<span class="sourceLineNo">207</span>     * If the call site incorrectly types the return value, a {@link ClassCastException} is thrown from the call site.<a name="line.207"></a>
+<span class="sourceLineNo">208</span>     * Without Generics in this declaration, the call site must type cast and can cause the same ClassCastException.<a name="line.208"></a>
+<span class="sourceLineNo">209</span>     * Note that in both cases, the ClassCastException is in the call site, not in this method.<a name="line.209"></a>
+<span class="sourceLineNo">210</span>     * &lt;/p&gt;<a name="line.210"></a>
+<span class="sourceLineNo">211</span>     *<a name="line.211"></a>
+<span class="sourceLineNo">212</span>     * @param &lt;T&gt;  the object type to be deserialized<a name="line.212"></a>
+<span class="sourceLineNo">213</span>     * @param objectData<a name="line.213"></a>
+<span class="sourceLineNo">214</span>     *            the serialized object, must not be null<a name="line.214"></a>
+<span class="sourceLineNo">215</span>     * @return the deserialized object<a name="line.215"></a>
+<span class="sourceLineNo">216</span>     * @throws IllegalArgumentException<a name="line.216"></a>
+<span class="sourceLineNo">217</span>     *             if {@code objectData} is {@code null}<a name="line.217"></a>
+<span class="sourceLineNo">218</span>     * @throws SerializationException<a name="line.218"></a>
+<span class="sourceLineNo">219</span>     *             (runtime) if the serialization fails<a name="line.219"></a>
+<span class="sourceLineNo">220</span>     */<a name="line.220"></a>
+<span class="sourceLineNo">221</span>    public static &lt;T&gt; T deserialize(final byte[] objectData) {<a name="line.221"></a>
+<span class="sourceLineNo">222</span>        Validate.notNull(objectData, "The byte[] must not be null");<a name="line.222"></a>
+<span class="sourceLineNo">223</span>        return deserialize(new ByteArrayInputStream(objectData));<a name="line.223"></a>
+<span class="sourceLineNo">224</span>    }<a name="line.224"></a>
+<span class="sourceLineNo">225</span><a name="line.225"></a>
+<span class="sourceLineNo">226</span>    /**<a name="line.226"></a>
+<span class="sourceLineNo">227</span>     * &lt;p&gt;Custom specialization of the standard JDK {@link java.io.ObjectInputStream}<a name="line.227"></a>
+<span class="sourceLineNo">228</span>     * that uses a custom  {@code ClassLoader} to resolve a class.<a name="line.228"></a>
+<span class="sourceLineNo">229</span>     * If the specified {@code ClassLoader} is not able to resolve the class,<a name="line.229"></a>
+<span class="sourceLineNo">230</span>     * the context classloader of the current thread will be used.<a name="line.230"></a>
+<span class="sourceLineNo">231</span>     * This way, the standard deserialization work also in web-application<a name="line.231"></a>
+<span class="sourceLineNo">232</span>     * containers and application servers, no matter in which of the<a name="line.232"></a>
+<span class="sourceLineNo">233</span>     * {@code ClassLoader} the particular class that encapsulates<a name="line.233"></a>
+<span class="sourceLineNo">234</span>     * serialization/deserialization lives. &lt;/p&gt;<a name="line.234"></a>
+<span class="sourceLineNo">235</span>     *<a name="line.235"></a>
+<span class="sourceLineNo">236</span>     * &lt;p&gt;For more in-depth information about the problem for which this<a name="line.236"></a>
+<span class="sourceLineNo">237</span>     * class here is a workaround, see the JIRA issue LANG-626. &lt;/p&gt;<a name="line.237"></a>
+<span class="sourceLineNo">238</span>     */<a name="line.238"></a>
+<span class="sourceLineNo">239</span>     static class ClassLoaderAwareObjectInputStream extends ObjectInputStream {<a name="line.239"></a>
+<span class="sourceLineNo">240</span>        private static final Map&lt;String, Class&lt;?&gt;&gt; primitiveTypes =<a name="line.240"></a>
+<span class="sourceLineNo">241</span>                new HashMap&lt;&gt;();<a name="line.241"></a>
+<span class="sourceLineNo">242</span><a name="line.242"></a>
+<span class="sourceLineNo">243</span>        static {<a name="line.243"></a>
+<span class="sourceLineNo">244</span>            primitiveTypes.put("byte", byte.class);<a name="line.244"></a>
+<span class="sourceLineNo">245</span>            primitiveTypes.put("short", short.class);<a name="line.245"></a>
+<span class="sourceLineNo">246</span>            primitiveTypes.put("int", int.class);<a name="line.246"></a>
+<span class="sourceLineNo">247</span>            primitiveTypes.put("long", long.class);<a name="line.247"></a>
+<span class="sourceLineNo">248</span>            primitiveTypes.put("float", float.class);<a name="line.248"></a>
+<span class="sourceLineNo">249</span>            primitiveTypes.put("double", double.class);<a name="line.249"></a>
+<span class="sourceLineNo">250</span>            primitiveTypes.put("boolean", boolean.class);<a name="line.250"></a>
+<span class="sourceLineNo">251</span>            primitiveTypes.put("char", char.class);<a name="line.251"></a>
+<span class="sourceLineNo">252</span>            primitiveTypes.put("void", void.class);<a name="line.252"></a>
+<span class="sourceLineNo">253</span>        }<a name="line.253"></a>
+<span class="sourceLineNo">254</span><a name="line.254"></a>
+<span class="sourceLineNo">255</span>        private final ClassLoader classLoader;<a name="line.255"></a>
+<span class="sourceLineNo">256</span><a name="line.256"></a>
+<span class="sourceLineNo">257</span>        /**<a name="line.257"></a>
+<span class="sourceLineNo">258</span>         * Constructor.<a name="line.258"></a>
+<span class="sourceLineNo">259</span>         * @param in The {@code InputStream}.<a name="line.259"></a>
+<span class="sourceLineNo">260</span>         * @param classLoader classloader to use<a name="line.260"></a>
+<span class="sourceLineNo">261</span>         * @throws IOException if an I/O error occurs while reading stream header.<a name="line.261"></a>
+<span class="sourceLineNo">262</span>         * @see java.io.ObjectInputStream<a name="line.262"></a>
+<span class="sourceLineNo">263</span>         */<a name="line.263"></a>
+<span class="sourceLineNo">264</span>        ClassLoaderAwareObjectInputStream(final InputStream in, final ClassLoader classLoader) throws IOException {<a name="line.264"></a>
+<span class="sourceLineNo">265</span>            super(in);<a name="line.265"></a>
+<span class="sourceLineNo">266</span>            this.classLoader = classLoader;<a name="line.266"></a>
+<span class="sourceLineNo">267</span>        }<a name="line.267"></a>
+<span class="sourceLineNo">268</span><a name="line.268"></a>
+<span class="sourceLineNo">269</span>        /**<a name="line.269"></a>
+<span class="sourceLineNo">270</span>         * Overridden version that uses the parameterized {@code ClassLoader} or the {@code ClassLoader}<a name="line.270"></a>
+<span class="sourceLineNo">271</span>         * of the current {@code Thread} to resolve the class.<a name="line.271"></a>
+<span class="sourceLineNo">272</span>         * @param desc An instance of class {@code ObjectStreamClass}.<a name="line.272"></a>
+<span class="sourceLineNo">273</span>         * @return A {@code Class} object corresponding to {@code desc}.<a name="line.273"></a>
+<span class="sourceLineNo">274</span>         * @throws IOException Any of the usual Input/Output exceptions.<a name="line.274"></a>
+<span class="sourceLineNo">275</span>         * @throws ClassNotFoundException If class of a serialized object cannot be found.<a name="line.275"></a>
+<span class="sourceLineNo">276</span>         */<a name="line.276"></a>
+<span class="sourceLineNo">277</span>        @Override<a name="line.277"></a>
+<span class="sourceLineNo">278</span>        protected Class&lt;?&gt; resolveClass(final ObjectStreamClass desc) throws IOException, ClassNotFoundException {<a name="line.278"></a>
+<span class="sourceLineNo">279</span>            final String name = desc.getName();<a name="line.279"></a>
+<span class="sourceLineNo">280</span>            try {<a name="line.280"></a>
+<span class="sourceLineNo">281</span>                return Class.forName(name, false, classLoader);<a name="line.281"></a>
+<span class="sourceLineNo">282</span>            } catch (final ClassNotFoundException ex) {<a name="line.282"></a>
+<span class="sourceLineNo">283</span>                try {<a name="line.283"></a>
+<span class="sourceLineNo">284</span>                    return Class.forName(name, false, Thread.currentThread().getContextClassLoader());<a name="line.284"></a>
+<span class="sourceLineNo">285</span>                } catch (final ClassNotFoundException cnfe) {<a name="line.285"></a>
+<span class="sourceLineNo">286</span>                    final Class&lt;?&gt; cls = primitiveTypes.get(name);<a name="line.286"></a>
+<span class="sourceLineNo">287</span>                    if (cls != null) {<a name="line.287"></a>
+<span class="sourceLineNo">288</span>                        return cls;<a name="line.288"></a>
+<span class="sourceLineNo">289</span>                    }<a name="line.289"></a>
+<span class="sourceLineNo">290</span>                    throw cnfe;<a name="line.290"></a>
+<span class="sourceLineNo">291</span>                }<a name="line.291"></a>
+<span class="sourceLineNo">292</span>            }<a name="line.292"></a>
+<span class="sourceLineNo">293</span>        }<a name="line.293"></a>
+<span class="sourceLineNo">294</span><a name="line.294"></a>
+<span class="sourceLineNo">295</span>    }<a name="line.295"></a>
+<span class="sourceLineNo">296</span><a name="line.296"></a>
+<span class="sourceLineNo">297</span>}<a name="line.297"></a>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</pre>
+</div>
+</body>
+</html>

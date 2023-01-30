@@ -1,0 +1,400 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en">
+<head>
+<title>Source code</title>
+<link rel="stylesheet" type="text/css" href="../../../../../stylesheet.css" title="Style">
+</head>
+<body>
+<div class="sourceContainer">
+<pre><span class="sourceLineNo">001</span>/*<a name="line.1"></a>
+<span class="sourceLineNo">002</span> * Licensed to the Apache Software Foundation (ASF) under one or more<a name="line.2"></a>
+<span class="sourceLineNo">003</span> * contributor license agreements.  See the NOTICE file distributed with<a name="line.3"></a>
+<span class="sourceLineNo">004</span> * this work for additional information regarding copyright ownership.<a name="line.4"></a>
+<span class="sourceLineNo">005</span> * The ASF licenses this file to You under the Apache License, Version 2.0<a name="line.5"></a>
+<span class="sourceLineNo">006</span> * (the "License"); you may not use this file except in compliance with<a name="line.6"></a>
+<span class="sourceLineNo">007</span> * the License.  You may obtain a copy of the License at<a name="line.7"></a>
+<span class="sourceLineNo">008</span> *<a name="line.8"></a>
+<span class="sourceLineNo">009</span> *      http://www.apache.org/licenses/LICENSE-2.0<a name="line.9"></a>
+<span class="sourceLineNo">010</span> *<a name="line.10"></a>
+<span class="sourceLineNo">011</span> * Unless required by applicable law or agreed to in writing, software<a name="line.11"></a>
+<span class="sourceLineNo">012</span> * distributed under the License is distributed on an "AS IS" BASIS,<a name="line.12"></a>
+<span class="sourceLineNo">013</span> * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.<a name="line.13"></a>
+<span class="sourceLineNo">014</span> * See the License for the specific language governing permissions and<a name="line.14"></a>
+<span class="sourceLineNo">015</span> * limitations under the License.<a name="line.15"></a>
+<span class="sourceLineNo">016</span> */<a name="line.16"></a>
+<span class="sourceLineNo">017</span><a name="line.17"></a>
+<span class="sourceLineNo">018</span>package org.apache.commons.csv;<a name="line.18"></a>
+<span class="sourceLineNo">019</span><a name="line.19"></a>
+<span class="sourceLineNo">020</span>import java.io.Serializable;<a name="line.20"></a>
+<span class="sourceLineNo">021</span>import java.util.Arrays;<a name="line.21"></a>
+<span class="sourceLineNo">022</span>import java.util.Iterator;<a name="line.22"></a>
+<span class="sourceLineNo">023</span>import java.util.LinkedHashMap;<a name="line.23"></a>
+<span class="sourceLineNo">024</span>import java.util.List;<a name="line.24"></a>
+<span class="sourceLineNo">025</span>import java.util.Map;<a name="line.25"></a>
+<span class="sourceLineNo">026</span>import java.util.Map.Entry;<a name="line.26"></a>
+<span class="sourceLineNo">027</span>import java.util.Objects;<a name="line.27"></a>
+<span class="sourceLineNo">028</span><a name="line.28"></a>
+<span class="sourceLineNo">029</span>/**<a name="line.29"></a>
+<span class="sourceLineNo">030</span> * A CSV record parsed from a CSV file.<a name="line.30"></a>
+<span class="sourceLineNo">031</span> *<a name="line.31"></a>
+<span class="sourceLineNo">032</span> * &lt;p&gt;<a name="line.32"></a>
+<span class="sourceLineNo">033</span> * Note: Support for {@link Serializable} is scheduled to be removed in version 2.0.<a name="line.33"></a>
+<span class="sourceLineNo">034</span> * In version 1.8 the mapping between the column header and the column index was<a name="line.34"></a>
+<span class="sourceLineNo">035</span> * removed from the serialised state. The class maintains serialization compatibility<a name="line.35"></a>
+<span class="sourceLineNo">036</span> * with versions pre-1.8 for the record values; these must be accessed by index<a name="line.36"></a>
+<span class="sourceLineNo">037</span> * following deserialization. There will be loss of any functionally linked to the header<a name="line.37"></a>
+<span class="sourceLineNo">038</span> * mapping when transferring serialised forms pre-1.8 to 1.8 and vice versa.<a name="line.38"></a>
+<span class="sourceLineNo">039</span> * &lt;/p&gt;<a name="line.39"></a>
+<span class="sourceLineNo">040</span> */<a name="line.40"></a>
+<span class="sourceLineNo">041</span>public final class CSVRecord implements Serializable, Iterable&lt;String&gt; {<a name="line.41"></a>
+<span class="sourceLineNo">042</span><a name="line.42"></a>
+<span class="sourceLineNo">043</span>    private static final String[] EMPTY_STRING_ARRAY = new String[0];<a name="line.43"></a>
+<span class="sourceLineNo">044</span><a name="line.44"></a>
+<span class="sourceLineNo">045</span>    private static final long serialVersionUID = 1L;<a name="line.45"></a>
+<span class="sourceLineNo">046</span><a name="line.46"></a>
+<span class="sourceLineNo">047</span>    private final long characterPosition;<a name="line.47"></a>
+<span class="sourceLineNo">048</span><a name="line.48"></a>
+<span class="sourceLineNo">049</span>    /** The accumulated comments (if any) */<a name="line.49"></a>
+<span class="sourceLineNo">050</span>    private final String comment;<a name="line.50"></a>
+<span class="sourceLineNo">051</span><a name="line.51"></a>
+<span class="sourceLineNo">052</span>    /** The record number. */<a name="line.52"></a>
+<span class="sourceLineNo">053</span>    private final long recordNumber;<a name="line.53"></a>
+<span class="sourceLineNo">054</span><a name="line.54"></a>
+<span class="sourceLineNo">055</span>    /** The values of the record */<a name="line.55"></a>
+<span class="sourceLineNo">056</span>    private final String[] values;<a name="line.56"></a>
+<span class="sourceLineNo">057</span><a name="line.57"></a>
+<span class="sourceLineNo">058</span>    /** The parser that originates this record. This is not serialized. */<a name="line.58"></a>
+<span class="sourceLineNo">059</span>    private final transient CSVParser parser;<a name="line.59"></a>
+<span class="sourceLineNo">060</span><a name="line.60"></a>
+<span class="sourceLineNo">061</span>    CSVRecord(final CSVParser parser, final String[] values, final String comment, final long recordNumber,<a name="line.61"></a>
+<span class="sourceLineNo">062</span>            final long characterPosition) {<a name="line.62"></a>
+<span class="sourceLineNo">063</span>        this.recordNumber = recordNumber;<a name="line.63"></a>
+<span class="sourceLineNo">064</span>        this.values = values != null ? values : EMPTY_STRING_ARRAY;<a name="line.64"></a>
+<span class="sourceLineNo">065</span>        this.parser = parser;<a name="line.65"></a>
+<span class="sourceLineNo">066</span>        this.comment = comment;<a name="line.66"></a>
+<span class="sourceLineNo">067</span>        this.characterPosition = characterPosition;<a name="line.67"></a>
+<span class="sourceLineNo">068</span>    }<a name="line.68"></a>
+<span class="sourceLineNo">069</span><a name="line.69"></a>
+<span class="sourceLineNo">070</span>    /**<a name="line.70"></a>
+<span class="sourceLineNo">071</span>     * Returns a value by {@link Enum}.<a name="line.71"></a>
+<span class="sourceLineNo">072</span>     *<a name="line.72"></a>
+<span class="sourceLineNo">073</span>     * @param e<a name="line.73"></a>
+<span class="sourceLineNo">074</span>     *            an enum<a name="line.74"></a>
+<span class="sourceLineNo">075</span>     * @return the String at the given enum String<a name="line.75"></a>
+<span class="sourceLineNo">076</span>     */<a name="line.76"></a>
+<span class="sourceLineNo">077</span>    public String get(final Enum&lt;?&gt; e) {<a name="line.77"></a>
+<span class="sourceLineNo">078</span>        return get(Objects.toString(e, null));<a name="line.78"></a>
+<span class="sourceLineNo">079</span>    }<a name="line.79"></a>
+<span class="sourceLineNo">080</span><a name="line.80"></a>
+<span class="sourceLineNo">081</span>    /**<a name="line.81"></a>
+<span class="sourceLineNo">082</span>     * Returns a value by index.<a name="line.82"></a>
+<span class="sourceLineNo">083</span>     *<a name="line.83"></a>
+<span class="sourceLineNo">084</span>     * @param i<a name="line.84"></a>
+<span class="sourceLineNo">085</span>     *            a column index (0-based)<a name="line.85"></a>
+<span class="sourceLineNo">086</span>     * @return the String at the given index<a name="line.86"></a>
+<span class="sourceLineNo">087</span>     */<a name="line.87"></a>
+<span class="sourceLineNo">088</span>    public String get(final int i) {<a name="line.88"></a>
+<span class="sourceLineNo">089</span>        return values[i];<a name="line.89"></a>
+<span class="sourceLineNo">090</span>    }<a name="line.90"></a>
+<span class="sourceLineNo">091</span><a name="line.91"></a>
+<span class="sourceLineNo">092</span>    /**<a name="line.92"></a>
+<span class="sourceLineNo">093</span>     * Returns a value by name.<a name="line.93"></a>
+<span class="sourceLineNo">094</span>     *<a name="line.94"></a>
+<span class="sourceLineNo">095</span>     * &lt;p&gt;<a name="line.95"></a>
+<span class="sourceLineNo">096</span>     * Note: This requires a field mapping obtained from the original parser.<a name="line.96"></a>
+<span class="sourceLineNo">097</span>     * A check using {@link #isMapped(String)} should be used to determine if a<a name="line.97"></a>
+<span class="sourceLineNo">098</span>     * mapping exists from the provided {@code name} to a field index. In this case an<a name="line.98"></a>
+<span class="sourceLineNo">099</span>     * exception will only be thrown if the record does not contain a field corresponding<a name="line.99"></a>
+<span class="sourceLineNo">100</span>     * to the mapping, that is the record length is not consistent with the mapping size.<a name="line.100"></a>
+<span class="sourceLineNo">101</span>     * &lt;/p&gt;<a name="line.101"></a>
+<span class="sourceLineNo">102</span>     *<a name="line.102"></a>
+<span class="sourceLineNo">103</span>     * @param name<a name="line.103"></a>
+<span class="sourceLineNo">104</span>     *            the name of the column to be retrieved.<a name="line.104"></a>
+<span class="sourceLineNo">105</span>     * @return the column value, maybe null depending on {@link CSVFormat#getNullString()}.<a name="line.105"></a>
+<span class="sourceLineNo">106</span>     * @throws IllegalStateException<a name="line.106"></a>
+<span class="sourceLineNo">107</span>     *             if no header mapping was provided<a name="line.107"></a>
+<span class="sourceLineNo">108</span>     * @throws IllegalArgumentException<a name="line.108"></a>
+<span class="sourceLineNo">109</span>     *             if {@code name} is not mapped or if the record is inconsistent<a name="line.109"></a>
+<span class="sourceLineNo">110</span>     * @see #isMapped(String)<a name="line.110"></a>
+<span class="sourceLineNo">111</span>     * @see #isConsistent()<a name="line.111"></a>
+<span class="sourceLineNo">112</span>     * @see #getParser()<a name="line.112"></a>
+<span class="sourceLineNo">113</span>     * @see CSVFormat#withNullString(String)<a name="line.113"></a>
+<span class="sourceLineNo">114</span>     */<a name="line.114"></a>
+<span class="sourceLineNo">115</span>    public String get(final String name) {<a name="line.115"></a>
+<span class="sourceLineNo">116</span>        final Map&lt;String, Integer&gt; headerMap = getHeaderMapRaw();<a name="line.116"></a>
+<span class="sourceLineNo">117</span>        if (headerMap == null) {<a name="line.117"></a>
+<span class="sourceLineNo">118</span>            throw new IllegalStateException(<a name="line.118"></a>
+<span class="sourceLineNo">119</span>                "No header mapping was specified, the record values can't be accessed by name");<a name="line.119"></a>
+<span class="sourceLineNo">120</span>        }<a name="line.120"></a>
+<span class="sourceLineNo">121</span>        final Integer index = headerMap.get(name);<a name="line.121"></a>
+<span class="sourceLineNo">122</span>        if (index == null) {<a name="line.122"></a>
+<span class="sourceLineNo">123</span>            throw new IllegalArgumentException(String.format("Mapping for %s not found, expected one of %s", name,<a name="line.123"></a>
+<span class="sourceLineNo">124</span>                headerMap.keySet()));<a name="line.124"></a>
+<span class="sourceLineNo">125</span>        }<a name="line.125"></a>
+<span class="sourceLineNo">126</span>        try {<a name="line.126"></a>
+<span class="sourceLineNo">127</span>            return values[index.intValue()];<a name="line.127"></a>
+<span class="sourceLineNo">128</span>        } catch (final ArrayIndexOutOfBoundsException e) {<a name="line.128"></a>
+<span class="sourceLineNo">129</span>            throw new IllegalArgumentException(String.format(<a name="line.129"></a>
+<span class="sourceLineNo">130</span>                "Index for header '%s' is %d but CSVRecord only has %d values!", name, index,<a name="line.130"></a>
+<span class="sourceLineNo">131</span>                Integer.valueOf(values.length)));<a name="line.131"></a>
+<span class="sourceLineNo">132</span>        }<a name="line.132"></a>
+<span class="sourceLineNo">133</span>    }<a name="line.133"></a>
+<span class="sourceLineNo">134</span><a name="line.134"></a>
+<span class="sourceLineNo">135</span>    /**<a name="line.135"></a>
+<span class="sourceLineNo">136</span>     * Returns the start position of this record as a character position in the source stream. This may or may not<a name="line.136"></a>
+<span class="sourceLineNo">137</span>     * correspond to the byte position depending on the character set.<a name="line.137"></a>
+<span class="sourceLineNo">138</span>     *<a name="line.138"></a>
+<span class="sourceLineNo">139</span>     * @return the position of this record in the source stream.<a name="line.139"></a>
+<span class="sourceLineNo">140</span>     */<a name="line.140"></a>
+<span class="sourceLineNo">141</span>    public long getCharacterPosition() {<a name="line.141"></a>
+<span class="sourceLineNo">142</span>        return characterPosition;<a name="line.142"></a>
+<span class="sourceLineNo">143</span>    }<a name="line.143"></a>
+<span class="sourceLineNo">144</span><a name="line.144"></a>
+<span class="sourceLineNo">145</span>    /**<a name="line.145"></a>
+<span class="sourceLineNo">146</span>     * Returns the comment for this record, if any.<a name="line.146"></a>
+<span class="sourceLineNo">147</span>     * Note that comments are attached to the following record.<a name="line.147"></a>
+<span class="sourceLineNo">148</span>     * If there is no following record (i.e. the comment is at EOF)<a name="line.148"></a>
+<span class="sourceLineNo">149</span>     * the comment will be ignored.<a name="line.149"></a>
+<span class="sourceLineNo">150</span>     *<a name="line.150"></a>
+<span class="sourceLineNo">151</span>     * @return the comment for this record, or null if no comment for this record is available.<a name="line.151"></a>
+<span class="sourceLineNo">152</span>     */<a name="line.152"></a>
+<span class="sourceLineNo">153</span>    public String getComment() {<a name="line.153"></a>
+<span class="sourceLineNo">154</span>        return comment;<a name="line.154"></a>
+<span class="sourceLineNo">155</span>    }<a name="line.155"></a>
+<span class="sourceLineNo">156</span><a name="line.156"></a>
+<span class="sourceLineNo">157</span>    private Map&lt;String, Integer&gt; getHeaderMapRaw() {<a name="line.157"></a>
+<span class="sourceLineNo">158</span>        return parser == null ? null : parser.getHeaderMapRaw();<a name="line.158"></a>
+<span class="sourceLineNo">159</span>    }<a name="line.159"></a>
+<span class="sourceLineNo">160</span><a name="line.160"></a>
+<span class="sourceLineNo">161</span>    /**<a name="line.161"></a>
+<span class="sourceLineNo">162</span>     * Returns the parser.<a name="line.162"></a>
+<span class="sourceLineNo">163</span>     *<a name="line.163"></a>
+<span class="sourceLineNo">164</span>     * &lt;p&gt;<a name="line.164"></a>
+<span class="sourceLineNo">165</span>     * Note: The parser is not part of the serialized state of the record. A null check<a name="line.165"></a>
+<span class="sourceLineNo">166</span>     * should be used when the record may have originated from a serialized form.<a name="line.166"></a>
+<span class="sourceLineNo">167</span>     * &lt;/p&gt;<a name="line.167"></a>
+<span class="sourceLineNo">168</span>     *<a name="line.168"></a>
+<span class="sourceLineNo">169</span>     * @return the parser.<a name="line.169"></a>
+<span class="sourceLineNo">170</span>     * @since 1.7<a name="line.170"></a>
+<span class="sourceLineNo">171</span>     */<a name="line.171"></a>
+<span class="sourceLineNo">172</span>    public CSVParser getParser() {<a name="line.172"></a>
+<span class="sourceLineNo">173</span>        return parser;<a name="line.173"></a>
+<span class="sourceLineNo">174</span>    }<a name="line.174"></a>
+<span class="sourceLineNo">175</span><a name="line.175"></a>
+<span class="sourceLineNo">176</span>    /**<a name="line.176"></a>
+<span class="sourceLineNo">177</span>     * Returns the number of this record in the parsed CSV file.<a name="line.177"></a>
+<span class="sourceLineNo">178</span>     *<a name="line.178"></a>
+<span class="sourceLineNo">179</span>     * &lt;p&gt;<a name="line.179"></a>
+<span class="sourceLineNo">180</span>     * &lt;strong&gt;ATTENTION:&lt;/strong&gt; If your CSV input has multi-line values, the returned number does not correspond to<a name="line.180"></a>
+<span class="sourceLineNo">181</span>     * the current line number of the parser that created this record.<a name="line.181"></a>
+<span class="sourceLineNo">182</span>     * &lt;/p&gt;<a name="line.182"></a>
+<span class="sourceLineNo">183</span>     *<a name="line.183"></a>
+<span class="sourceLineNo">184</span>     * @return the number of this record.<a name="line.184"></a>
+<span class="sourceLineNo">185</span>     * @see CSVParser#getCurrentLineNumber()<a name="line.185"></a>
+<span class="sourceLineNo">186</span>     */<a name="line.186"></a>
+<span class="sourceLineNo">187</span>    public long getRecordNumber() {<a name="line.187"></a>
+<span class="sourceLineNo">188</span>        return recordNumber;<a name="line.188"></a>
+<span class="sourceLineNo">189</span>    }<a name="line.189"></a>
+<span class="sourceLineNo">190</span><a name="line.190"></a>
+<span class="sourceLineNo">191</span>    /**<a name="line.191"></a>
+<span class="sourceLineNo">192</span>     * Checks whether this record has a comment, false otherwise.<a name="line.192"></a>
+<span class="sourceLineNo">193</span>     * Note that comments are attached to the following record.<a name="line.193"></a>
+<span class="sourceLineNo">194</span>     * If there is no following record (i.e. the comment is at EOF)<a name="line.194"></a>
+<span class="sourceLineNo">195</span>     * the comment will be ignored.<a name="line.195"></a>
+<span class="sourceLineNo">196</span>     *<a name="line.196"></a>
+<span class="sourceLineNo">197</span>     * @return true if this record has a comment, false otherwise<a name="line.197"></a>
+<span class="sourceLineNo">198</span>     * @since 1.3<a name="line.198"></a>
+<span class="sourceLineNo">199</span>     */<a name="line.199"></a>
+<span class="sourceLineNo">200</span>    public boolean hasComment() {<a name="line.200"></a>
+<span class="sourceLineNo">201</span>        return comment != null;<a name="line.201"></a>
+<span class="sourceLineNo">202</span>    }<a name="line.202"></a>
+<span class="sourceLineNo">203</span><a name="line.203"></a>
+<span class="sourceLineNo">204</span>    /**<a name="line.204"></a>
+<span class="sourceLineNo">205</span>     * Tells whether the record size matches the header size.<a name="line.205"></a>
+<span class="sourceLineNo">206</span>     *<a name="line.206"></a>
+<span class="sourceLineNo">207</span>     * &lt;p&gt;<a name="line.207"></a>
+<span class="sourceLineNo">208</span>     * Returns true if the sizes for this record match and false if not. Some programs can export files that fail this<a name="line.208"></a>
+<span class="sourceLineNo">209</span>     * test but still produce parsable files.<a name="line.209"></a>
+<span class="sourceLineNo">210</span>     * &lt;/p&gt;<a name="line.210"></a>
+<span class="sourceLineNo">211</span>     *<a name="line.211"></a>
+<span class="sourceLineNo">212</span>     * @return true of this record is valid, false if not<a name="line.212"></a>
+<span class="sourceLineNo">213</span>     */<a name="line.213"></a>
+<span class="sourceLineNo">214</span>    public boolean isConsistent() {<a name="line.214"></a>
+<span class="sourceLineNo">215</span>        final Map&lt;String, Integer&gt; headerMap = getHeaderMapRaw();<a name="line.215"></a>
+<span class="sourceLineNo">216</span>        return headerMap == null || headerMap.size() == values.length;<a name="line.216"></a>
+<span class="sourceLineNo">217</span>    }<a name="line.217"></a>
+<span class="sourceLineNo">218</span><a name="line.218"></a>
+<span class="sourceLineNo">219</span>    /**<a name="line.219"></a>
+<span class="sourceLineNo">220</span>     * Checks whether a given column is mapped, i.e. its name has been defined to the parser.<a name="line.220"></a>
+<span class="sourceLineNo">221</span>     *<a name="line.221"></a>
+<span class="sourceLineNo">222</span>     * @param name<a name="line.222"></a>
+<span class="sourceLineNo">223</span>     *            the name of the column to be retrieved.<a name="line.223"></a>
+<span class="sourceLineNo">224</span>     * @return whether a given column is mapped.<a name="line.224"></a>
+<span class="sourceLineNo">225</span>     */<a name="line.225"></a>
+<span class="sourceLineNo">226</span>    public boolean isMapped(final String name) {<a name="line.226"></a>
+<span class="sourceLineNo">227</span>        final Map&lt;String, Integer&gt; headerMap = getHeaderMapRaw();<a name="line.227"></a>
+<span class="sourceLineNo">228</span>        return headerMap != null &amp;&amp; headerMap.containsKey(name);<a name="line.228"></a>
+<span class="sourceLineNo">229</span>    }<a name="line.229"></a>
+<span class="sourceLineNo">230</span><a name="line.230"></a>
+<span class="sourceLineNo">231</span>    /**<a name="line.231"></a>
+<span class="sourceLineNo">232</span>     * Checks whether a given columns is mapped and has a value.<a name="line.232"></a>
+<span class="sourceLineNo">233</span>     *<a name="line.233"></a>
+<span class="sourceLineNo">234</span>     * @param name<a name="line.234"></a>
+<span class="sourceLineNo">235</span>     *            the name of the column to be retrieved.<a name="line.235"></a>
+<span class="sourceLineNo">236</span>     * @return whether a given columns is mapped and has a value<a name="line.236"></a>
+<span class="sourceLineNo">237</span>     */<a name="line.237"></a>
+<span class="sourceLineNo">238</span>    public boolean isSet(final String name) {<a name="line.238"></a>
+<span class="sourceLineNo">239</span>        return isMapped(name) &amp;&amp; getHeaderMapRaw().get(name).intValue() &lt; values.length;<a name="line.239"></a>
+<span class="sourceLineNo">240</span>    }<a name="line.240"></a>
+<span class="sourceLineNo">241</span><a name="line.241"></a>
+<span class="sourceLineNo">242</span>    /**<a name="line.242"></a>
+<span class="sourceLineNo">243</span>     * Checks whether a column with given index has a value.<a name="line.243"></a>
+<span class="sourceLineNo">244</span>     *<a name="line.244"></a>
+<span class="sourceLineNo">245</span>     * @param index<a name="line.245"></a>
+<span class="sourceLineNo">246</span>     *         a column index (0-based)<a name="line.246"></a>
+<span class="sourceLineNo">247</span>     * @return whether a column with given index has a value<a name="line.247"></a>
+<span class="sourceLineNo">248</span>     */<a name="line.248"></a>
+<span class="sourceLineNo">249</span>    public boolean isSet(final int index) {<a name="line.249"></a>
+<span class="sourceLineNo">250</span>        return 0 &lt;= index &amp;&amp; index &lt; values.length;<a name="line.250"></a>
+<span class="sourceLineNo">251</span>    }<a name="line.251"></a>
+<span class="sourceLineNo">252</span><a name="line.252"></a>
+<span class="sourceLineNo">253</span>    /**<a name="line.253"></a>
+<span class="sourceLineNo">254</span>     * Returns an iterator over the values of this record.<a name="line.254"></a>
+<span class="sourceLineNo">255</span>     *<a name="line.255"></a>
+<span class="sourceLineNo">256</span>     * @return an iterator over the values of this record.<a name="line.256"></a>
+<span class="sourceLineNo">257</span>     */<a name="line.257"></a>
+<span class="sourceLineNo">258</span>    @Override<a name="line.258"></a>
+<span class="sourceLineNo">259</span>    public Iterator&lt;String&gt; iterator() {<a name="line.259"></a>
+<span class="sourceLineNo">260</span>        return toList().iterator();<a name="line.260"></a>
+<span class="sourceLineNo">261</span>    }<a name="line.261"></a>
+<span class="sourceLineNo">262</span><a name="line.262"></a>
+<span class="sourceLineNo">263</span>    /**<a name="line.263"></a>
+<span class="sourceLineNo">264</span>     * Puts all values of this record into the given Map.<a name="line.264"></a>
+<span class="sourceLineNo">265</span>     *<a name="line.265"></a>
+<span class="sourceLineNo">266</span>     * @param map<a name="line.266"></a>
+<span class="sourceLineNo">267</span>     *            The Map to populate.<a name="line.267"></a>
+<span class="sourceLineNo">268</span>     * @return the given map.<a name="line.268"></a>
+<span class="sourceLineNo">269</span>     */<a name="line.269"></a>
+<span class="sourceLineNo">270</span>    &lt;M extends Map&lt;String, String&gt;&gt; M putIn(final M map) {<a name="line.270"></a>
+<span class="sourceLineNo">271</span>        if (getHeaderMapRaw() == null) {<a name="line.271"></a>
+<span class="sourceLineNo">272</span>            return map;<a name="line.272"></a>
+<span class="sourceLineNo">273</span>        }<a name="line.273"></a>
+<span class="sourceLineNo">274</span>        for (final Entry&lt;String, Integer&gt; entry : getHeaderMapRaw().entrySet()) {<a name="line.274"></a>
+<span class="sourceLineNo">275</span>            final int col = entry.getValue().intValue();<a name="line.275"></a>
+<span class="sourceLineNo">276</span>            if (col &lt; values.length) {<a name="line.276"></a>
+<span class="sourceLineNo">277</span>                map.put(entry.getKey(), values[col]);<a name="line.277"></a>
+<span class="sourceLineNo">278</span>            }<a name="line.278"></a>
+<span class="sourceLineNo">279</span>        }<a name="line.279"></a>
+<span class="sourceLineNo">280</span>        return map;<a name="line.280"></a>
+<span class="sourceLineNo">281</span>    }<a name="line.281"></a>
+<span class="sourceLineNo">282</span><a name="line.282"></a>
+<span class="sourceLineNo">283</span>    /**<a name="line.283"></a>
+<span class="sourceLineNo">284</span>     * Returns the number of values in this record.<a name="line.284"></a>
+<span class="sourceLineNo">285</span>     *<a name="line.285"></a>
+<span class="sourceLineNo">286</span>     * @return the number of values.<a name="line.286"></a>
+<span class="sourceLineNo">287</span>     */<a name="line.287"></a>
+<span class="sourceLineNo">288</span>    public int size() {<a name="line.288"></a>
+<span class="sourceLineNo">289</span>        return values.length;<a name="line.289"></a>
+<span class="sourceLineNo">290</span>    }<a name="line.290"></a>
+<span class="sourceLineNo">291</span><a name="line.291"></a>
+<span class="sourceLineNo">292</span>    /**<a name="line.292"></a>
+<span class="sourceLineNo">293</span>     * Converts the values to a List.<a name="line.293"></a>
+<span class="sourceLineNo">294</span>     *<a name="line.294"></a>
+<span class="sourceLineNo">295</span>     * TODO: Maybe make this public?<a name="line.295"></a>
+<span class="sourceLineNo">296</span>     *<a name="line.296"></a>
+<span class="sourceLineNo">297</span>     * @return a new List<a name="line.297"></a>
+<span class="sourceLineNo">298</span>     */<a name="line.298"></a>
+<span class="sourceLineNo">299</span>    private List&lt;String&gt; toList() {<a name="line.299"></a>
+<span class="sourceLineNo">300</span>        return Arrays.asList(values);<a name="line.300"></a>
+<span class="sourceLineNo">301</span>    }<a name="line.301"></a>
+<span class="sourceLineNo">302</span><a name="line.302"></a>
+<span class="sourceLineNo">303</span>    /**<a name="line.303"></a>
+<span class="sourceLineNo">304</span>     * Copies this record into a new Map of header name to record value.<a name="line.304"></a>
+<span class="sourceLineNo">305</span>     *<a name="line.305"></a>
+<span class="sourceLineNo">306</span>     * @return A new Map. The map is empty if the record has no headers.<a name="line.306"></a>
+<span class="sourceLineNo">307</span>     */<a name="line.307"></a>
+<span class="sourceLineNo">308</span>    public Map&lt;String, String&gt; toMap() {<a name="line.308"></a>
+<span class="sourceLineNo">309</span>        return putIn(new LinkedHashMap&lt;String, String&gt;(values.length));<a name="line.309"></a>
+<span class="sourceLineNo">310</span>    }<a name="line.310"></a>
+<span class="sourceLineNo">311</span><a name="line.311"></a>
+<span class="sourceLineNo">312</span>    /**<a name="line.312"></a>
+<span class="sourceLineNo">313</span>     * Returns a string representation of the contents of this record. The result is constructed by comment, mapping,<a name="line.313"></a>
+<span class="sourceLineNo">314</span>     * recordNumber and by passing the internal values array to {@link Arrays#toString(Object[])}.<a name="line.314"></a>
+<span class="sourceLineNo">315</span>     *<a name="line.315"></a>
+<span class="sourceLineNo">316</span>     * @return a String representation of this record.<a name="line.316"></a>
+<span class="sourceLineNo">317</span>     */<a name="line.317"></a>
+<span class="sourceLineNo">318</span>    @Override<a name="line.318"></a>
+<span class="sourceLineNo">319</span>    public String toString() {<a name="line.319"></a>
+<span class="sourceLineNo">320</span>        return "CSVRecord [comment='" + comment + "', recordNumber=" + recordNumber + ", values=" +<a name="line.320"></a>
+<span class="sourceLineNo">321</span>            Arrays.toString(values) + "]";<a name="line.321"></a>
+<span class="sourceLineNo">322</span>    }<a name="line.322"></a>
+<span class="sourceLineNo">323</span><a name="line.323"></a>
+<span class="sourceLineNo">324</span>    String[] values() {<a name="line.324"></a>
+<span class="sourceLineNo">325</span>        return values;<a name="line.325"></a>
+<span class="sourceLineNo">326</span>    }<a name="line.326"></a>
+<span class="sourceLineNo">327</span><a name="line.327"></a>
+<span class="sourceLineNo">328</span>}<a name="line.328"></a>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</pre>
+</div>
+</body>
+</html>
